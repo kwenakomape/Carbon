@@ -12,7 +12,7 @@ try {
       type: 'text',
       messages: [
         {
-          destinations: [{ to: '27634364578' }],
+          destinations: [{ to: '+27609442412' }],
           from: 'YourSenderID',
           text: OTP,
         },
