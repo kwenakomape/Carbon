@@ -11,11 +11,13 @@ import {
 
 export const LandingForm = () => {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [showOTPField, setShowOTPField] = useState(false);
   const [otp, setOtp] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [cell, setCell] = useState('');
+  const [userId,setUserid] =useState('');
 
   const navigate = useNavigate();
   
@@ -23,7 +25,7 @@ export const LandingForm = () => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:3001/check-username', { username });
-      const { exists, type ,Cell} = response.data;
+      const { exists, type, Cell,erroMessage } = response.data;
       
       if (type === 'email' && exists) {
         setShowPasswordField(true);
@@ -33,38 +35,58 @@ export const LandingForm = () => {
         setShowOTPField(true);
         setShowPasswordField(false);
         setErrorMessage('');
-        setCell(Cell)
+        setCell(Cell);
         await axios.post('http://localhost:3001/send-otp', { Cell });
       } else {
-        setErrorMessage('Username does not exist');
+        setErrorMessage(erroMessage);
       }
     } catch (error) {
-      console.error('Error checking username:', error);
+      
       setErrorMessage('An error occurred while checking the username');
     }
   };
     
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post('http://localhost:3001/verify-otp', { Cell:cell, otp });
-      if (response.data.valid) {
-        navigate('/dashboard');
-      } else {
-        setErrorMessage('Invalid OTP');
+    if (showPasswordField) {
+      try {
+        const response = await axios.post('http://localhost:3001/verify-password', { username, password });
+        
+        if (response.data.valid) {
+          navigate(`/dashboard/admin/${username}`);
+        } else {
+          setErrorMessage(response.data.errorMessage);
+        }
+      } catch (error) {
+        console.error('Error verifying password:', error);
+        setErrorMessage('An error occurred while verifying the password');
       }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      setErrorMessage('An error occurred while verifying the OTP');
+    } else if (showOTPField) {
+      try {
+        const response = await axios.post('http://localhost:3001/verify-otp', { Cell: cell, otp });
+        if (response.data.valid) {
+          navigate(`/dashboard/user/${username}`);
+        } else {
+          setErrorMessage('Invalid OTP');
+        }
+      } catch (error) {
+        
+        if (error.response && error.response.status === 400) {
+          setErrorMessage('Invalid OTP');
+        } else {
+          setErrorMessage('An error occurred while verifying the OTP');
+        }
+      }
     }
   };
+  
 
   return (
     <Form onSubmit={handleSubmit}>
       <FormField>
         <label>Username</label>
         <input
-          placeholder="username"
+          placeholder="Username"
           onChange={(e) => setUsername(e.target.value)}
         />
       </FormField>
@@ -96,7 +118,11 @@ export const LandingForm = () => {
           {showPasswordField && (
             <FormField>
               <label>Password</label>
-              <input type="password" placeholder="Password" />
+              <input
+                type="password"
+                placeholder="Password"
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </FormField>
           )}
           {showOTPField && (

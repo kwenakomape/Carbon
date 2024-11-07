@@ -99,7 +99,6 @@ background-color: rgb(242, 242, 242) !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6px;
   color: #721c24;
   background-color: #f8d7da;
   border-radius: 3.25px;
@@ -111,7 +110,19 @@ background-color: rgb(242, 242, 242) !important;
   line-height: 19.5px;
   text-align: left;
 }
-
+.username-error-alert span{
+  margin-left: 9px;
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+.username-error-alert span span{
+ margin: 0px;
+}
+input:focus {
+  border-color: #80bdff !important;
+  box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25) !important
+}
 
 @keyframes blink {
   0% { opacity: 1; }
@@ -124,5 +135,5 @@ background-color: rgb(242, 242, 242) !important;
 }
 
 .LogInpage .ui.form >*{
-  width: 250px !important ;
+  width: 320px !important ;
 }

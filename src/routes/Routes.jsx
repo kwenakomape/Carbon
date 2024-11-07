@@ -10,7 +10,8 @@ export const AllRoutes = () =>  {
         <Routes>
           <Route path="/" element={<Navigate to="/start-login" />} />
           <Route path="/start-login" element={<StartlogIn/>} />
-          <Route path="/dashboard" element={<Dashboard/>} />
+          <Route path="/dashboard/user/:id" element={<Dashboard/>} />
+          <Route path="/dashboard/admin/:id" element={<Dashboard/>} />
           {/* <Route path="/assets/:id" element={<Dashboard />} /> */}
         </Routes>
       </BrowserRouter>
