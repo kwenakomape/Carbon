@@ -21,9 +21,11 @@ import {
 } from "semantic-ui-react";
 import useLoading from "../js/useLoading.js";
 import { LoaderExampleText } from "../components/loader.jsx";
+
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Modaldialogue } from "../components/ModalDialogue.jsx";
 
 export const Dashboard = () => {
   let { id } = useParams();
@@ -113,7 +115,7 @@ export const Dashboard = () => {
               </div>
               <br />
               <br />
-              <Button positive content="BOOK APPOINTMENT" type="submit" />
+              <Modaldialogue memberId={id} userName={data[0].Name} />
             </HeaderContent>
           </Segment>
         </div>

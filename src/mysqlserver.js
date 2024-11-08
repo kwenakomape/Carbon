@@ -193,3 +193,16 @@ app.get('/member/:id', (req, res) => {
     res.send(results);
   });
 })
+
+app.post('/api/bookings', (req, res) => {
+  const { memberId, specialistId, date, status } = req.body;
+  const query = 'INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES (?, ?, ?, ?)';
+  db.query(query, [memberId, specialistId, date, status], (err, results) => {
+    if (err) {
+      console.error('Error inserting appointment:', err);
+      res.status(500).send('Error booking appointment');
+      return;
+    }
+    res.status(200).send('Appointment booked successfully');
+  });
+});

@@ -137,3 +137,56 @@ input:focus {
 .LogInpage .ui.form >*{
   width: 320px !important ;
 }
+
+.specialistOptions{
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.book-modal-centered-header{
+  text-align: center;
+  
+}
+.specialistOptions Button {
+  background-color: white;
+}
+.specialistOptions Button.selected {
+  background-color: #1ABA52 !important;
+}
+
+#calender-modal-centered-header,#time-modal-centered-header,#confirmation-modal-centered-header{
+  display: flex;
+  /* justify-content: space-between; */
+}
+
+#calender-modal-centered-header span,#time-modal-centered-header span,#confirmation-modal-centered-header span{
+flex-grow: 1;
+text-align: center;
+margin-right: 70px;
+}
+
+.select-time-appointment{
+  display: flex;
+  justify-content: center;
+}
+
+.memberDetails{
+display: flex;
+font-size: 18px;
+flex-direction: column;
+}
+
+.memberDetails div{
+  display: flex;
+  gap: 6px;
+}
+
+.centered-actions {
+  display: flex;
+  justify-content: center;
+  
+}
+.centered-actions Button{
+  width: 50%;
+}
