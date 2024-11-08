@@ -14,12 +14,14 @@ import axios from "axios";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { el } from "date-fns/locale";
 
 
 export const Modaldialogue = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
+  const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [value, setValue] = useState(null);
   const [currentDate, setNewDate] = useState(null);
 
@@ -29,6 +31,17 @@ export const Modaldialogue = (props) => {
 
   const handleSpecialistSelect = (specialist) => {
     setSelectedSpecialist(specialist);
+    if(specialist==="BIOKINETICIST"){
+        setSelectedSpecialistID(1)
+    }
+    else if(specialist==="DIETITIAN"){
+        
+        setSelectedSpecialistID(2)
+    }
+    else if(specialist==="PHYSIOTHERAPIST"){
+        
+        setSelectedSpecialistID(3);
+    }
   };
 
   const handleClose = () => {
@@ -47,10 +60,10 @@ export const Modaldialogue = (props) => {
   };
   const handleBooking = async () => {
     
-    const formattedDate = date.toLocaleDateString('en-GB').split('/').reverse().join('-');
+    const formattedDate = currentDate.toLocaleDateString('en-GB').split('/').reverse().join('-');
     const bookingData = {
       memberId: props.memberId, // Assuming you have memberId in props
-      specialistId: 1, // You need to map this to the actual specialist ID
+      specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
       date: formattedDate, //need to convert this one
       status: 'Pending', // Default status
     };
