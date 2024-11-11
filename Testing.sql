@@ -17,7 +17,7 @@ CREATE TABLE Appointments (
     Appointment_Id INT PRIMARY KEY AUTO_INCREMENT,
     Member_Id INT,
     Specialist_Id INT,
-    Date DATE,
+    Date DATE DEFAULT NULL,
     Status ENUM('Attended', 'Missed', 'Pending') NOT NULL,
     FOREIGN KEY (Member_Id) REFERENCES Members(Id_No),
     FOREIGN KEY (Specialist_Id) REFERENCES Specialists(Specialist_Id)
@@ -31,9 +31,10 @@ INSERT INTO Members (Id_No, Email,Name, Cell, Joined_Date, Points) VALUES
 
 -- Insert data into Specialists table
 INSERT INTO Specialists (Name, Type) VALUES
-('Dr. Smith', 'Biokineticist'),
-('Dr. Johnson', 'Dietitian'),
-('Dr. Jade', 'Physiotherapist');
+('Brain', 'Biokineticist'),
+('Natasha', 'Dietitian'),
+('Marie', 'Dietitian'),
+('Jade', 'Physiotherapist');
 
 -- Insert data into Appointments table
 INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES

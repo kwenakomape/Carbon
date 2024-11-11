@@ -138,7 +138,7 @@ input:focus {
   width: 320px !important ;
 }
 
-.specialistOptions{
+.specialistOptions,.dietitianOptions{
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -148,22 +148,29 @@ input:focus {
   text-align: center;
   
 }
-.specialistOptions Button {
+.specialistOptions Button, .dietitianOptions Button{
   background-color: white;
 }
-.specialistOptions Button.selected {
+.specialistOptions Button.selected,.dietitianOptions Button.selected {
   background-color: #1ABA52 !important;
 }
 
-#calender-modal-centered-header,#time-modal-centered-header,#confirmation-modal-centered-header{
+#calender-modal-centered-header,
+#time-modal-centered-header,
+#bookfromwebsite-modal,
+#chooseDietitian-modal-centered-header,
+#confirmation-modal-centered-header {
   display: flex;
-  /* justify-content: space-between; */
 }
 
-#calender-modal-centered-header span,#time-modal-centered-header span,#confirmation-modal-centered-header span{
-flex-grow: 1;
-text-align: center;
-margin-right: 70px;
+#calender-modal-centered-header span,
+#bookfromwebsite-modal span,
+#time-modal-centered-header span,
+#chooseDietitian-modal-centered-header span,
+#confirmation-modal-centered-header span {
+  flex-grow: 1;
+  text-align: center;
+  margin-right: 70px;
 }
 
 .select-time-appointment{

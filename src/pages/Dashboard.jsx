@@ -88,9 +88,9 @@ export const Dashboard = () => {
               <TableBody>
                 {data.map((appointment, index) => (
                   <TableRow key={index}>
-                    <TableCell>{formatDate(appointment.Date)}</TableCell>
+                    <TableCell>{appointment.Date}</TableCell>
                     <TableCell>
-                      {appointment.Specialist} ({appointment.Type})
+                      {appointment.Type}
                     </TableCell>
                     <TableCell>{appointment.Status}</TableCell>
                   </TableRow>

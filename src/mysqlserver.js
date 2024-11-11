@@ -4,7 +4,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
-
+import nodemailer from "nodemailer";
+import { da } from "date-fns/locale";
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -175,34 +176,81 @@ app.post("/verify-password", (req, res) => {
     }
   });
 });
-app.get('/member/:id', (req, res) => {
-  
+app.get("/member/:id", (req, res) => {
   const memberId = req.params.id;
   const query = `
-    SELECT m.Id_No, m.Email,m.Name, m.Cell, m.Joined_Date, m.Points, 
-           a.Date, a.Status, s.Name AS Specialist, s.Type 
-    FROM Members m
-    LEFT JOIN Appointments a ON m.Id_No = a.Member_Id
-    LEFT JOIN Specialists s ON a.Specialist_Id = s.Specialist_Id
-    WHERE m.Id_No = ?`;
+  SELECT m.Id_No, m.Email, m.Name, m.Cell, m.Joined_Date, m.Points, 
+         IFNULL(a.Date, '___________') AS Date, a.Status, s.Name AS Specialist, s.Type 
+  FROM Members m
+  LEFT JOIN Appointments a ON m.Id_No = a.Member_Id
+  LEFT JOIN Specialists s ON a.Specialist_Id = s.Specialist_Id
+  WHERE m.Id_No = ?`;
 
   db.query(query, [memberId], (err, results) => {
     if (err) {
-      return res.status(500).send('Database error');
+      return res.status(500).send("Database error");
     }
     res.send(results);
   });
-})
+});
 
-app.post('/api/bookings', (req, res) => {
+app.post("/api/bookings", (req, res) => {
   const { memberId, specialistId, date, status } = req.body;
-  const query = 'INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES (?, ?, ?, ?)';
+  const query =
+    "INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES (?, ?, ?, ?)";
   db.query(query, [memberId, specialistId, date, status], (err, results) => {
     if (err) {
-      console.error('Error inserting appointment:', err);
-      res.status(500).send('Error booking appointment');
+      console.error("Error inserting appointment:", err);
+      res.status(500).send("Error booking appointment");
       return;
     }
-    res.status(200).send('Appointment booked successfully');
+    res.status(200).send("Appointment booked successfully");
   });
 });
+
+app.post("/api/send-email", (req, res) => {
+  const { memberName, selectedSpecialist, date, selectedDietitian,time } = req.body;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "kwenakomape2@gmail.com",
+        pass: "kugt ckvd bbum donl",
+      },
+    });
+
+    const mailOptions = {
+      from: "kwenakomape2@gmail.com",
+      to: "kwenakomape3@gmail.com",
+      subject: "New Appointment Scheduled: Jane",
+      text: `Dear ${selectedDietitian},
+
+          You have a new appointment scheduled with the following details:
+            - **Client Name**: **${memberName}**
+            - **Speciality**: **${selectedSpecialist}**
+            - **Date**: **${date}**
+            - **Time**: **${time}**
+          Please ensure that all necessary preparations are made for Jane's appointment. If there are any questions or changes needed, please contact Jane directly.
+          To approve and attend the appointment, please log into the carbon site using your admin credentials at the following link:
+          http://localhost:5173/dashboard/user/920845
+
+          Thank you,
+          Your SSISA CARBON TEAM`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+        res.status(500).send("Error sending email");
+      } else {
+        console.log("Email sent:", info.response);
+        res.status(200).send("Email sent successfully");
+      }
+    });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).send("Error sending email");
+  }
+});
+
