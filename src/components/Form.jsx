@@ -53,7 +53,8 @@ export const LandingForm = () => {
         const response = await axios.post('http://localhost:3001/verify-password', { username, password });
         
         if (response.data.valid) {
-          navigate(`/dashboard/admin/${username}`);
+          console.log("this is the is",response.data.AdminID)
+          navigate(`/dashboard/admin/${response.data.AdminID}`);
         } else {
           setErrorMessage(response.data.errorMessage);
         }

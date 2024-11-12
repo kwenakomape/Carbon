@@ -5,7 +5,7 @@ import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-import { da } from "date-fns/locale";
+// import { da } from "date-fns/locale";
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -76,7 +76,7 @@ function verifyOtp(phoneNumber, otp) {
 app.post("/check-username", (req, res) => {
   const { username } = req.body;
 
-  const checkEmailQuery = "SELECT * FROM Admin WHERE Username = ?";
+  const checkEmailQuery = "SELECT * FROM Admin WHERE Email = ?";
   const checkIDQuery = "SELECT * FROM Members WHERE Id_No = ?";
 
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
@@ -97,7 +97,6 @@ app.post("/check-username", (req, res) => {
       }
       if (results.length > 0) {
         const { Cell, } = results[0];
-        // const { Cell } = results[0];
         res.send({
           exists: true,
           type: "id",
@@ -156,15 +155,17 @@ app.listen(3001, () => {
 app.post("/verify-password", (req, res) => {
   const { username, password } = req.body;
 
-  const query = "SELECT Password FROM Admin WHERE Username = ?";
+  const query = "SELECT Password FROM Admin WHERE Email = ?";
   db.query(query, [username], (err, results) => {
     if (err) {
       return res.status(500).send("Database error");
     }
     if (results.length > 0) {
       const storedPassword = results[0].Password;
+      let AdminID = results[0].Admin_Id;
+      console.log("This is the actually",AdminID)
       if (storedPassword === password) {
-        res.send({ valid: true });
+        res.send({ valid: true ,AdminID:AdminID});
       } else {
         if(password===""){
           res.send({ valid: false ,errorMessage: "Field Empty,Please Enter Password"});
@@ -179,12 +180,26 @@ app.post("/verify-password", (req, res) => {
 app.get("/member/:id", (req, res) => {
   const memberId = req.params.id;
   const query = `
-  SELECT m.Id_No, m.Email, m.Name, m.Cell, m.Joined_Date, m.Points, 
-         IFNULL(a.Date, '___________') AS Date, a.Status, s.Name AS Specialist, s.Type 
-  FROM Members m
-  LEFT JOIN Appointments a ON m.Id_No = a.Member_Id
-  LEFT JOIN Specialists s ON a.Specialist_Id = s.Specialist_Id
-  WHERE m.Id_No = ?`;
+        SELECT 
+            a.Appointment_Id,
+            a.Date,
+            a.Status,
+            m.Id_No,
+            m.Email,
+            m.Name AS Member_Name,
+            m.Cell,
+            m.Joined_Date,
+            m.Points,
+            s.Name AS Specialist_Name,
+            s.Specialization
+        FROM 
+            Appointments a
+        JOIN 
+            Members m ON a.Member_Id = m.Id_No
+        JOIN 
+            Admin s ON a.Specialist_Id = s.Admin_Id
+        WHERE 
+            m.Id_No = ?`;
 
   db.query(query, [memberId], (err, results) => {
     if (err) {
@@ -193,7 +208,32 @@ app.get("/member/:id", (req, res) => {
     res.send(results);
   });
 });
+app.get("/api/appointments-with-specialist", (req, res) => {
+  const adminId = req.params.id;
+  const query = `
+          SELECT 
+              a.Appointment_Id,
+              a.Member_Id,
+              m.Name AS Member_Name,
+              a.Date,
+              a.Status,
+              ad.Name AS Specialist_Name
+          FROM 
+              Appointments a
+          JOIN 
+              Members m ON a.Member_Id = m.Id_No
+          JOIN 
+              Admin ad ON a.Specialist_Id = ad.Admin_Id
+          WHERE 
+              a.Specialist_Id = ?`;
 
+          db.query(query, [adminId], (err, results) => {
+            if (err) {
+              return res.status(500).send("Database error");
+            }
+            res.send(results);
+          });
+});
 app.post("/api/bookings", (req, res) => {
   const { memberId, specialistId, date, status } = req.body;
   const query =

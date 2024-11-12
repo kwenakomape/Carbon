@@ -9,10 +9,18 @@ CREATE TABLE Members (
 
 CREATE TABLE Specialists (
     Specialist_Id INT PRIMARY KEY AUTO_INCREMENT,
+    Email VARCHAR(255) NOT NULL,
     Name VARCHAR(255) NOT NULL,
     Type ENUM('Biokineticist', 'Dietitian','Physiotherapist', 'Other') NOT NULL
 );
 
+CREATE TABLE Admin (
+    Name VARCHAR(50),
+    Username VARCHAR(50) PRIMARY KEY,
+    AdminID VARCHAR(10) UNIQUE,
+    Password VARCHAR(50),
+    Specialization VARCHAR(50)
+);
 CREATE TABLE Appointments (
     Appointment_Id INT PRIMARY KEY AUTO_INCREMENT,
     Member_Id INT,
@@ -44,10 +52,30 @@ INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES
 (920811, 3, '2024-12-01', 'Pending'),
 (920811, 1, '2024-12-01', 'Pending');
 
+INSERT INTO Admin (Name, Username,AdminID, Password, Specialization) VALUES
+('Marvin Jacobs', 'marvinjacobs@gmail.com', 'ADM1001','SSISA!', 'Biokineticist'),
+('Marie', 'augustbhila@gmail.com','ADM1002', 'SSISA!', 'Dietitian'),
+('Rashaad', 'joedoe@gmail.com','ADM1003', 'SSISA!', 'Physiotherapist'),
+('Natasha', 'davidbrown@gmail.com','ADM1004',  'SSISA!', 'Dietitian');
+
+
 SELECT * FROM Members;
 SELECT * FROM Appointments;
 SELECT * FROM Specialists;
+SELECT * FROM Admin;
+SELECT 
+    Appointments.Appointment_Id, 
+    Appointments.Member_Id, 
+    Members.Name AS Member_Name, 
+    Appointments.Specialist_Id, 
+    Appointments.Date, 
+    Appointments.Status 
+FROM 
+    Appointments 
+JOIN 
+    Members ON Appointments.Member_Id = Members.Id_No;
 
 DROP TABLE IF EXISTS Appointments;
 DROP TABLE IF EXISTS Specialists;
 DROP TABLE IF EXISTS Members;
+DROP TABLE IF EXISTS Admin;

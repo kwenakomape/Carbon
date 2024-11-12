@@ -27,11 +27,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Modaldialogue } from "../components/ModalDialogue.jsx";
 
-export const Dashboard = () => {
+export const MemberDashboard = () => {
   let { id } = useParams();
-  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id)){
-    id = 920811;
-  }
+
   const [data, setData] = useState(null);
   //const [loading] = useLoading();
   const [loading, setLoading, resetLoading] = useLoading();
@@ -74,7 +72,7 @@ export const Dashboard = () => {
           </Segment>
           <div className="userdashbaord-center-panel">
             <Segment id="headingMessage">
-              Hi {data.Email}, You have {pendingCount} pending appointments
+              Hi {data[0].Member_Name}, You have {pendingCount} pending appointments
             </Segment>
             <Table celled padded>
               <div className="userTable"></div>
@@ -88,9 +86,9 @@ export const Dashboard = () => {
               <TableBody>
                 {data.map((appointment, index) => (
                   <TableRow key={index}>
-                    <TableCell>{appointment.Date}</TableCell>
+                    <TableCell>{formatDate(appointment.Date)}</TableCell>
                     <TableCell>
-                      {appointment.Type}
+                      {appointment.Specialization}
                     </TableCell>
                     <TableCell>{appointment.Status}</TableCell>
                   </TableRow>
@@ -101,7 +99,7 @@ export const Dashboard = () => {
           <Segment className="userProfile">
             <Header as="h2" icon textAlign="center">
               <Icon name="user" circular />
-              <HeaderContent>{data[0].Name}</HeaderContent>
+              <HeaderContent>{data[0].Member_Name}</HeaderContent>
             </Header>
             <HeaderContent>
               <div>
