@@ -4,148 +4,170 @@ import React, { useState } from "react";
 import axios from 'axios';
 import {
   FormField,
-  Button,
   Icon,
+  Button as SemanticButton,
   Form,
 } from "semantic-ui-react";
+import { Button as AntButton } from 'antd';
+import { Card, Space } from 'antd';
 
 export const LandingForm = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [showOTPField, setShowOTPField] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [cell, setCell] = useState('');
-  const [userId,setUserid] =useState('');
+  const [otp, setOtp] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [cell, setCell] = useState("");
+  const [userId, setUserid] = useState("");
 
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3001/check-username', { username });
-      const { exists, type, Cell,erroMessage } = response.data;
-      
-      if (type === 'email' && exists) {
+      const response = await axios.post(
+        "http://localhost:3001/check-username",
+        { username }
+      );
+      const { exists, type, Cell, erroMessage } = response.data;
+
+      if (type === "email" && exists) {
         setShowPasswordField(true);
         setShowOTPField(false);
-        setErrorMessage('');
-      } else if (type === 'id' && exists) {
+        setErrorMessage("");
+      } else if (type === "id" && exists) {
         setShowOTPField(true);
         setShowPasswordField(false);
-        setErrorMessage('');
+        setErrorMessage("");
         setCell(Cell);
-        await axios.post('http://localhost:3001/send-otp', { Cell });
+        await axios.post("http://localhost:3001/send-otp", { Cell });
       } else {
         setErrorMessage(erroMessage);
       }
     } catch (error) {
-      
-      setErrorMessage('An error occurred while checking the username');
+      setErrorMessage("An error occurred while checking the username");
     }
   };
-    
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     if (showPasswordField) {
       try {
-        const response = await axios.post('http://localhost:3001/verify-password', { username, password });
-        
+        const response = await axios.post(
+          "http://localhost:3001/verify-password",
+          { username, password }
+        );
+
         if (response.data.valid) {
-          console.log("this is the is",response.data.AdminID)
+          console.log("this is the is", response.data.AdminID);
           navigate(`/dashboard/admin/${response.data.AdminID}`);
         } else {
           setErrorMessage(response.data.errorMessage);
         }
       } catch (error) {
-        console.error('Error verifying password:', error);
-        setErrorMessage('An error occurred while verifying the password');
+        console.error("Error verifying password:", error);
+        setErrorMessage("An error occurred while verifying the password");
       }
     } else if (showOTPField) {
       try {
-        const response = await axios.post('http://localhost:3001/verify-otp', { Cell: cell, otp });
+        const response = await axios.post("http://localhost:3001/verify-otp", {
+          Cell: cell,
+          otp,
+        });
         if (response.data.valid) {
           navigate(`/dashboard/user/${username}`);
         } else {
-          setErrorMessage('Invalid OTP');
+          setErrorMessage("Invalid OTP");
         }
       } catch (error) {
-        
         if (error.response && error.response.status === 400) {
-          setErrorMessage('Invalid OTP');
+          setErrorMessage("Invalid OTP");
         } else {
-          setErrorMessage('An error occurred while verifying the OTP');
+          setErrorMessage("An error occurred while verifying the OTP");
         }
       }
     }
   };
-  
 
   return (
-    <Form onSubmit={handleSubmit}>
-      <FormField>
-        <label>Username</label>
-        <input
-          placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </FormField>
-      <FormField>
-        {errorMessage && (
-          <div className="username-error-alert">
-            <span>
-              <Icon name="exclamation triangle" size="Small" className="blinking-icon"/>
-              <span>
-                <strong>Error:</strong>
-                {errorMessage}
-              </span>
-            </span>
-          </div>
-        )}
-      </FormField>
-
-      {!showPasswordField && !showOTPField && (
-        <Button
-          positive
-          icon="chevron right"
-          labelPosition="right"
-          content="Next"
-          type="submit"
-        />
-      )}
-      {(showPasswordField || showOTPField) && (
-        <>
-          {showPasswordField && (
-            <FormField>
-              <label>Password</label>
-              <input
-                type="password"
-                placeholder="Password"
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </FormField>
-          )}
-          {showOTPField && (
-            <FormField>
-              <label>OTP</label>
-              <input
-                type="text"
-                placeholder="OTP"
-                onChange={(e) => setOtp(e.target.value)}
-              />
-            </FormField>
-          )}
-          <Button
-            positive
-            icon="chevron right"
-            labelPosition="right"
-            content="LOGIN"
-            type="submit"
-            onClick={handleLoginSubmit}
+    <Card>
+      <Form onSubmit={handleSubmit}>
+        {showPasswordField || showOTPField ? (
+                <h1>Log In</h1>
+            ) : (
+              <h1>Enter Username</h1>
+            )}
+        <FormField>
+          <label>Username</label>
+          <input
+            placeholder="Username"
+            onChange={(e) => setUsername(e.target.value)}
+            
+            readOnly={showPasswordField || showOTPField }
           />
-        </>
-      )}
-    </Form>
+        </FormField>
+        <FormField>
+          {errorMessage && (
+            <div className="username-error-alert">
+              <span>
+                <Icon
+                  name="exclamation triangle"
+                  size="Small"
+                  className="blinking-icon"
+                />
+                <span>
+                  <strong>Error:</strong>
+                  {errorMessage}
+                </span>
+              </span>
+            </div>
+          )}
+        </FormField>
+
+        {!showPasswordField && !showOTPField && (
+          <>
+            <AntButton block type="primary" htmlType="submit">
+              Next
+            </AntButton>
+            <br />
+            <br />
+            or <a href="/create-account">Create New Account</a>
+          </>
+        )}
+        {(showPasswordField || showOTPField) && (
+          <>
+            {showPasswordField && (
+              <FormField>
+                <label>Password</label>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </FormField>
+            )}
+            {showOTPField && (
+              <FormField>
+                <label>OTP</label>
+                <input
+                  type="text"
+                  placeholder="OTP"
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+              </FormField>
+            )}
+            <AntButton
+              block
+              type="primary"
+              htmlType="submit"
+              onClick={handleLoginSubmit}
+            >
+              LOGIN
+            </AntButton>
+          </>
+        )}
+      </Form>
+    </Card>
   );
 };

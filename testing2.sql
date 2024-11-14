@@ -2,14 +2,22 @@ CREATE TABLE Members (
     Id_No INT PRIMARY KEY,
     Email VARCHAR(255) NOT NULL,
     Name VARCHAR(255) NOT NULL,
-    Cell VARCHAR(15),
+    Surname VARCHAR(255) NOT NULL,
+    Phone_Number VARCHAR(15),
     Joined_Date DATE,
     Points INT DEFAULT 0
 );
-
+CREATE TABLE Members (
+    Id_No INT PRIMARY KEY,
+    Email VARCHAR(255) NOT NULL,
+    Name VARCHAR(255) NOT NULL,
+    Cell VARCHAR(15),
+    Joined_Date DATE DEFAULT CURRENT_DATE,
+    Points INT DEFAULT 0
+);
 CREATE TABLE Roles (
     Role_Id INT PRIMARY KEY AUTO_INCREMENT,
-    Role_Name ENUM('Specialist', 'IT Manager') NOT NULL
+    Role_Name ENUM('Specialist', 'IT Manager','Member') NOT NULL
 );
 
 CREATE TABLE Admin (
@@ -100,6 +108,9 @@ JOIN
     Admin ad ON a.Specialist_Id = ad.Admin_Id
 WHERE 
     a.Specialist_Id = 1;
+UPDATE Members
+SET Points = Points - 1
+WHERE Id_No = 920811;
 
 
 DROP TABLE IF EXISTS Appointments;

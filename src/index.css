@@ -5,7 +5,7 @@ html, body, #root {
   width: 100%;
   box-sizing: border-box;
   /* background-color: #f7f7f7 !important; */
-  background-color: rgb(242, 242, 242) !important;
+  /* background-color: rgb(242, 242, 242) !important; */
   color: rgb(106, 108, 111);
   display: flex;
   flex-direction: row;
@@ -17,6 +17,10 @@ html, body, #root {
   display: flex;
   /* flex-grow: 1; */
   flex-direction: column;
+  background-image: url("backgroundPic.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed
   /* width: 100%; */
   
 }

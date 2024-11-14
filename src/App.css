@@ -6,10 +6,12 @@
   flex-grow: 1;
   /* flex-direction: column; */
   align-items: center;
+  /* min-width: 500px ; */
 }
 
 .LogInpage Button{
   width: 100%;
+  
   /* text-align:right; */
 }
 
@@ -31,9 +33,10 @@
   height: 800px;
   background-color: rgb(242, 242, 242) !important;
 }
-.userdashbaord-center-panel{
+.userdashbaord-center-panel,.admindashbaord-center-panel{
   flex-grow: 19;
 }
+
 .userProfile{
 flex-grow: 0;
 height: 320px;
@@ -44,10 +47,12 @@ background-color: rgb(242, 242, 242) !important;
   align-self: flex-start;
 }
 
-.userdashbaord-center-panel #headingMessage{
+.userdashbaord-center-panel #headingMessage, #headingMessageAdmin{
   width: 400px;
 }
-
+#headingMessageAdmin{
+  font-size: 17px;
+}
 .left-siber-options{
   display: flex;
   flex-direction: column;
@@ -138,20 +143,20 @@ input:focus {
   width: 320px !important ;
 }
 
-.specialistOptions,.dietitianOptions{
+.specialistOptions,.dietitianOptions,.statusOptions{
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
 
-.book-modal-centered-header{
+.book-modal-centered-header,.status-modal-centered-header{
   text-align: center;
   
 }
-.specialistOptions Button, .dietitianOptions Button{
+.specialistOptions Button, .dietitianOptions Button,.statusOptions Button{
   background-color: white;
 }
-.specialistOptions Button.selected,.dietitianOptions Button.selected {
+.specialistOptions Button.selected,.dietitianOptions Button.selected ,.statusOptions Button.selected {
   background-color: #1ABA52 !important;
 }
 
@@ -196,4 +201,36 @@ flex-direction: column;
 }
 .centered-actions Button{
   width: 50%;
+}
+
+/* .status-container {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+} */
+
+.status-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 95px; /* Adjust this value as needed */
+}
+
+.status-container :nth-child(2){
+    cursor: pointer;
+    background-color: rgb(242, 242, 242);
+    border: 1px solid rgb(245, 198, 203);
+    border-radius: 4.25px;
+    margin-top: 1px;
+}
+
+.ellipsisIcon{
+  margin: 1px !important;
+}
+.logInFormContainer{
+  border: 1px solid rgba(61, 68, 77, 0.7);
+  border-radius: 6px;
+  box-shadow: oklab(0.560344 -0.00759451 -0.0144049 / 0.38725) 0px 0px 0px 1;
+  padding: 30px;
+  /* background-color: #465a7e66; */
 }

@@ -154,8 +154,7 @@ app.listen(3001, () => {
 
 app.post("/verify-password", (req, res) => {
   const { username, password } = req.body;
-
-  const query = "SELECT Password FROM Admin WHERE Email = ?";
+  const query = "SELECT * FROM Admin WHERE Email = ?";
   db.query(query, [username], (err, results) => {
     if (err) {
       return res.status(500).send("Database error");
@@ -163,7 +162,6 @@ app.post("/verify-password", (req, res) => {
     if (results.length > 0) {
       const storedPassword = results[0].Password;
       let AdminID = results[0].Admin_Id;
-      console.log("This is the actually",AdminID)
       if (storedPassword === password) {
         res.send({ valid: true ,AdminID:AdminID});
       } else {
@@ -208,7 +206,7 @@ app.get("/member/:id", (req, res) => {
     res.send(results);
   });
 });
-app.get("/api/appointments-with-specialist", (req, res) => {
+app.get("/api/appointments-with-specialist/:id", (req, res) => {
   const adminId = req.params.id;
   const query = `
           SELECT 
@@ -233,6 +231,21 @@ app.get("/api/appointments-with-specialist", (req, res) => {
             }
             res.send(results);
           });
+});
+// (`http://localhost:3001/api/paywith-credits/${id}`);
+app.get("/api/paywith-credits/:id", (req, res) => {
+  const memberId = req.params.id;
+  console.log(memberId," thos api passed")
+  const query = `UPDATE Members
+            SET Points = Points - 1
+       WHERE Id_No = ?`;
+
+  db.query(query, [memberId], (err, results) => {
+    if (err) {
+      return res.status(500).send("Error updating points");
+    }
+    res.send(`Points updated successfully for memberId`);
+  });
 });
 app.post("/api/bookings", (req, res) => {
   const { memberId, specialistId, date, status } = req.body;
