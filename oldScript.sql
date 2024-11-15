@@ -2,19 +2,11 @@ CREATE TABLE Members (
     Id_No INT PRIMARY KEY,
     Email VARCHAR(255) NOT NULL,
     Name VARCHAR(255) NOT NULL,
-    Surname VARCHAR(255) NOT NULL,
-    Phone_Number VARCHAR(15),
-    Joined_Date DATE,
-    Points INT DEFAULT 0
-);
-CREATE TABLE Members (
-    Id_No INT PRIMARY KEY,
-    Email VARCHAR(255) NOT NULL,
-    Name VARCHAR(255) NOT NULL,
     Cell VARCHAR(15),
-    Joined_Date DATE DEFAULT CURRENT_DATE,
+    Joined_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Points INT DEFAULT 0
 );
+
 CREATE TABLE Roles (
     Role_Id INT PRIMARY KEY AUTO_INCREMENT,
     Role_Name ENUM('Specialist', 'IT Manager','Member') NOT NULL
@@ -23,32 +15,41 @@ CREATE TABLE Roles (
 CREATE TABLE Admin (
     Admin_Id INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(255) NOT NULL,
-    Surname VARCHAR(255) NOT NULL,
     Email VARCHAR(255) UNIQUE NOT NULL,
     Password VARCHAR(50) NOT NULL,
     Role_Id INT,
     Specialization ENUM('Biokineticist', 'Dietitian', 'Physiotherapist', 'IT Software Development'),
     FOREIGN KEY (Role_Id) REFERENCES Roles(Role_Id)
 );
-
 CREATE TABLE Appointments (
     Appointment_Id INT PRIMARY KEY AUTO_INCREMENT,
     Member_Id INT,
     Specialist_Id INT,
     Date DATE DEFAULT NULL,
     Status ENUM('Attended', 'Missed', 'Pending') NOT NULL,
+    Payment_Id INT,
     FOREIGN KEY (Member_Id) REFERENCES Members(Id_No),
-    FOREIGN KEY (Specialist_Id) REFERENCES Admin(Admin_Id)
+    FOREIGN KEY (Specialist_Id) REFERENCES Admin(Admin_Id),
+    FOREIGN KEY (Payment_Id) REFERENCES Payments(Payment_Id)
 );
+CREATE TABLE Payments (
+    Payment_Id INT PRIMARY KEY AUTO_INCREMENT,
+    Appointment_Id INT,
+    Amount DECIMAL(10, 2) NOT NULL,
+    Payment_Method ENUM('CASH', 'CARD', 'Credits') NOT NULL,
+    Payment_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (Appointment_Id) REFERENCES Appointments(Appointment_Id)
+);
+
 
 -- Insert roles
 INSERT INTO Roles (Role_Name) VALUES ('Specialist'), ('IT Manager');
 
 -- Insert data into Members table
-INSERT INTO Members (Id_No, Email, Name, Cell, Joined_Date, Points) VALUES
-(920811, 'kwenakomape2@gmail.com', 'Kwena', '27609442412', '2024-05-14', 125),
-(920845, 'jane.doe@example.com', 'Jane', '27634364578', '2024-06-20', 100),
-(920938, 'augustnhila@ssisa.com', 'August', '27729723179', '2024-06-20', 100);
+INSERT INTO Members (Id_No, Email, Name, Cell, Points) VALUES
+(920811, 'kwenakomape2@gmail.com', 'Kwena', '27609442412', 125),
+(920845, 'jane.doe@example.com', 'Jane', '27814511463', 100),
+(920938, 'augustnhila@ssisa.com', 'August', '27729723179', 100);
 
 -- Insert data into Admin table
 INSERT INTO Admin (Name, Email, Password, Role_Id, Specialization) VALUES
@@ -59,18 +60,20 @@ INSERT INTO Admin (Name, Email, Password, Role_Id, Specialization) VALUES
 ('IT Manager', 'itmanager@example.com', 'SSISA!', 2, 'IT Software Development');
 
 -- Insert data into Appointments table
-INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES
-(920811, 1, '2024-12-24', 'Attended'),
-(920811, 2, '2024-11-14', 'Missed'),
-(920845, 1, '2024-11-16', 'Pending'),
-(920811, 3, '2024-12-01', 'Pending'),
-(920811, 1, '2024-12-01', 'Pending');
+INSERT INTO Appointments (Member_Id, Specialist_Id, Status) VALUES
+(920811, 1, 'Pending'),
+(920811, 2, 'Pending'),
+(920845, 1,'Pending');
 
+INSERT INTO Payments (Appointment_Id, Amount, Payment_Method) VALUES
+(1, 200.00, 'CARD'),
+(2, 150.00, 'CASH');
 
 SELECT * FROM Members;
 SELECT * FROM Appointments;
 SELECT * FROM Roles;
 SELECT * FROM Admin;
+SELECT * FROM Payments;
 
 SELECT 
     a.Appointment_Id,
@@ -119,3 +122,4 @@ DROP TABLE IF EXISTS Specialists;
 DROP TABLE IF EXISTS Members;
 DROP TABLE IF EXISTS Admin;
 DROP TABLE IF EXISTS Roles;
+DROP TABLE IF EXISTS Payments;

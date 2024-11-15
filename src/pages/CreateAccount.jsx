@@ -83,6 +83,8 @@ import { Card, Space } from 'antd';
              }}
              scrollToFirstError
            >
+            <h1>Register</h1>
+            
              <Form.Item
                name="Name"
                label="Name"
@@ -158,6 +160,7 @@ import { Card, Space } from 'antd';
                </Select>
              </Form.Item>
              {role === "specialist" && (
+              <>
                <Form.Item
                  name="specialization"
                  label="Specialization"
@@ -171,7 +174,7 @@ import { Card, Space } from 'antd';
                    <Option value="physiotherapist">Physiotherapist</Option>
                  </Select>{" "}
                </Form.Item>
-             )}
+             
              <Form.Item
                name="password"
                label="Password"
@@ -185,7 +188,7 @@ import { Card, Space } from 'antd';
              >
                <Input.Password />
              </Form.Item>
-
+             
              <Form.Item
                name="confirm"
                label="Confirm Password"
@@ -212,7 +215,8 @@ import { Card, Space } from 'antd';
              >
                <Input.Password />
              </Form.Item>
-
+             </>
+              )}
              <Form.Item
                name="agreement"
                valuePropName="checked"

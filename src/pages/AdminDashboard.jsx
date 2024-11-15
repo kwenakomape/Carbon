@@ -87,6 +87,7 @@ export const AdminDashboard = () => {
                 <TableRow>
                   <TableHeaderCell>Date</TableHeaderCell>
                   <TableHeaderCell>Client</TableHeaderCell>
+                  <TableHeaderCell>Payment Method</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
                 </TableRow>
               </TableHeader>
@@ -97,6 +98,9 @@ export const AdminDashboard = () => {
                       {formatDate(appointment.Date)}
                     </TableCell>
                     <TableCell>{appointment.Member_Name}</TableCell>
+                    <TableCell collapsing>
+                      cash
+                    </TableCell>
                     <TableCell collapsing>
                       <div className="status-container">
                         <span>{appointment.Status}</span>

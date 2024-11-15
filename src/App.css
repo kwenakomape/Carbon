@@ -234,3 +234,12 @@ flex-direction: column;
   padding: 30px;
   /* background-color: #465a7e66; */
 }
+.LogInpage h1{
+  text-align: center;
+}
+
+
+
+:where(.css-dev-only-do-not-override-49qm).ant-card .ant-card-body{
+  padding-top: 5 !important;
+}

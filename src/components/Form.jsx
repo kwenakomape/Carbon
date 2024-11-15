@@ -99,7 +99,6 @@ export const LandingForm = () => {
               <h1>Enter Username</h1>
             )}
         <FormField>
-          <label>Username</label>
           <input
             placeholder="Username"
             onChange={(e) => setUsername(e.target.value)}

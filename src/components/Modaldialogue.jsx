@@ -14,6 +14,7 @@ import axios from "axios";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { el } from "date-fns/locale";
 export const Modaldialogue = (props) => {
   const [open, setOpen] = useState(false);
@@ -170,7 +171,10 @@ export const Modaldialogue = (props) => {
               <span>CHOOSE A DATE</span>
             </ModalHeader>
             <ModalContent>
-              <SemanticDatepicker inline onChange={onChange} />
+              {/* <SemanticDatepicker inline onChange={onChange} /> */}
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateCalendar />
+              </LocalizationProvider>
             </ModalContent>
             <ModalActions>
               <Button

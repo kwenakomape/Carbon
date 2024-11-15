@@ -31,7 +31,6 @@ export const MemberDashboard = () => {
   let { id } = useParams();
 
   const [data, setData] = useState(null);
-  //const [loading] = useLoading();
   const [loading, setLoading, resetLoading] = useLoading();
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +85,8 @@ export const MemberDashboard = () => {
               <TableBody>
                 {data.map((appointment, index) => (
                   <TableRow key={index}>
-                    <TableCell>{formatDate(appointment.Date)}</TableCell>
+                    
+                    <TableCell> {appointment.Date ? formatDate(appointment.Date) : "______________"} </TableCell>
                     <TableCell>
                       {appointment.Specialization}
                     </TableCell>
