@@ -25,7 +25,7 @@ import { LoaderExampleText } from "../components/loader.jsx";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Modaldialogue } from "../components/ModalDialogue.jsx";
+import {MemberModals} from "../components/MemberModals.jsx";
 
 export const MemberDashboard = () => {
   let { id } = useParams();
@@ -113,7 +113,7 @@ export const MemberDashboard = () => {
               </div>
               <br />
               <br />
-              <Modaldialogue memberId={id} userName={data[0].Name} />
+              <MemberModals memberId={id} userName={data[0].Member_Name} />
             </HeaderContent>
           </Segment>
         </div>
