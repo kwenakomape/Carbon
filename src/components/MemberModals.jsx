@@ -8,7 +8,6 @@ import {
   Modal,
 } from "semantic-ui-react";
 import React, { useState, useEffect } from "react";
-import SemanticDatepicker from "react-semantic-ui-datepickers";
 import axios from "axios";
 import { Box, TextField, Typography } from "@mui/material";
 
@@ -16,18 +15,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
-import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
-import { el } from "date-fns/locale";
 import dayjs from "dayjs";
-import TestModal from "./TestModal";
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
-  const [selectedDietitian, setSelectedDietitian] = useState(null);
+  const [specialistName, setSpecialistName] = useState(null);
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
-  const [time, setTime] = useState(null);
-  const [currentDate, setNewDate] = useState(null);
   const [isDietitian, setIsDietitian] = useState(false);
 
   const [selectedDates, setSelectedDates] = useState([null, null, null]);
@@ -45,7 +39,6 @@ export const MemberModals = (props) => {
       [date]: { start: null, end: null },
     }));
 
-    console.log(`Date ${index + 1} selected:`, date);
   };
 
   const handleTimeChange = (date, time, type) => {
@@ -72,15 +65,11 @@ export const MemberModals = (props) => {
     const isBeforeToday = dayjs(date).isBefore(today);
     return isWeekend || isSelected || isBeforeToday;
   };
-  const onChange = (event, data) => {
-    setNewDate(data.value);
-  };
   const handleClose = () => {
     setOpen(false);
     setStep(1);
     setSelectedSpecialist(null);
-    setSelectedDietitian(null);
-    setTime(null);
+    setSpecialistName(null)
     setIsDietitian(false);
     setSelectedDates([null, null, null]);
     setTimeRanges({});
@@ -99,7 +88,7 @@ export const MemberModals = (props) => {
     }
   };
   const handleDietitianName = (name) => {
-    setSelectedDietitian(name);
+    setSpecialistName(name);
   };
   const handleNext = () => {
     if (step === 1 && selectedSpecialist === "DIETITIAN") {
@@ -111,46 +100,51 @@ export const MemberModals = (props) => {
     } else if (step === 3 && isDietitian) {
       setStep(4); // Proceed to confirmation for dietitian
     } else {
+      
       setStep(step + 1);
     }
+    // const printTimeRanges = (timeRanges) => {
+    //   for (const [date, times] of Object.entries(timeRanges)) {
+        
+    //     console.log(`Date: ${dayjs(date).format("YYYY-MM-DD")}, Start: ${dayjs(times.start).format("HH:mm")}, End: ${dayjs(times.end).format("HH:mm")}`);
+    //   }
+    // };
+    // printTimeRanges(timeRanges)
   };
 
   const handleBack = () => {
     setStep(step - 1);
   };
   const handleBooking = async () => {
-    // let bookingData;
+    let bookingData;
 
-    // if (isDietitian) {
-    //   bookingData = {
-    //     memberId: props.memberId, // Assuming you have memberId in props
-    //     memberName: props.userName,
-    //     specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
-    //     selectedDietitian: selectedDietitian,
-    //     selectedSpecialist: selectedSpecialist,
-    //     date: null, //need to convert this one
-    //     status: "Pending", // Default status
-    //   };
-    // } else {
-    //   bookingData = {
-    //     memberId: props.memberId, // Assuming you have memberId in props
-    //     specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
-    //     memberName: props.userName,
-    //     selectedSpecialist: selectedSpecialist,
-    //     time: time.format("HH:mm"),
-    //     date: currentDate
-    //       .toLocaleDateString("en-GB")
-    //       .split("/")
-    //       .reverse()
-    //       .join("-"), //need to convert this one
-    //     status: "Pending", // Default status
-    //   };
-    // }
+    if (isDietitian) {
+      bookingData = {
+        memberId: props.memberId, // Assuming you have memberId in props
+        memberName: props.memberName,
+        specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
+        specialistName: specialistName, //investigate thsi???
+        selectedSpecialist: selectedSpecialist,
+        date: null, //The the selected date(from the website wil be sent to the specialist email),but in the database it will be stored as null until confirmed by specilaist
+        status: "Pending", // Default status
+      };
+    } else {
+      bookingData = {
+        memberId: props.memberId, // Assuming you have memberId in props
+        memberName: props.memberName,
+        specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
+        selectedSpecialist: selectedSpecialist,
+        specialistName: specialistName, // Ask which specialist will recieve the email
+        timeRanges : timeRanges,
+        selectedDates: selectedDates,
+        status: "Pending", // Default status
+      };
+    }
 
     try {
-      // await axios.post("http://localhost:3001/api/bookings", bookingData);
+      await axios.post("http://localhost:3001/api/bookings", bookingData);
       handleClose();
-      // await axios.post("http://localhost:3001/api/send-email", bookingData);
+      await axios.post("http://localhost:3001/api/send-email", bookingData);
     } catch (error) {
       console.error("Error booking appointment:", error);
     }
@@ -310,13 +304,13 @@ export const MemberModals = (props) => {
               <div className="dietitianOptions">
                 <Button
                   onClick={() => handleDietitianName("NATASHIA")}
-                  className={selectedDietitian === "NATASHIA" ? "selected" : ""}
+                  className={specialistName === "NATASHIA" ? "selected" : ""}
                 >
                   NATASHIA
                 </Button>
                 <Button
                   onClick={() => handleDietitianName("MARIE")}
-                  className={selectedDietitian === "MARIE" ? "selected" : ""}
+                  className={specialistName === "MARIE" ? "selected" : ""}
                 >
                   MARIE
                 </Button>
@@ -371,7 +365,7 @@ export const MemberModals = (props) => {
                   <span>
                     <strong>NAME:</strong>
                   </span>
-                  <span>{props.userName}</span>
+                  <span>{props.memberName}</span>
                 </div>
 
                 <div>
@@ -415,7 +409,7 @@ export const MemberModals = (props) => {
                     <span>
                       <strong>SPECIALIST:</strong>
                     </span>
-                    <span>{selectedDietitian}</span>
+                    <span>{specialistName}</span>
                   </div>
                 )}
               </div>
@@ -446,7 +440,7 @@ export const MemberModals = (props) => {
                   <span>
                     <strong>NAME:</strong>
                   </span>
-                  <span>{props.userName}</span>
+                  <span>{props.memberName}</span>
                 </div>
 
                 <div>
@@ -485,7 +479,7 @@ export const MemberModals = (props) => {
                     <span>
                       <strong>SPECIALIST:</strong>
                     </span>
-                    <span>{selectedDietitian}</span>
+                    <span>{specialistName}</span>
                   </div>
                 )}
               </div>

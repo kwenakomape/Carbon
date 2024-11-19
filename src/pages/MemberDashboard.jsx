@@ -1,23 +1,14 @@
 import {
-  Card,
   Icon,
-  Button,
-  Form,
-  Popup,
-  Divider,
-  Dropdown,
-  Input,
   HeaderContent,
   TableRow,
   TableHeaderCell,
   TableHeader,
   TableCell,
   TableBody,
-  Checkbox,
   Header,
   Table,
   Segment,
-  FormField,
 } from "semantic-ui-react";
 import useLoading from "../js/useLoading.js";
 import { LoaderExampleText } from "../components/loader.jsx";
@@ -113,7 +104,7 @@ export const MemberDashboard = () => {
               </div>
               <br />
               <br />
-              <MemberModals memberId={id} userName={data[0].Member_Name} />
+              <MemberModals memberId={id} memberName={data[0].Member_Name} />
             </HeaderContent>
           </Segment>
         </div>

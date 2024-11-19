@@ -5,6 +5,7 @@ import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import dayjs from "dayjs";
 // import { da } from "date-fns/locale";
 const app = express();
 app.use(bodyParser.json());
@@ -96,7 +97,7 @@ app.post("/check-username", (req, res) => {
         return res.status(500).send("Database error");
       }
       if (results.length > 0) {
-        const { Cell, } = results[0];
+        const { Cell } = results[0];
         res.send({
           exists: true,
           type: "id",
@@ -163,14 +164,16 @@ app.post("/verify-password", (req, res) => {
       const storedPassword = results[0].Password;
       let AdminID = results[0].Admin_Id;
       if (storedPassword === password) {
-        res.send({ valid: true ,AdminID:AdminID});
+        res.send({ valid: true, AdminID: AdminID });
       } else {
-        if(password===""){
-          res.send({ valid: false ,errorMessage: "Field Empty,Please Enter Password"});
-        }else{
-          res.send({ valid: false ,errorMessage: "Invalid Password"});
+        if (password === "") {
+          res.send({
+            valid: false,
+            errorMessage: "Field Empty,Please Enter Password",
+          });
+        } else {
+          res.send({ valid: false, errorMessage: "Invalid Password" });
         }
-        
       }
     }
   });
@@ -225,17 +228,17 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
           WHERE 
               a.Specialist_Id = ?`;
 
-          db.query(query, [adminId], (err, results) => {
-            if (err) {
-              return res.status(500).send("Database error");
-            }
-            res.send(results);
-          });
+  db.query(query, [adminId], (err, results) => {
+    if (err) {
+      return res.status(500).send("Database error");
+    }
+    res.send(results);
+  });
 });
 // (`http://localhost:3001/api/paywith-credits/${id}`);
 app.get("/api/paywith-credits/:id", (req, res) => {
   const memberId = req.params.id;
-  console.log(memberId," thos api passed")
+  console.log(memberId, " thos api passed");
   const query = `UPDATE Members
             SET Points = Points - 1
        WHERE Id_No = ?`;
@@ -247,11 +250,26 @@ app.get("/api/paywith-credits/:id", (req, res) => {
     res.send(`Points updated successfully for memberId`);
   });
 });
+
+app.get("/api/confirm-date/:id", (req, res) => {
+  const memberId = req.params.id;
+  const { selectedDate,timeRange } = req.body;
+  
+  const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
+  const query = `UPDATE Appointments SET Date = ? WHERE Id_No = ?`;
+
+  db.query(query, [confirmedDate, memberId], (err, results) => {
+    if (err) {
+      return res.status(500).send("Error updating points");
+    }
+    res.send(`Date Updated by the Specialist`);
+  });
+});
 app.post("/api/bookings", (req, res) => {
-  const { memberId, specialistId, date, status } = req.body;
+  const { memberId, specialistId, status } = req.body;
   const query =
-    "INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES (?, ?, ?, ?)";
-  db.query(query, [memberId, specialistId, date, status], (err, results) => {
+    "INSERT INTO Appointments (Member_Id, Specialist_Id, Status) VALUES (?, ?, ?)";
+  db.query(query, [memberId, specialistId, status], (err, results) => {
     if (err) {
       console.error("Error inserting appointment:", err);
       res.status(500).send("Error booking appointment");
@@ -262,7 +280,26 @@ app.post("/api/bookings", (req, res) => {
 });
 
 app.post("/api/send-email", (req, res) => {
-  const { memberName, selectedSpecialist, date, selectedDietitian,time } = req.body;
+  let {
+    memberName,
+    selectedSpecialist,
+    specialistName,
+    selectedDates,
+    timeRanges,
+  } = req.body;
+  if (!specialistName) {
+    specialistName = "Marvin";
+  }
+  const appointmentDetailsHTML = Object.entries(timeRanges)
+    .map(
+      ([date, times], index) =>
+        ` <p key={date} class="appointment-date">Day ${index + 1}: ${dayjs(
+          date
+        ).format("YYYY-MM-DD")} | Time: From ${dayjs(times.start).format(
+          "HH:mm"
+        )} to ${dayjs(times.end).format("HH:mm")}</p> `
+    )
+    .join("");
 
   try {
     const transporter = nodemailer.createTransport({
@@ -276,20 +313,24 @@ app.post("/api/send-email", (req, res) => {
     const mailOptions = {
       from: "kwenakomape2@gmail.com",
       to: "kwenakomape3@gmail.com",
-      subject: "New Appointment Scheduled: Jane",
-      text: `Dear ${selectedDietitian},
-
-          You have a new appointment scheduled with the following details:
-            - **Client Name**: **${memberName}**
-            - **Speciality**: **${selectedSpecialist}**
-            - **Date**: **${date}**
-            - **Time**: **${time}**
-          Please ensure that all necessary preparations are made for Jane's appointment. If there are any questions or changes needed, please contact Jane directly.
-          To approve and attend the appointment, please log into the carbon site using your admin credentials at the following link:
-          http://localhost:5173/dashboard/user/920845
-
-          Thank you,
-          Your SSISA CARBON TEAM`,
+      subject: `New Appointment Scheduled: ${memberName}`,
+      html: `<!DOCTYPE html> <html> <head> <style> body { font-family: Arial, sans-serif; } 
+      .email-container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; } 
+      .email-header, .email-footer { text-align: center; margin-bottom: 20px; } .email-content { margin-bottom: 20px; } 
+      .appointment-details { margin-bottom: 20px; } .appointment-date { font-weight: bold; color: #333; } </style> </head> 
+      <body> <div class="email-container"> <div class="email-header"> 
+      <h2>Your SSISA Carbon Team</h2> </div> <div class="email-content">
+       <p>You have a new appointment scheduled with the following details:</p> 
+       <p>Client Name: <strong>${memberName}</strong></p> 
+       <p>Specialist: <strong>${selectedSpecialist}</strong></p> 
+       </div> <div class="appointment-details"> 
+           ${appointmentDetailsHTML}
+      </div> <div class="email-content"> 
+      <p>Please ensure that all necessary preparations are made for ${memberName}'s appointment. To approve and attend the appointment,
+       please log into the site using your admin credentials at the following link:</p> 
+       <p><a href="http://your-health-clinic-admin-portal-link">carbon@ssisa.com</a></p> 
+       <p>If there are any questions or changes needed, please contact ${memberName} directly.</p> </div> <div class="email-footer"> 
+       <p>Thank you,<br>Your SSISA Carbon Team</p> </div> </div> </body> </html> `,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -306,4 +347,3 @@ app.post("/api/send-email", (req, res) => {
     res.status(500).send("Error sending email");
   }
 });
-

@@ -8,27 +8,46 @@ import {
 } from "semantic-ui-react";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
+import dayjs from "dayjs";
+import { Box, TextField, Typography } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { DatePicker } from "@mui/x-date-pickers";
 export const AdminModals = (props) => {
+  const id = props.memberId;
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-  const [isAttented, setiIsAttented] = useState(false);
+  const [isSeen, setiIsSeen] = useState(false);
   const [isMissed, setiIsMissed] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
+  const [isConfirm, setIsConfirm] = useState(false);
+
+
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [timeRange, setTimeRange] = useState({ start: null, end: null });
+  const [datesSelected, setDatesSelected] = useState(false);
+  const shouldDisableDate = (date) => {
+    const today = dayjs().startOf("day");
+    const day = dayjs(date).day();
+    const isWeekend = day === 0 || day === 6;
+    const isBeforeToday = dayjs(date).isBefore(today);
+    return isWeekend || isBeforeToday;
+  };
   const handleClose = () => {
     setOpen(false);
     setStep(1);
     setSelectedStatus(null);
     setSelectedPaymentMethod(null);
     setiIsMissed(false);
-    setiIsAttented(false)
+    setiIsSeen(false);
     setIsCancel(false);
-    
+    setSelectedDate(null);
+    setTimeRange({ start: null, end: null })
   };
   const handlePayment = async () => {
-    const id = props.memberId;
     try {
       await axios.get(`http://localhost:3001/api/paywith-credits/${id}`);
       handleClose();
@@ -37,22 +56,45 @@ export const AdminModals = (props) => {
       console.error("Error Making Payment:", error);
     }
   }
+  
+  const handleDateConfirmation = async () => {
 
+    let data = {
+       selectedDate : selectedDate,
+       timeRange: timeRange
+    }
+ 
+    try {
+      await axios.post(`http://localhost:3001/api/confirm-date/${id}`,data);
+      handleClose();
+      
+    } catch (error) {
+      console.error("Error Making Payment:", error);
+    }
+  }
 
   const handleSelectedStatus = (status) => {
     if (status === "MISSED") {
       setiIsMissed(true);
-      setiIsAttented(false)
+      setiIsSeen(false)
       setIsCancel(false)
+      setIsConfirm(false)
       
     } else if (status === "CANCELED") {
       setiIsMissed(false);
-      setiIsAttented(false)
+      setiIsSeen(false)
       setIsCancel(true)
+      setIsConfirm(false)
       
-    }else if (status === "ATTEND"){
+    }else if (status === "SEEN"){
       setiIsMissed(false);
-      setiIsAttented(true)
+      setiIsSeen(true)
+      setIsCancel(false)
+      setIsConfirm(false)
+    }else if (status === "CONFIRM"){
+      setiIsMissed(false);
+      setiIsSeen(false)
+      setIsConfirm(true)
       setIsCancel(false)
     }
     setSelectedStatus(status);
@@ -66,6 +108,18 @@ export const AdminModals = (props) => {
   const handleBack = () => {
     setStep(step - 1);
   };
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setTimeRange({ start: null, end: null });
+  };
+  const handleTimeChange = (time, type) => {
+    setTimeRange((prevTimeRange) => ({ ...prevTimeRange, [type]: time }));
+  };
+  useEffect(() => {
+    const allDatesSelected = selectedDate !== null;
+    const allTimesSelected = timeRange.start !== null && timeRange.end !== null;
+    setDatesSelected(allDatesSelected && allTimesSelected);
+  }, [selectedDate, timeRange]);
   return (
     <>
       <Icon
@@ -79,7 +133,7 @@ export const AdminModals = (props) => {
         onClose={step === 2 ? handleBack : handleClose}
         open={open}
         closeOnDimmerClick={false}
-        size="tiny"
+        size="small"
       >
         {step === 1 && (
           <>
@@ -89,16 +143,22 @@ export const AdminModals = (props) => {
             <ModalContent>
               <div className="statusOptions">
                 <Button
-                  onClick={() => handleSelectedStatus("ATTEND")}
-                  className={selectedStatus === "ATTEND" ? "selected" : ""}
+                  onClick={() => handleSelectedStatus("SEEN")}
+                  className={selectedStatus === "SEEN" ? "selected" : ""}
                 >
-                  ATTEND
+                  SEEN
                 </Button>
                 <Button
                   onClick={() => handleSelectedStatus("MISSED")}
                   className={selectedStatus === "MISSED" ? "selected" : ""}
                 >
                   MISSED
+                </Button>
+                <Button
+                  onClick={() => handleSelectedStatus("CONFIRM")}
+                  className={selectedStatus === "CONFIRM" ? "selected" : ""}
+                >
+                  CONFIRM
                 </Button>
                 <Button
                   onClick={() => handleSelectedStatus("CANCELED")}
@@ -116,7 +176,7 @@ export const AdminModals = (props) => {
             </ModalActions>
           </>
         )}
-        {step === 2 && !isMissed && !isCancel && (
+        {step === 2 && isSeen && (
           <>
             <ModalHeader id="calender-modal-centered-header">
               <Button
@@ -151,20 +211,124 @@ export const AdminModals = (props) => {
             </ModalActions>
           </>
         )}
-        {step === 2 && selectedStatus && !isAttented && (
+        {step === 2 && isMissed && (
           <>
             <ModalHeader className="status-modal-centered-header">
               Confirm Action
             </ModalHeader>
             <ModalContent>
               <p>
-                Are you sure you want to mark this appointment as <strong>{selectedStatus.toLowerCase()}</strong>?
+                Are you sure you want to mark this appointment as{" "}
+                <strong>{selectedStatus.toLowerCase()}</strong>?
               </p>
             </ModalContent>
             <ModalActions>
               <Button onClick={handleBack}>No</Button>
               <Button onClick={handleClose} primary>
                 Yes
+              </Button>
+            </ModalActions>
+          </>
+        )}
+        {step === 2 && isConfirm && (
+          <>
+            <ModalHeader className="status-modal-centered-header">
+              Choose a Date and Time
+            </ModalHeader>
+            <ModalContent>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Box sx={{ my: 5 }}>
+                  <DatePicker
+                    label="Select Date"
+                    value={selectedDate || null}
+                    onChange={handleDateChange}
+                    shouldDisableDate={shouldDisableDate}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                  />
+                  &nbsp;
+                  <>
+                    {" "}
+                    <TimePicker
+                      label="From"
+                      value={timeRange.start || null}
+                      onChange={(time) => handleTimeChange(time, "start")}
+                      renderInput={(params) => (
+                        <TextField {...params} fullWidth />
+                      )}
+                      ampm={false}
+                    />{" "}
+                    &nbsp;
+                    <TimePicker
+                      label="To"
+                      value={timeRange.end || null}
+                      onChange={(time) => handleTimeChange(time, "end")}
+                      renderInput={(params) => (
+                        <TextField {...params} fullWidth />
+                      )}
+                      ampm={false}
+                    />
+                  </>
+                </Box>
+              </LocalizationProvider>
+            </ModalContent>
+            <ModalActions>
+              <Button onClick={handleNext} primary disabled={!datesSelected}>
+                Continue
+                <Icon name="right chevron" />
+              </Button>
+            </ModalActions>
+          </>
+        )}
+        {step === 2 && isCancel && (
+          <>
+            <ModalHeader className="status-modal-centered-header">
+              Confirm Action
+            </ModalHeader>
+            <ModalContent>
+              <p>
+                Are you sure you want to <strong>cancel</strong> this
+                appointment ?
+              </p>
+            </ModalContent>
+            <ModalActions>
+              <Button onClick={handleBack}>No</Button>
+              <Button onClick={handleClose} primary>
+                Yes
+              </Button>
+            </ModalActions>
+          </>
+        )}
+        {step === 3 && isConfirm && (
+          <>
+            <ModalHeader id="adminConfirmDate-modal-centered-header">
+            <Button
+                icon="left chevron"
+                content="Previous"
+                onClick={handleBack}
+              />
+              <span>Confirm Your Availablity</span>
+              
+            </ModalHeader>
+            <ModalContent>
+              <h3>Appointment Details</h3>
+              <div class="appointment-details">
+                
+                <p>
+                  
+                  <strong>Date:</strong> {dayjs(selectedDate).format('dddd, D MMMM YYYY')}
+                </p>
+                <p>
+                  
+                  <strong>Time:</strong> {dayjs(timeRange.start).format("HH:mm")} - {dayjs(timeRange.end).format("HH:mm")}
+                </p>
+              </div>
+              <p><em>Note: Confirming will send an SMS to the client with these details.</em></p>
+            </ModalContent>
+            <ModalActions className="centered-actions">
+              <Button onClick={handleDateConfirmation} primary>
+                Confirm
               </Button>
             </ModalActions>
           </>

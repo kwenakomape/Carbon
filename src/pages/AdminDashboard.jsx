@@ -94,9 +94,8 @@ export const AdminDashboard = () => {
               <TableBody>
                 {data.map((appointment, index) => (
                   <TableRow key={index}>
-                    <TableCell collapsing>
-                      {formatDate(appointment.Date)}
-                    </TableCell>
+                    
+                    <TableCell collapsing> {appointment.Date ? formatDate(appointment.Date) : "______________"} </TableCell>
                     <TableCell>{appointment.Member_Name}</TableCell>
                     <TableCell collapsing>
                       cash

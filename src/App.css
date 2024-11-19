@@ -161,6 +161,7 @@ input:focus {
 }
 
 #calender-modal-centered-header,
+#adminConfirmDate-modal-centered-header,
 #time-modal-centered-header,
 #bookfromwebsite-modal,
 #chooseDietitian-modal-centered-header,
@@ -169,6 +170,7 @@ input:focus {
 }
 
 #calender-modal-centered-header span,
+#adminConfirmDate-modal-centered-header span,
 #bookfromwebsite-modal span,
 #time-modal-centered-header span,
 #chooseDietitian-modal-centered-header span,
