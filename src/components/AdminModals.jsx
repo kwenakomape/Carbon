@@ -16,6 +16,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 export const AdminModals = (props) => {
   const id = props.memberId;
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState(null);
@@ -23,7 +24,8 @@ export const AdminModals = (props) => {
   const [isSeen, setiIsSeen] = useState(false);
   const [isMissed, setiIsMissed] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
-  const [isConfirm, setIsConfirm] = useState(false);
+
+  const [isModify, setIsModify] = useState(false);
 
 
   const [selectedDate, setSelectedDate] = useState(null);
@@ -56,20 +58,41 @@ export const AdminModals = (props) => {
       console.error("Error Making Payment:", error);
     }
   }
+  const handleAppointmentStatus = async (status) => {
+    let data = {
+      memberId : id,
+      newStatus:status,
+      AppointmentId:props.AppointmentId,
+   }
+    try {
+      await axios.post(`http://localhost:3001/api/update-appointment-status`,data);
+      handleClose();
+      
+    } catch (error) {
+      console.error("Error Updating Appoinment status", error);
+    }
+  }
   
   const handleDateConfirmation = async () => {
 
     let data = {
+       memberId : id,
+       memberName:props.memberName,
+       AppointmentId:props.AppointmentId,
        selectedDate : selectedDate,
-       timeRange: timeRange
+       timeRange: timeRange,
+       phoneNumber: props.phoneNumber,
     }
  
     try {
-      await axios.post(`http://localhost:3001/api/confirm-date/${id}`,data);
+      await axios.post("http://localhost:3001/api/confirm-date", data);
       handleClose();
+
+      await axios.post("http://localhost:3001/api/send-appointment-details", data);
+      // await axios.post("http://localhost:3001/api/send-email", data);
       
     } catch (error) {
-      console.error("Error Making Payment:", error);
+      console.error("Error Cofirming sms:", error);
     }
   }
 
@@ -78,23 +101,23 @@ export const AdminModals = (props) => {
       setiIsMissed(true);
       setiIsSeen(false)
       setIsCancel(false)
-      setIsConfirm(false)
+      setIsModify(false)
       
     } else if (status === "CANCELED") {
       setiIsMissed(false);
       setiIsSeen(false)
       setIsCancel(true)
-      setIsConfirm(false)
+      setIsModify(false)
       
     }else if (status === "SEEN"){
       setiIsMissed(false);
       setiIsSeen(true)
       setIsCancel(false)
-      setIsConfirm(false)
-    }else if (status === "CONFIRM"){
+      setIsModify(false)
+    }else if (status === "MODIFY"){
       setiIsMissed(false);
       setiIsSeen(false)
-      setIsConfirm(true)
+      setIsModify(true)
       setIsCancel(false)
     }
     setSelectedStatus(status);
@@ -155,10 +178,10 @@ export const AdminModals = (props) => {
                   MISSED
                 </Button>
                 <Button
-                  onClick={() => handleSelectedStatus("CONFIRM")}
-                  className={selectedStatus === "CONFIRM" ? "selected" : ""}
+                  onClick={() => handleSelectedStatus("MODIFY")}
+                  className={selectedStatus === "MODIFY" ? "selected" : ""}
                 >
-                  CONFIRM
+                  MODIFY
                 </Button>
                 <Button
                   onClick={() => handleSelectedStatus("CANCELED")}
@@ -224,13 +247,13 @@ export const AdminModals = (props) => {
             </ModalContent>
             <ModalActions>
               <Button onClick={handleBack}>No</Button>
-              <Button onClick={handleClose} primary>
+              <Button onClick={()=>handleAppointmentStatus("Missed")} primary>
                 Yes
               </Button>
             </ModalActions>
           </>
         )}
-        {step === 2 && isConfirm && (
+        {step === 2 && isModify && (
           <>
             <ModalHeader className="status-modal-centered-header">
               Choose a Date and Time
@@ -294,13 +317,13 @@ export const AdminModals = (props) => {
             </ModalContent>
             <ModalActions>
               <Button onClick={handleBack}>No</Button>
-              <Button onClick={handleClose} primary>
+              <Button onClick={()=>handleAppointmentStatus("Canceled")} primary>
                 Yes
               </Button>
             </ModalActions>
           </>
         )}
-        {step === 3 && isConfirm && (
+        {step === 3 && isModify && (
           <>
             <ModalHeader id="adminConfirmDate-modal-centered-header">
             <Button

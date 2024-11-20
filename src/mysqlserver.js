@@ -27,9 +27,9 @@ db.connect((err) => {
 });
 
 const infobipClient = new Infobip({
-  baseUrl: "rp351y.api.infobip.com",
+  baseUrl: "xk94el.api.infobip.com",
   apiKey:
-    "4ef7b1a013e03cddf64daa67f82c15e5-f8dc5622-83e5-4578-bf50-26e64ebc1366",
+    "abc09110b918bb66712f677c79f107c4-a44701bc-b6f9-40f8-8dc2-db651143b080",
   authType: AuthType.ApiKey,
 });
 
@@ -40,11 +40,17 @@ function generateOtp() {
   return crypto.randomInt(1000, 9999).toString();
 }
 
-// Send OTP to user's phone number
+async function sendAppointmentMessage(phoneNumber, message) {
+
+  return await sendSms(phoneNumber, message);
+}
 async function sendOtp(phoneNumber) {
   const otp = generateOtp();
   otpStore.set(phoneNumber, otp);
-
+  const message = `Your OTP code is ${otp}`;
+  return await sendSms(phoneNumber, message);
+}
+async function sendSms(phoneNumber, message) {
   try {
     const response = await infobipClient.channels.sms.send({
       type: "text",
@@ -52,14 +58,14 @@ async function sendOtp(phoneNumber) {
         {
           destinations: [{ to: phoneNumber }],
           from: "YourSenderID",
-          text: `Your OTP code is ${otp}`,
+          text: message,
         },
       ],
     });
-    console.log("OTP sent:", response.data);
+    console.log("SMS sent:", response.data);
     return true;
   } catch (error) {
-    console.error("Error sending OTP:", error);
+    console.error("Error sending SMS:", error);
     return false;
   }
 }
@@ -126,6 +132,7 @@ app.post("/check-username", (req, res) => {
     });
   }
 });
+
 
 app.post("/send-otp", async (req, res) => {
   const { Cell } = req.body;
@@ -216,6 +223,7 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
               a.Appointment_Id,
               a.Member_Id,
               m.Name AS Member_Name,
+              m.Cell,
               a.Date,
               a.Status,
               ad.Name AS Specialist_Name
@@ -235,8 +243,8 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     res.send(results);
   });
 });
-// (`http://localhost:3001/api/paywith-credits/${id}`);
-app.get("/api/paywith-credits/:id", (req, res) => {
+
+app.get("/api/paywith-credits", (req, res) => {
   const memberId = req.params.id;
   console.log(memberId, " thos api passed");
   const query = `UPDATE Members
@@ -250,19 +258,50 @@ app.get("/api/paywith-credits/:id", (req, res) => {
     res.send(`Points updated successfully for memberId`);
   });
 });
+app.post("/api/send-appointment-details", async (req, res) => {
 
-app.get("/api/confirm-date/:id", (req, res) => {
-  const memberId = req.params.id;
-  const { selectedDate,timeRange } = req.body;
+  const { phoneNumber,selectedDate,timeRange,memberName } = req.body;
+  const confirmedDate = dayjs(selectedDate).format('MMMM D, YYYY');
+  // const phoneNumber = Cell; // Assuming username is the phone number
+  const message =`Dear ${memberName}, your appointment with the BIOKINETICIST is confirmed:
+Date: ${confirmedDate}
+Time: ${dayjs(timeRange.start).format("HH:mm")} - ${dayjs(timeRange.end).format("HH:mm")}
+Please arrive early for paperwork. Thanks!
+`
+
+  const success = await sendAppointmentMessage(phoneNumber,message);
+  if (success) {
+    res.status(200).send("appointment message sent successfully");
+  } else {
+    res.status(500).send("Failed to send appointment message");
+  }
+});
+app.post("/api/confirm-date", (req, res) => {
+
+  const { memberId,selectedDate,AppointmentId,timeRange } = req.body;
   
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-  const query = `UPDATE Appointments SET Date = ? WHERE Id_No = ?`;
-
-  db.query(query, [confirmedDate, memberId], (err, results) => {
+  const query = `UPDATE Appointments SET Date = ?, Status = 'Confirmed' WHERE Member_Id = ? AND Appointment_Id = ?`
+  
+  
+  db.query(query, [confirmedDate, memberId,AppointmentId], (err, results) => {
     if (err) {
       return res.status(500).send("Error updating points");
     }
     res.send(`Date Updated by the Specialist`);
+  });
+});
+app.post("/api/update-appointment-status", (req, res) => {
+
+  const { newStatus,memberId,AppointmentId} = req.body;
+
+  const query = `UPDATE Appointments SET Status = ? WHERE Member_Id = ? AND Appointment_Id = ?`;
+  
+  db.query(query, [newStatus, memberId, AppointmentId], (err, results) => {
+    if (err) {
+      return res.status(500).send("Error updating Status");
+    }
+    res.send(`Status Updated Successfully`);
   });
 });
 app.post("/api/bookings", (req, res) => {

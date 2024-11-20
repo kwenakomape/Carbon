@@ -21,25 +21,25 @@ CREATE TABLE Admin (
     Specialization ENUM('Biokineticist', 'Dietitian', 'Physiotherapist', 'IT Software Development'),
     FOREIGN KEY (Role_Id) REFERENCES Roles(Role_Id)
 );
-CREATE TABLE Appointments (
-    Appointment_Id INT PRIMARY KEY AUTO_INCREMENT,
-    Member_Id INT,
-    Specialist_Id INT,
-    Date DATE DEFAULT NULL,
-    Status ENUM('Attended', 'Missed', 'Pending') NOT NULL,
-    Payment_Id INT,
-    FOREIGN KEY (Member_Id) REFERENCES Members(Id_No),
-    FOREIGN KEY (Specialist_Id) REFERENCES Admin(Admin_Id),
-    FOREIGN KEY (Payment_Id) REFERENCES Payments(Payment_Id)
-);
 CREATE TABLE Payments (
     Payment_Id INT PRIMARY KEY AUTO_INCREMENT,
     Appointment_Id INT,
     Amount DECIMAL(10, 2) NOT NULL,
     Payment_Method ENUM('CASH', 'CARD', 'Credits') NOT NULL,
-    Payment_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Appointment_Id) REFERENCES Appointments(Appointment_Id)
+    Payment_Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE Appointments (
+    Appointment_Id INT PRIMARY KEY AUTO_INCREMENT,
+    Member_Id INT,
+    Specialist_Id INT,
+    Date DATE DEFAULT NULL,
+    Status ENUM('Missed', 'Pending','Confirmed','Seen','Canceled') NOT NULL,
+    Payment_Id INT,
+    FOREIGN KEY (Member_Id) REFERENCES Members(Id_No),
+    FOREIGN KEY (Specialist_Id) REFERENCES Admin(Admin_Id),
+    FOREIGN KEY (Payment_Id) REFERENCES Payments(Payment_Id)
+);
+
 
 
 -- Insert roles
@@ -51,6 +51,7 @@ INSERT INTO Members (Id_No, Email, Name, Cell, Points) VALUES
 (920845, 'jane.doe@example.com', 'Jane', '27814511463', 100),
 (920938, 'augustnhila@ssisa.com', 'August', '27729723179', 100);
 
+
 -- Insert data into Admin table
 INSERT INTO Admin (Name, Email, Password, Role_Id, Specialization) VALUES
 ('Marvin Jacobs', 'marvinjacobs@gmail.com', 'SSISA!', 1, 'Biokineticist'),
@@ -61,14 +62,16 @@ INSERT INTO Admin (Name, Email, Password, Role_Id, Specialization) VALUES
 
 -- Insert data into Appointments table
 INSERT INTO Appointments (Member_Id, Specialist_Id, Status) VALUES
-(920811, 1, 'Pending'),
-(920811, 2, 'Pending'),
-(920845, 1,'Pending');
+(920811, 1,'Pending'),
+(920811, 2,'Pending'),
+(920845, 1,'Pending'),
+(920811, 3,'Pending'),
+(920811, 1,'Pending');
+
 
 INSERT INTO Payments (Appointment_Id, Amount, Payment_Method) VALUES
 (1, 200.00, 'CARD'),
 (2, 150.00, 'CASH');
-
 SELECT * FROM Members;
 SELECT * FROM Appointments;
 SELECT * FROM Roles;
@@ -101,6 +104,7 @@ SELECT
     a.Appointment_Id,
     a.Member_Id,
     m.Name AS Member_Name,
+    m.Cell,
     a.Date,
     a.Status,
     ad.Name AS Specialist_Name

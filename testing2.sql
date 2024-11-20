@@ -2,8 +2,6 @@ CREATE TABLE Members (
     Id_No INT PRIMARY KEY,
     Email VARCHAR(255) NOT NULL,
     Name VARCHAR(255) NOT NULL,
-    Surname VARCHAR(255) NOT NULL,
-    Phone_Number VARCHAR(15),
     Joined_Date DATE,
     Points INT DEFAULT 0
 );
@@ -59,14 +57,14 @@ INSERT INTO Admin (Name, Email, Password, Role_Id, Specialization) VALUES
 ('IT Manager', 'itmanager@example.com', 'SSISA!', 2, 'IT Software Development');
 
 -- Insert data into Appointments table
-INSERT INTO Appointments (Member_Id, Specialist_Id, Date, Status) VALUES
-(920811, 1, '2024-12-24', 'Attended'),
-(920811, 2, '2024-11-14', 'Missed'),
-(920845, 1, '2024-11-16', 'Pending'),
-(920811, 3, '2024-12-01', 'Pending'),
-(920811, 1, '2024-12-01', 'Pending');
-
-
+INSERT INTO Appointments (Member_Id, Specialist_Id, Status) VALUES
+(920811, 1, 'Attended'),
+(920811, 2,'Missed'),
+(920845, 1,'Pending'),
+(920811, 3,'Pending'),
+(920811, 1,'Pending');
+UPDATE Appointments SET Date = null WHERE Member_Id = 920811;
+UPDATE Appointments SET Date = null WHERE Member_Id = 920845;
 SELECT * FROM Members;
 SELECT * FROM Appointments;
 SELECT * FROM Roles;

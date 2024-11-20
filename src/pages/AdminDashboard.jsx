@@ -94,18 +94,24 @@ export const AdminDashboard = () => {
               <TableBody>
                 {data.map((appointment, index) => (
                   <TableRow key={index}>
-                    
-                    <TableCell collapsing> {appointment.Date ? formatDate(appointment.Date) : "______________"} </TableCell>
-                    <TableCell>{appointment.Member_Name}</TableCell>
                     <TableCell collapsing>
-                      cash
+                      {" "}
+                      {appointment.Date
+                        ? formatDate(appointment.Date)
+                        : "______________"}{" "}
                     </TableCell>
+                    <TableCell>{appointment.Member_Name}</TableCell>
+                    <TableCell collapsing>cash</TableCell>
                     <TableCell collapsing>
                       <div className="status-container">
                         <span>{appointment.Status}</span>
                         <span>
-                          
-                          <AdminModals memberId={data[index].Member_Id} />
+                          <AdminModals
+                            memberId={data[index].Member_Id}
+                            memberName={data[index].Member_Name}
+                            AppointmentId={data[index].Appointment_Id}
+                            phoneNumber={data[index].Cell}
+                          />
                         </span>
                       </div>
                     </TableCell>
