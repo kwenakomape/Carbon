@@ -27,16 +27,28 @@ export const AdminModals = (props) => {
 
   const [isModify, setIsModify] = useState(false);
 
-
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
-  const [datesSelected, setDatesSelected] = useState(false);
+  const [dateSelected, setDateSelected] = useState(false);
+
   const shouldDisableDate = (date) => {
     const today = dayjs().startOf("day");
     const day = dayjs(date).day();
     const isWeekend = day === 0 || day === 6;
+    // const isSelected = selectedDate && dayjs(selectedDate).isSame(date, "day");
     const isBeforeToday = dayjs(date).isBefore(today);
     return isWeekend || isBeforeToday;
+  };
+  
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    if (!timeRange.start) {
+      setTimeRange({ start: null, end: null });
+    }
+  };
+  const handleTimeChange = (time, type) => {
+    setTimeRange((prevTimeRange) => ({ ...prevTimeRange, [type]: time }));
   };
   const handleClose = () => {
     setOpen(false);
@@ -131,17 +143,12 @@ export const AdminModals = (props) => {
   const handleBack = () => {
     setStep(step - 1);
   };
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    setTimeRange({ start: null, end: null });
-  };
-  const handleTimeChange = (time, type) => {
-    setTimeRange((prevTimeRange) => ({ ...prevTimeRange, [type]: time }));
-  };
+
   useEffect(() => {
-    const allDatesSelected = selectedDate !== null;
-    const allTimesSelected = timeRange.start !== null && timeRange.end !== null;
-    setDatesSelected(allDatesSelected && allTimesSelected);
+    const isDateSelected = selectedDate !== null;
+    const isTimeRangeSelected =
+      timeRange.start !== null && timeRange.end !== null;
+    setDateSelected(isDateSelected && isTimeRangeSelected);
   }, [selectedDate, timeRange]);
   return (
     <>
@@ -229,8 +236,10 @@ export const AdminModals = (props) => {
                 </Button>
               </div>
             </ModalContent>
-            <ModalActions className="centered-actions">
-              <Button content="PAY" primary onClick={handlePayment} />
+            <ModalActions >
+              <Button content="Next" primary 
+              disabled={!selectedPaymentMethod}
+              onClick={handleNext} />
             </ModalActions>
           </>
         )}
@@ -247,7 +256,7 @@ export const AdminModals = (props) => {
             </ModalContent>
             <ModalActions>
               <Button onClick={handleBack}>No</Button>
-              <Button onClick={()=>handleAppointmentStatus("Missed")} primary>
+              <Button onClick={() => handleAppointmentStatus("Missed")} primary>
                 Yes
               </Button>
             </ModalActions>
@@ -260,44 +269,43 @@ export const AdminModals = (props) => {
             </ModalHeader>
             <ModalContent>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <Box sx={{ my: 5 }}>
+                {" "}
+                <Box sx={{ my: 4 }}>
+                  {" "}
                   <DatePicker
                     label="Select Date"
                     value={selectedDate || null}
                     onChange={handleDateChange}
-                    shouldDisableDate={shouldDisableDate}
+                    shouldDisableDate={(date) => shouldDisableDate(date)}
                     renderInput={(params) => (
                       <TextField {...params} fullWidth />
                     )}
-                  />
-                  &nbsp;
-                  <>
-                    {" "}
-                    <TimePicker
-                      label="From"
-                      value={timeRange.start || null}
-                      onChange={(time) => handleTimeChange(time, "start")}
-                      renderInput={(params) => (
-                        <TextField {...params} fullWidth />
-                      )}
-                      ampm={false}
-                    />{" "}
-                    &nbsp;
-                    <TimePicker
-                      label="To"
-                      value={timeRange.end || null}
-                      onChange={(time) => handleTimeChange(time, "end")}
-                      renderInput={(params) => (
-                        <TextField {...params} fullWidth />
-                      )}
-                      ampm={false}
-                    />
-                  </>
-                </Box>
+                  />{" "}
+                  &nbsp;{" "}
+                  <TimePicker
+                    label="From"
+                    value={timeRange.start || null}
+                    onChange={(time) => handleTimeChange(time, "start")}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                    ampm={false}
+                  />{" "}
+                  &nbsp;{" "}
+                  <TimePicker
+                    label="To"
+                    value={timeRange.end || null}
+                    onChange={(time) => handleTimeChange(time, "end")}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                    ampm={false}
+                  />{" "}
+                </Box>{" "}
               </LocalizationProvider>
             </ModalContent>
             <ModalActions>
-              <Button onClick={handleNext} primary disabled={!datesSelected}>
+              <Button onClick={handleNext} primary disabled={!dateSelected}>
                 Continue
                 <Icon name="right chevron" />
               </Button>
@@ -317,7 +325,52 @@ export const AdminModals = (props) => {
             </ModalContent>
             <ModalActions>
               <Button onClick={handleBack}>No</Button>
-              <Button onClick={()=>handleAppointmentStatus("Canceled")} primary>
+              <Button
+                onClick={() => handleAppointmentStatus("Canceled")}
+                primary
+              >
+                Yes
+              </Button>
+            </ModalActions>
+          </>
+        )}
+        {step === 3 && isSeen && selectedPaymentMethod === "CASH/CARD" && (
+          <>
+            <ModalHeader className="status-modal-centered-header">
+              Confirm Message
+            </ModalHeader>
+            <ModalContent>
+              <p >
+              Please confirm: Has the member paid for the appointment using <strong>cash</strong> or <strong>card</strong> ?
+              </p>
+            </ModalContent>
+            <ModalActions>
+              <Button onClick={handleBack}>No</Button>
+              <Button
+                onClick={() => handleAppointmentStatus("Canceled")}
+                primary
+              >
+                Yes
+              </Button>
+            </ModalActions>
+          </>
+        )}
+        {step === 3 && isSeen && selectedPaymentMethod === "SSISA CREDITS" && (
+          <>
+            <ModalHeader className="status-modal-centered-header">
+              Upload Invoice
+            </ModalHeader>
+            <ModalContent>
+              <p >
+              Please upload the invoice for the appointment using <strong> SSISA Credits</strong>.
+              </p>
+            </ModalContent>
+            <ModalActions>
+              <Button onClick={handleBack}>No</Button>
+              <Button
+                onClick={() => handleAppointmentStatus("Canceled")}
+                primary
+              >
                 Yes
               </Button>
             </ModalActions>
@@ -326,28 +379,32 @@ export const AdminModals = (props) => {
         {step === 3 && isModify && (
           <>
             <ModalHeader id="adminConfirmDate-modal-centered-header">
-            <Button
+              <Button
                 icon="left chevron"
                 content="Previous"
                 onClick={handleBack}
               />
               <span>Confirm Your Availablity</span>
-              
             </ModalHeader>
             <ModalContent>
               <h3>Appointment Details</h3>
               <div class="appointment-details">
-                
                 <p>
-                  
-                  <strong>Date:</strong> {dayjs(selectedDate).format('dddd, D MMMM YYYY')}
+                  <strong>Date:</strong>{" "}
+                  {dayjs(selectedDate).format("dddd, D MMMM YYYY")}
                 </p>
                 <p>
-                  
-                  <strong>Time:</strong> {dayjs(timeRange.start).format("HH:mm")} - {dayjs(timeRange.end).format("HH:mm")}
+                  <strong>Time:</strong>{" "}
+                  {dayjs(timeRange.start).format("HH:mm")} -{" "}
+                  {dayjs(timeRange.end).format("HH:mm")}
                 </p>
               </div>
-              <p><em>Note: Confirming will send an SMS to the client with these details.</em></p>
+              <p>
+                <em>
+                  Note: Confirming will send an SMS to the client with these
+                  details.
+                </em>
+              </p>
             </ModalContent>
             <ModalActions className="centered-actions">
               <Button onClick={handleDateConfirmation} primary>

@@ -326,18 +326,20 @@ app.post("/api/send-email", (req, res) => {
     selectedDates,
     timeRanges,
   } = req.body;
+  
   if (!specialistName) {
     specialistName = "Marvin";
   }
-  const appointmentDetailsHTML = Object.entries(timeRanges)
-    .map(
-      ([date, times], index) =>
-        ` <p key={date} class="appointment-date">Day ${index + 1}: ${dayjs(
-          date
-        ).format("YYYY-MM-DD")} | Time: From ${dayjs(times.start).format(
-          "HH:mm"
-        )} to ${dayjs(times.end).format("HH:mm")}</p> `
-    )
+  
+  const appointmentDetailsHTML = selectedDates
+    .map((date, index) => {
+      const times = timeRanges[index];
+      return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format(
+        "YYYY-MM-DD"
+      )} | Time: From ${dayjs(times.start).format("HH:mm")} to ${dayjs(times.end).format(
+        "HH:mm"
+      )}</p>`;
+    })
     .join("");
 
   try {

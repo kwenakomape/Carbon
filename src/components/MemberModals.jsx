@@ -24,33 +24,37 @@ export const MemberModals = (props) => {
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [isDietitian, setIsDietitian] = useState(false);
 
+  // const [selectedDates, setSelectedDates] = useState([null, null, null]);
+  // const [timeRanges, setTimeRanges] = useState({});
   const [selectedDates, setSelectedDates] = useState([null, null, null]);
-  const [timeRanges, setTimeRanges] = useState({});
-  const [datesSelected, setDatesSelected] = useState(false); //state is used to determine if all dates have been selected.
+  const [timeRanges, setTimeRanges] = useState([
+    { start: null, end: null },
+    { start: null, end: null },
+    { start: null, end: null }
+  ]);
+  const [datesSelected, setDatesSelected] = useState(false);
+  
+
 
   const handleDateChange = (date, index) => {
     const newDates = [...selectedDates];
     newDates[index] = date;
     setSelectedDates(newDates);
-
-    // Initialize timeRanges for the selected date
-    setTimeRanges((prevTimeRanges) => ({
-      ...prevTimeRanges,
-      [date]: { start: null, end: null },
-    }));
-
+    const newTimeRanges = [...timeRanges];
+    if (!newTimeRanges[index]) {
+      newTimeRanges[index] = { start: null, end: null };
+    }
+    setTimeRanges(newTimeRanges);
   };
-
-  const handleTimeChange = (date, time, type) => {
-    setTimeRanges((prevTimeRanges) => {
-      const newTimeRanges = { ...prevTimeRanges };
-      if (!newTimeRanges[date]) {
-        newTimeRanges[date] = {};
-      }
-      newTimeRanges[date][type] = time;
-      return newTimeRanges;
-    });
+  const handleTimeChange = (index, time, type) => {
+    const newTimeRanges = [...timeRanges];
+    if (!newTimeRanges[index]) {
+      newTimeRanges[index] = { start: null, end: null };
+    }
+    newTimeRanges[index][type] = time;
+    setTimeRanges(newTimeRanges);
   };
+  
   const shouldDisableDate = (date, currentIndex) => {
     const today = dayjs().startOf("day");
     const day = dayjs(date).day();
@@ -72,7 +76,7 @@ export const MemberModals = (props) => {
     setSpecialistName(null)
     setIsDietitian(false);
     setSelectedDates([null, null, null]);
-    setTimeRanges({});
+    setTimeRanges([{}, {}, {}]);
   };
   const handleSpecialistSelect = (specialist) => {
     setSelectedSpecialist(specialist);
@@ -103,13 +107,7 @@ export const MemberModals = (props) => {
       
       setStep(step + 1);
     }
-    // const printTimeRanges = (timeRanges) => {
-    //   for (const [date, times] of Object.entries(timeRanges)) {
-        
-    //     console.log(`Date: ${dayjs(date).format("YYYY-MM-DD")}, Start: ${dayjs(times.start).format("HH:mm")}, End: ${dayjs(times.end).format("HH:mm")}`);
-    //   }
-    // };
-    // printTimeRanges(timeRanges)
+
   };
 
   const handleBack = () => {
@@ -149,17 +147,16 @@ export const MemberModals = (props) => {
       console.error("Error booking appointment:", error);
     }
   };
-  useEffect(() => {
-    const allDatesSelected = selectedDates.every((date) => date !== null);
-    const allTimesSelected = selectedDates.every(
-      (date) =>
-        date &&
-        timeRanges[date]?.start !== null &&
-        timeRanges[date]?.end !== null
-    );
 
+  useEffect(() => {
+    const allDatesSelected = selectedDates.every(date => date !== null);
+    const allTimesSelected = timeRanges.every(
+      range => range.start !== null && range.end !== null
+    );
+  
     setDatesSelected(allDatesSelected && allTimesSelected);
   }, [selectedDates, timeRanges]);
+  
   return (
     <>
       <Button positive onClick={() => setOpen(true)}>
@@ -227,9 +224,10 @@ export const MemberModals = (props) => {
             </ModalHeader>
             <ModalContent>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
+                {" "}
                 {Array.from({ length: 3 }).map((_, index) => (
                   <Box key={index} sx={{ my: 4 }}>
-                    
+                    {" "}
                     <DatePicker
                       label={`Select Date ${index + 1}`}
                       value={selectedDates[index] || null}
@@ -240,43 +238,31 @@ export const MemberModals = (props) => {
                       renderInput={(params) => (
                         <TextField {...params} fullWidth />
                       )}
-                    />
-                    &nbsp;
-                    {selectedDates[index] && (
-                      <>
-                        <TimePicker
-                          label="From"
-                          value={
-                            timeRanges[selectedDates[index]]?.start || null
-                          }
-                          onChange={(time) =>
-                            handleTimeChange(
-                              selectedDates[index],
-                              time,
-                              "start"
-                            )
-                          }
-                          renderInput={(params) => (
-                            <TextField {...params} fullWidth />
-                          )}
-                          ampm={false}
-                        />
-                        &nbsp;
-                        <TimePicker
-                          label="To"
-                          value={timeRanges[selectedDates[index]]?.end || null}
-                          onChange={(time) =>
-                            handleTimeChange(selectedDates[index], time, "end")
-                          }
-                          renderInput={(params) => (
-                            <TextField {...params} fullWidth />
-                          )}
-                          ampm={false}
-                        />
-                      </>
-                    )}
+                    />{" "}
+                    &nbsp;{" "}
+                    <TimePicker
+                      label="From"
+                      value={timeRanges[index]?.start || null}
+                      onChange={(time) =>
+                        handleTimeChange(index, time, "start")
+                      }
+                      renderInput={(params) => (
+                        <TextField {...params} fullWidth />
+                      )}
+                      ampm={false}
+                    />{" "}
+                    &nbsp;{" "}
+                    <TimePicker
+                      label="To"
+                      value={timeRanges[index]?.end || null}
+                      onChange={(time) => handleTimeChange(index, time, "end")}
+                      renderInput={(params) => (
+                        <TextField {...params} fullWidth />
+                      )}
+                      ampm={false}
+                    />{" "}
                   </Box>
-                ))}
+                ))}{" "}
               </LocalizationProvider>
             </ModalContent>
             <ModalActions>
@@ -377,31 +363,36 @@ export const MemberModals = (props) => {
                 {!isDietitian ? (
                   <>
                     {selectedDates.map((date, index) => (
-                      <>
-                        <div>
+                      <div key={index}>
+                        <span>
+                          <strong>Day {index + 1}:</strong>
+                        </span>
+                        <span>
+                          {date ? dayjs(date).format("YYYY-MM-DD") : "N/A"}
+                        </span>
+                        <span>
                           <span>
-                            <strong>Day {index + 1}:</strong>
+                            <strong>From:</strong>
                           </span>
-                          <span>{dayjs(date).format("YYYY-MM-DD")}</span>
+                          &nbsp;
                           <span>
-                            <span>
-                              <strong>From:</strong>
-                            </span>&nbsp;
-                            <span>
-                              {timeRanges[date]?.start
-                                ? dayjs(timeRanges[date].start).format("HH:mm")
-                                : "N/A"}
-                            </span>
+                            {timeRanges[index]?.start
+                              ? dayjs(timeRanges[index].start).format("HH:mm")
+                              : "N/A"}
                           </span>
+                        </span>
+                        <span>
                           <span>
-                            <span><strong>To:</strong></span>&nbsp;
-                            <span> {timeRanges[date]?.end
-                              ? dayjs(timeRanges[date].end).format("HH:mm")
-                              : "N/A"}</span>
-                           
+                            <strong>To:</strong>
                           </span>
-                        </div>
-                      </>
+                          &nbsp;
+                          <span>
+                            {timeRanges[index]?.end
+                              ? dayjs(timeRanges[index].end).format("HH:mm")
+                              : "N/A"}
+                          </span>
+                        </span>
+                      </div>
                     ))}
                   </>
                 ) : (
