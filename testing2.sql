@@ -38,7 +38,28 @@ CREATE TABLE Appointments (
     FOREIGN KEY (Member_Id) REFERENCES Members(Id_No),
     FOREIGN KEY (Specialist_Id) REFERENCES Admin(Admin_Id)
 );
-
+CREATE TABLE Invoices (
+    Invoice_Id INT PRIMARY KEY AUTO_INCREMENT,
+    Invoice_Number VARCHAR(50) NOT NULL,
+    Date DATE NOT NULL,
+    Member_Id INT,
+    Payment_Method ENUM('CARD', 'CASH', 'SSISA CREDITS') NOT NULL,
+    Total_Amount DECIMAL(10, 2),
+    Total_Credits_Used INT,
+    Remaining_Credits INT,
+    FOREIGN KEY (Member_Id) REFERENCES Members(Id_No)
+);
+CREATE TABLE Sessions (
+    Session_Id INT PRIMARY KEY AUTO_INCREMENT,
+    Invoice_Id INT,
+    Description VARCHAR(255) NOT NULL,
+    Date DATE NOT NULL,
+    Duration VARCHAR(50) NOT NULL,
+    Biokineticist VARCHAR(255) NOT NULL,
+    Amount DECIMAL(10, 2),
+    Credits_Used INT,
+    FOREIGN KEY (Invoice_Id) REFERENCES Invoices(Invoice_Id)
+)
 -- Insert roles
 INSERT INTO Roles (Role_Name) VALUES ('Specialist'), ('IT Manager');
 

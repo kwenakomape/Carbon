@@ -4,9 +4,13 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import dayjs from "dayjs";
-// import { da } from "date-fns/locale";
+import {sendEmail} from './utils/emailSender.js';
+import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
+import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
+
+
+
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
@@ -83,8 +87,8 @@ function verifyOtp(phoneNumber, otp) {
 app.post("/check-username", (req, res) => {
   const { username } = req.body;
 
-  const checkEmailQuery = "SELECT * FROM Admin WHERE Email = ?";
-  const checkIDQuery = "SELECT * FROM Members WHERE Id_No = ?";
+  const checkEmailQuery = "SELECT * FROM Admin WHERE email = ?";
+  const checkIDQuery = "SELECT * FROM Members WHERE member_id = ?";
 
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
     db.query(checkEmailQuery, [username], (err, results) => {
@@ -103,11 +107,11 @@ app.post("/check-username", (req, res) => {
         return res.status(500).send("Database error");
       }
       if (results.length > 0) {
-        const { Cell } = results[0];
+        const { cell } = results[0];
         res.send({
           exists: true,
           type: "id",
-          Cell: Cell,
+          Cell: cell,
           erroMessage: "Username does not exist",
         });
       } else {
@@ -162,14 +166,14 @@ app.listen(3001, () => {
 
 app.post("/verify-password", (req, res) => {
   const { username, password } = req.body;
-  const query = "SELECT * FROM Admin WHERE Email = ?";
+  const query = "SELECT * FROM Admin WHERE email = ?";
   db.query(query, [username], (err, results) => {
     if (err) {
       return res.status(500).send("Database error");
     }
     if (results.length > 0) {
-      const storedPassword = results[0].Password;
-      let AdminID = results[0].Admin_Id;
+      const storedPassword = results[0].password;
+      let AdminID = results[0].admin_id;
       if (storedPassword === password) {
         res.send({ valid: true, AdminID: AdminID });
       } else {
@@ -188,26 +192,32 @@ app.post("/verify-password", (req, res) => {
 app.get("/member/:id", (req, res) => {
   const memberId = req.params.id;
   const query = `
-        SELECT 
-            a.Appointment_Id,
-            a.Date,
-            a.Status,
-            m.Id_No,
-            m.Email,
-            m.Name AS Member_Name,
-            m.Cell,
-            m.Joined_Date,
-            m.Points,
-            s.Name AS Specialist_Name,
-            s.Specialization
-        FROM 
-            Appointments a
-        JOIN 
-            Members m ON a.Member_Id = m.Id_No
-        JOIN 
-            Admin s ON a.Specialist_Id = s.Admin_Id
-        WHERE 
-            m.Id_No = ?`;
+  SELECT 
+    Members.member_id,
+    Members.email,
+    Members.name AS member_name,
+    Members.cell,
+    Members.joined_date,
+    Members.credits,
+    Appointments.appointment_id,
+    Appointments.request_date,
+    Appointments.confirmed_date,
+    Appointments.status,
+    Admin.name AS specialist_name,
+    Admin.specialist_type, -- Corrected to specialist_type
+    Payments.payment_method
+FROM 
+    Members
+LEFT JOIN 
+    Appointments ON Members.member_id = Appointments.member_id
+LEFT JOIN 
+    Admin ON Appointments.specialist_id = Admin.admin_id
+LEFT JOIN 
+    Payments ON Appointments.appointment_id = Payments.appointment_id
+WHERE 
+    Members.member_id = ?
+ORDER BY 
+    Members.member_id, Appointments.appointment_id`;
 
   db.query(query, [memberId], (err, results) => {
     if (err) {
@@ -219,22 +229,56 @@ app.get("/member/:id", (req, res) => {
 app.get("/api/appointments-with-specialist/:id", (req, res) => {
   const adminId = req.params.id;
   const query = `
-          SELECT 
-              a.Appointment_Id,
-              a.Member_Id,
-              m.Name AS Member_Name,
-              m.Cell,
-              a.Date,
-              a.Status,
-              ad.Name AS Specialist_Name
-          FROM 
-              Appointments a
-          JOIN 
-              Members m ON a.Member_Id = m.Id_No
-          JOIN 
-              Admin ad ON a.Specialist_Id = ad.Admin_Id
-          WHERE 
-              a.Specialist_Id = ?`;
+  SELECT 
+    a.appointment_id,
+    a.member_id,
+    m.name AS member_name,
+    m.cell,
+    a.request_date,
+    a.confirmed_date,
+    a.status,
+    a.preferred_date1,
+    a.preferred_time_range1,
+    a.preferred_date2,
+    a.preferred_time_range2,
+    a.preferred_date3,
+    a.preferred_time_range3,
+    ad.admin_id AS specialist_id,
+    ad.name AS specialist_name,
+    i.payment_method,
+    COALESCE(SUM(s.credits_used), 0) AS total_credits_used,
+    COALESCE(SUM(s.amount), 0) AS total_amount
+FROM 
+    Admin ad
+LEFT JOIN 
+    Appointments a ON ad.admin_id = a.specialist_id
+LEFT JOIN 
+    Members m ON a.member_id = m.member_id
+LEFT JOIN 
+    Invoices i ON a.appointment_id = i.appointment_id
+LEFT JOIN 
+    Sessions s ON a.appointment_id = s.appointment_id
+WHERE 
+    ad.admin_id = ?
+GROUP BY 
+    a.appointment_id,
+    a.member_id,
+    m.name,
+    m.cell,
+    a.request_date,
+    a.confirmed_date,
+    a.status,
+    a.preferred_date1,
+    a.preferred_time_range1,
+    a.preferred_date2,
+    a.preferred_time_range2,
+    a.preferred_date3,
+    a.preferred_time_range3,
+    ad.admin_id,
+    ad.name,
+    i.payment_method
+ORDER BY 
+    a.appointment_id`;
 
   db.query(query, [adminId], (err, results) => {
     if (err) {
@@ -243,26 +287,135 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     res.send(results);
   });
 });
+app.post('/api/add-invoice', (req, res) => {
+  const { member_id, appointment_id, total_credits_used, total_amount, payment_method } = req.body;
 
-app.get("/api/paywith-credits", (req, res) => {
+  // Check if an invoice already exists for the given appointment_id
+  db.query('SELECT invoice_id, invoice_number FROM Invoices WHERE appointment_id = ?', [appointment_id], (err, results) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    if (results.length > 0) {
+      // Invoice exists, update it with new details
+      const existing_invoice_id = results[0].invoice_id;
+      const existing_invoice_number = results[0].invoice_number;
+
+      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ? WHERE invoice_id = ?`;
+      db.query(updateQuery, [member_id, total_credits_used, total_amount, payment_method, existing_invoice_id], (err, result) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+        res.send(`Invoice updated successfully with number: ${existing_invoice_number}`);
+      });
+    } else {
+      // No existing invoice, create a new one
+      db.query('SELECT invoice_number FROM Invoices ORDER BY invoice_id DESC LIMIT 1', (err, results) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+
+        let last_invoice_number = results.length ? results[0].invoice_number : null;
+        let new_invoice_number;
+        const current_date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+        if (last_invoice_number) {
+          const last_number = parseInt(last_invoice_number.split('-')[2], 10);
+          new_invoice_number = `INV-${current_date}-${String(last_number + 1).padStart(3, '0')}`;
+        } else {
+          new_invoice_number = `INV-${current_date}-001`;
+        }
+
+        const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method) VALUES (?, ?, ?, ?, ?, ?)`;
+        db.query(insertQuery, [new_invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method], (err, result) => {
+          if (err) {
+            return res.status(500).send(err);
+          }
+
+          res.send(`Invoice added successfully with number: ${new_invoice_number}`);
+        });
+      });
+    }
+  });
+});
+app.get("/api/invoices/details/:id", (req, res) => {
+  const appointmentId = req.params.id;
+  
+  const query = `
+    SELECT 
+    i.invoice_id,
+    i.invoice_number,
+    i.date AS invoice_date,
+    i.total_credits_used,
+    i.total_amount,
+    i.payment_method,
+    m.member_id,
+    m.name AS member_name,
+    m.email AS member_email,
+    m.cell AS member_cell,
+    s.session_id,
+    s.date AS session_date,
+    s.duration AS session_duration,
+    s.credits_used AS session_credits_used,
+    s.amount AS session_amount,
+    sv.service_id,
+    sv.service_name,
+    sv.service_description,
+    sp.admin_id AS specialist_id,
+    sp.name AS specialist_name,
+    sp.email AS specialist_email,
+    sp.specialist_type
+FROM 
+    Invoices i
+JOIN 
+    Members m ON i.member_id = m.member_id
+JOIN 
+    Appointments a ON i.appointment_id = a.appointment_id
+JOIN 
+    Sessions s ON a.appointment_id = s.appointment_id
+JOIN 
+    Services sv ON s.service_id = sv.service_id
+JOIN 
+    Admin sp ON s.specialist_id = sp.admin_id
+WHERE 
+    i.appointment_id = ?;
+  `;
+
+  db.query(query, [appointmentId], (err, results) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      res.status(500).send("Server error");
+      return;
+    }
+    res.send(results);
+  });
+});
+
+app.get("/api/paywith-credits/:id", (req, res) => {
   const memberId = req.params.id;
-  console.log(memberId, " thos api passed");
-  const query = `UPDATE Members
-            SET Points = Points - 1
-       WHERE Id_No = ?`;
+  const updateQuery = `UPDATE Members SET credits = credits - 80 WHERE member_id = ?`;
+  const selectQuery = `SELECT credits FROM Members WHERE member_id = ?`;
 
-  db.query(query, [memberId], (err, results) => {
+  db.query(updateQuery, [memberId], (err, updateResults) => {
     if (err) {
       return res.status(500).send("Error updating points");
     }
-    res.send(`Points updated successfully for memberId`);
+
+    db.query(selectQuery, [memberId], (err, results) => {
+      if (err) {
+        return res.status(500).send("Error retrieving updated points");
+      }
+      
+      
+      res.send(results);
+    });
   });
 });
+
 app.post("/api/send-appointment-details", async (req, res) => {
 
   const { phoneNumber,selectedDate,timeRange,memberName } = req.body;
   const confirmedDate = dayjs(selectedDate).format('MMMM D, YYYY');
-  // const phoneNumber = Cell; // Assuming username is the phone number
   const message =`Dear ${memberName}, your appointment with the BIOKINETICIST is confirmed:
 Date: ${confirmedDate}
 Time: ${dayjs(timeRange.start).format("HH:mm")} - ${dayjs(timeRange.end).format("HH:mm")}
@@ -276,26 +429,33 @@ Please arrive early for paperwork. Thanks!
     res.status(500).send("Failed to send appointment message");
   }
 });
-app.post("/api/confirm-date", (req, res) => {
 
-  const { memberId,selectedDate,AppointmentId,timeRange } = req.body;
-  
+
+app.post("/api/confirm-date", (req, res) => {
+  const { memberId, selectedDate, appointmentId } = req.body;
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-  const query = `UPDATE Appointments SET Date = ?, Status = 'Confirmed' WHERE Member_Id = ? AND Appointment_Id = ?`
-  
-  
-  db.query(query, [confirmedDate, memberId,AppointmentId], (err, results) => {
-    if (err) {
-      return res.status(500).send("Error updating points");
-    }
-    res.send(`Date Updated by the Specialist`);
+
+  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?, status = 'Confirmed' WHERE member_id = ? AND appointment_id = ?`;
+  const updateSessionQuery = `UPDATE Sessions SET date = ? WHERE appointment_id = ?`;
+
+  db.query(updateAppointmentQuery, [confirmedDate, memberId, appointmentId], (err, results) => {
+      if (err) {
+          return res.status(500).send("Error updating appointment");
+      }
+
+      db.query(updateSessionQuery, [confirmedDate, appointmentId], (err, results) => {
+          if (err) {
+              return res.status(500).send("Error updating session date");
+          }
+          res.send("Date updated by the specialist");
+      });
   });
 });
 app.post("/api/update-appointment-status", (req, res) => {
 
   const { newStatus,memberId,AppointmentId} = req.body;
 
-  const query = `UPDATE Appointments SET Status = ? WHERE Member_Id = ? AND Appointment_Id = ?`;
+  const query = `UPDATE Appointments SET status = ? WHERE member_id = ? AND appointment_id = ?`;
   
   db.query(query, [newStatus, memberId, AppointmentId], (err, results) => {
     if (err) {
@@ -304,87 +464,134 @@ app.post("/api/update-appointment-status", (req, res) => {
     res.send(`Status Updated Successfully`);
   });
 });
+
+// just prepopulate this data on the backend , we need an interface for member so select which services they are interested in
+// or specialist choose which servives they offered them ,point is we need an interface to add sessions(services)
+
 app.post("/api/bookings", (req, res) => {
-  const { memberId, specialistId, status } = req.body;
-  const query =
-    "INSERT INTO Appointments (Member_Id, Specialist_Id, Status) VALUES (?, ?, ?)";
-  db.query(query, [memberId, specialistId, status], (err, results) => {
+  const { memberId, specialistId, status, selectedDates, timeRanges} = req.body;
+
+  const formatDateTime = (date, timeRange) => ({
+    date: dayjs(date).format("YYYY-MM-DD"),
+    timeRange: `${dayjs(timeRange.start).format('HH:mm')} to ${dayjs(timeRange.end).format('HH:mm')}`
+  });
+
+  const preferredTimes = selectedDates.map((date, index) => formatDateTime(date, timeRanges[index]));
+  const appointmentQuery = `
+    INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const appointmentValues = [
+    memberId, specialistId, status,
+    preferredTimes[0].date, preferredTimes[0].timeRange,
+    preferredTimes[1].date, preferredTimes[1].timeRange,
+    preferredTimes[2].date, preferredTimes[2].timeRange
+  ];
+
+  db.query(appointmentQuery, appointmentValues, (err, results) => {
     if (err) {
-      console.error("Error inserting appointment:", err);
       res.status(500).send("Error booking appointment");
       return;
     }
-    res.status(200).send("Appointment booked successfully");
+
+    const appointmentId = results.insertId;
+
+    // Fetch all services for the given specialistId
+    const servicesQuery = `
+      SELECT s.service_id, s.price, s.credit_cost
+      FROM Services s
+      JOIN SpecialistServices ss ON s.service_id = ss.service_id
+      WHERE ss.specialist_id = ?
+    `;
+
+    db.query(servicesQuery, [specialistId], (err, services) => {
+      if (err) {
+        res.status(500).send("Error fetching services");
+        return;
+      }
+
+      const sessionQueries = services.map(service => {
+        return db.format(`
+          INSERT INTO Sessions (appointment_id, specialist_id, service_id, duration, credits_used, amount)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `, [appointmentId, specialistId, service.service_id, '1 hour', service.credit_cost, service.price]);
+      });
+      
+      const executeQueries = (queries, callback) => {
+        if (queries.length === 0) {
+          callback(null);
+          return;
+        }
+      
+        const query = queries.shift();
+        db.query(query, (err) => {
+          if (err) {
+            callback(err);
+            return;
+          }
+          executeQueries(queries, callback);
+        });
+      };
+      
+      executeQueries(sessionQueries, (err) => {
+        if (err) {
+          res.status(500).send("Error creating sessions");
+          return;
+        }
+        res.status(200).send("Appointment and sessions booked successfully");
+      });
+    });
   });
 });
-
 app.post("/api/send-email", (req, res) => {
-  let {
+  const {
+    type,
     memberName,
     selectedSpecialist,
-    specialistName,
     selectedDates,
     timeRanges,
+    invoiceDetails,
+    remainingCredits,
+    paymentMethod,
+    pdfEmailAttach,
   } = req.body;
-  
-  if (!specialistName) {
-    specialistName = "Marvin";
+  let mailOptions;
+  switch (type) {
+    case "appointmentConfirmation":
+      mailOptions = {
+        from: "kwenakomape3@gmail.com",
+        to: "kwenakomape2@gmail.com,kwenakomape3@gmail.com",
+        subject: `New Appointment Scheduled: ${memberName}`,
+        html: generateAppointmentConfirmationHTML(
+          memberName,
+          selectedSpecialist,
+          selectedDates,
+          timeRanges
+        ),
+      };
+      break;
+    case "invoiceEmail":
+      mailOptions = {
+        from: "kwenakomape3@gmail.com",
+        to: 'kwenakomape2@gmail.com,kwenakomape3@gmail.com',
+        subject: invoiceDetails[0].invoice_number,
+        html: generateInvoiceEmailHTML(
+          invoiceDetails,
+          paymentMethod,
+          remainingCredits,
+        ),
+        attachments: [
+          {
+            filename: `${invoiceDetails[0].invoice_number}.pdf`,
+            content: pdfEmailAttach.split("base64,")[1],
+            encoding: "base64",
+          },
+        ],
+      };
+      break;
+    default:
+      res.status(400).send("Invalid email type");
+      return;
   }
-  
-  const appointmentDetailsHTML = selectedDates
-    .map((date, index) => {
-      const times = timeRanges[index];
-      return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format(
-        "YYYY-MM-DD"
-      )} | Time: From ${dayjs(times.start).format("HH:mm")} to ${dayjs(times.end).format(
-        "HH:mm"
-      )}</p>`;
-    })
-    .join("");
-
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "kwenakomape2@gmail.com",
-        pass: "kugt ckvd bbum donl",
-      },
-    });
-
-    const mailOptions = {
-      from: "kwenakomape2@gmail.com",
-      to: "kwenakomape3@gmail.com",
-      subject: `New Appointment Scheduled: ${memberName}`,
-      html: `<!DOCTYPE html> <html> <head> <style> body { font-family: Arial, sans-serif; } 
-      .email-container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; } 
-      .email-header, .email-footer { text-align: center; margin-bottom: 20px; } .email-content { margin-bottom: 20px; } 
-      .appointment-details { margin-bottom: 20px; } .appointment-date { font-weight: bold; color: #333; } </style> </head> 
-      <body> <div class="email-container"> <div class="email-header"> 
-      <h2>Your SSISA Carbon Team</h2> </div> <div class="email-content">
-       <p>You have a new appointment scheduled with the following details:</p> 
-       <p>Client Name: <strong>${memberName}</strong></p> 
-       <p>Specialist: <strong>${selectedSpecialist}</strong></p> 
-       </div> <div class="appointment-details"> 
-           ${appointmentDetailsHTML}
-      </div> <div class="email-content"> 
-      <p>Please ensure that all necessary preparations are made for ${memberName}'s appointment. To approve and attend the appointment,
-       please log into the site using your admin credentials at the following link:</p> 
-       <p><a href="http://your-health-clinic-admin-portal-link">carbon@ssisa.com</a></p> 
-       <p>If there are any questions or changes needed, please contact ${memberName} directly.</p> </div> <div class="email-footer"> 
-       <p>Thank you,<br>Your SSISA Carbon Team</p> </div> </div> </body> </html> `,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-        res.status(500).send("Error sending email");
-      } else {
-        console.log("Email sent:", info.response);
-        res.status(200).send("Email sent successfully");
-      }
-    });
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).send("Error sending email");
-  }
+  sendEmail(mailOptions, res);
 });

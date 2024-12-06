@@ -9,7 +9,9 @@ import {
   Form,
 } from "semantic-ui-react";
 import { Button as AntButton } from 'antd';
+
 import { Card, Space } from 'antd';
+import { Button } from "@/components/ui/button";
 
 export const LandingForm = () => {
   const [username, setUsername] = useState("");
@@ -19,7 +21,6 @@ export const LandingForm = () => {
   const [otp, setOtp] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [cell, setCell] = useState("");
-  const [userId, setUserid] = useState("");
 
   const navigate = useNavigate();
 
@@ -129,6 +130,7 @@ export const LandingForm = () => {
             <AntButton block type="primary" htmlType="submit">
               Next
             </AntButton>
+            
             <br />
             <br />
             or <a href="/create-account">Create New Account</a>
@@ -164,6 +166,7 @@ export const LandingForm = () => {
             >
               LOGIN
             </AntButton>
+            
           </>
         )}
       </Form>

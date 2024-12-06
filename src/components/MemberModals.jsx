@@ -15,6 +15,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
+import { getRandomNumber } from "../js/getRandomNumber.js"
 import dayjs from "dayjs";
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
@@ -87,7 +88,7 @@ export const MemberModals = (props) => {
       setSelectedSpecialistID(2);
       setIsDietitian(true);
     } else if (specialist === "PHYSIOTHERAPIST") {
-      setSelectedSpecialistID(4);
+      setSelectedSpecialistID(3);
       setIsDietitian(false);
     }
   };
@@ -113,9 +114,9 @@ export const MemberModals = (props) => {
   const handleBack = () => {
     setStep(step - 1);
   };
+
   const handleBooking = async () => {
     let bookingData;
-
     if (isDietitian) {
       bookingData = {
         memberId: props.memberId, // Assuming you have memberId in props
@@ -135,6 +136,7 @@ export const MemberModals = (props) => {
         specialistName: specialistName, // Ask which specialist will recieve the email
         timeRanges : timeRanges,
         selectedDates: selectedDates,
+        type:"appointmentConfirmation",
         status: "Pending", // Default status
       };
     }
@@ -221,8 +223,10 @@ export const MemberModals = (props) => {
                 onClick={handleBack}
               />
               <span>CHOOSE THREE DATES</span>
+              
             </ModalHeader>
             <ModalContent>
+            <p>Please select  <strong>three </strong>dates and <strong>time</strong> ranges for your availabilty to continue</p>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 {" "}
                 {Array.from({ length: 3 }).map((_, index) => (
@@ -268,7 +272,7 @@ export const MemberModals = (props) => {
             <ModalActions>
               <Button
                 icon="check"
-                content="Next"
+                content="Continue"
                 primary
                 disabled={!datesSelected}
                 onClick={handleNext}

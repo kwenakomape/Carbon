@@ -1,25 +1,23 @@
 import { LandingForm } from "../components/Form.jsx";
-import { Splash } from "./Splash.jsx";
-import React,{ useRef,useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Spin } from 'antd';
 
 export const StartlogIn = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000); // Display splash screen for 3 seconds
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
+  const MemoizedLandingForm = useMemo(() => <LandingForm />, []);
+
   return (
-    <>
-      {loading ? (
-        <Splash />
-      ) : (
-        <div className="LogInpage">
-          <LandingForm />
-        </div>
-      )}
-    </>
+    <div className="LogInpage">
+      {loading ? <Spin size="large" /> : MemoizedLandingForm}
+    </div>
   );
 };

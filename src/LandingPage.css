@@ -1,0 +1,77 @@
+.landing-page {
+    text-align: center;
+  }
+  
+  .header {
+    background-color: #008fc8;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    font-size: 24px;
+    color: #ffffff;
+  }
+  
+  .nav a {
+    color: #ffffff;
+    margin: 0 15px;
+    text-decoration: none;
+  }
+  
+  .hero {
+    background-color: #002b4e;
+    color: #ffffff;
+    padding: 100px 20px;
+  }
+  
+  .cta-button {
+    background-color: #ff695b;
+    color: #ffffff;
+    padding: 15px 30px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cta-button:hover {
+    background-color: #ff4a3b;
+  }
+  
+  .services, .specialists, .how-it-works, .testimonials, .cta, .footer {
+    padding: 50px 20px;
+  }
+  
+  .service-cards, .specialist-profiles, .steps {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .service-card, .specialist-profile, .step {
+    background-color: #dedede;
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+  }
+  
+  .service-card:hover, .specialist-profile:hover, .step:hover {
+    transform: scale(1.05);
+  }
+  
+  .footer {
+    background-color: #022843;
+    color: #ffffff;
+  }
+  
+  .footer a {
+    color: #ffffff;
+    margin: 0 10px;
+    text-decoration: none;
+  }
+  
+  .footer .contact-info, .footer .social-media {
+    margin-top: 20px;
+  }
