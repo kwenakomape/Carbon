@@ -5,13 +5,12 @@ import axios from 'axios';
 import {
   FormField,
   Icon,
+  Input,
   Button as SemanticButton,
   Form,
 } from "semantic-ui-react";
 import { Button as AntButton } from 'antd';
 
-import { Card, Space } from 'antd';
-import { Button } from "@/components/ui/button";
 
 export const LandingForm = () => {
   const [username, setUsername] = useState("");
@@ -61,7 +60,6 @@ export const LandingForm = () => {
         );
 
         if (response.data.valid) {
-          console.log("this is the is", response.data.AdminID);
           navigate(`/dashboard/admin/${response.data.AdminID}`);
         } else {
           setErrorMessage(response.data.errorMessage);
@@ -92,19 +90,19 @@ export const LandingForm = () => {
   };
 
   return (
-    <Card>
-      <Form onSubmit={handleSubmit}>
+    <div className="border border-customBorder rounded-custom shadow-custom p-6 bg-gray-100 w-full max-w-lg mx-auto">
+      <Form onSubmit={handleSubmit} className="ui form w-full">
         {showPasswordField || showOTPField ? (
-                <h1>Log In</h1>
-            ) : (
-              <h1>Enter Username</h1>
-            )}
+          <h1 className="text-3xl font-bold text-center mb-4">Log In</h1>
+        ) : (
+          <h1 className="text-3xl font-bold text-center mb-4">Enter Username</h1>
+        )}
         <FormField>
-          <input
+          <Input
+            size="large"
             placeholder="Username"
             onChange={(e) => setUsername(e.target.value)}
-            
-            readOnly={showPasswordField || showOTPField }
+            readOnly={showPasswordField || showOTPField}
           />
         </FormField>
         <FormField>
@@ -127,10 +125,11 @@ export const LandingForm = () => {
 
         {!showPasswordField && !showOTPField && (
           <>
-            <AntButton block type="primary" htmlType="submit">
+            <AntButton block type="primary" htmlType="submit" size="large"
+            disabled={!username}
+            >
               Next
             </AntButton>
-            
             <br />
             <br />
             or <a href="/create-account">Create New Account</a>
@@ -141,7 +140,8 @@ export const LandingForm = () => {
             {showPasswordField && (
               <FormField>
                 <label>Password</label>
-                <input
+                <Input
+                  size="large"
                   type="password"
                   placeholder="Password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -151,7 +151,8 @@ export const LandingForm = () => {
             {showOTPField && (
               <FormField>
                 <label>OTP</label>
-                <input
+                <Input
+                  size="large"
                   type="text"
                   placeholder="OTP"
                   onChange={(e) => setOtp(e.target.value)}
@@ -162,14 +163,14 @@ export const LandingForm = () => {
               block
               type="primary"
               htmlType="submit"
+              size="large"
               onClick={handleLoginSubmit}
             >
               LOGIN
             </AntButton>
-            
           </>
         )}
       </Form>
-    </Card>
+    </div>
   );
 };

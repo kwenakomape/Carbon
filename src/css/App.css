@@ -1,13 +1,21 @@
-.LogInpage{
+/* .LogInpage{
 
   display: flex;
   justify-content: center;
   flex-grow: 1;
   align-items: center;
+  background-color: #333;
+}
+.LogInpage .ui.form >*{
+  width: 320px !important ;
 }
 
 .LogInpage Button{
   width: 100%;
+} */
+
+.LogInpage h1{
+  text-align: center;
 }
 
 .userDashboard{
@@ -126,9 +134,7 @@ input:focus {
   animation: blink 1.8s infinite;
 }
 
-.LogInpage .ui.form >*{
-  width: 320px !important ;
-}
+
 
 .specialistOptions,.dietitianOptions,.statusOptions{
   display: flex;
@@ -216,9 +222,7 @@ flex-direction: column;
   box-shadow: oklab(0.560344 -0.00759451 -0.0144049 / 0.38725) 0px 0px 0px 1;
   padding: 30px;
 }
-.LogInpage h1{
-  text-align: center;
-}
+
 
 :where(.css-dev-only-do-not-override-49qm).ant-card .ant-card-body{
   padding-top: 5 !important;

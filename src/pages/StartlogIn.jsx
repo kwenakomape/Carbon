@@ -8,7 +8,8 @@ export const StartLogIn = () => {
   const MemoizedLandingForm = useMemo(() => <LandingForm />, []);
 
   return (
-    <div className="LogInpage">
+    <div className="flex justify-center flex-grow items-center bg-dimBeige">
+    
       {loading ? <Spin size="large" /> : MemoizedLandingForm}
     </div>
   );
