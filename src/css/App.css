@@ -1,42 +1,28 @@
 .LogInpage{
 
   display: flex;
-  /* margin-top: 50px; */
   justify-content: center;
   flex-grow: 1;
-  /* flex-direction: column; */
   align-items: center;
-  /* min-width: 500px ; */
 }
 
 .LogInpage Button{
   width: 100%;
-  
-  /* text-align:right; */
 }
 
-.userDashbaord{
+.userDashboard{
   display: flex;
   padding: 10px;
   gap: 8px;
-  /* flex-direction: row; */
-  /* width: 800px !important; */
-  /* flex-grow: 1; */
-  
 }
-/* .userDashbaord> *{
-   flex-grow: 1;
-} */
-
 .left-sidebar{
   flex-grow: 2;
-  height: 800px;
+  height: 900px;
   background-color: rgb(242, 242, 242) !important;
 }
-.userdashbaord-center-panel,.admindashbaord-center-panel{
+.userdashboard-center-panel,.admindashboard-center-panel{
   flex-grow: 19;
 }
-
 .userProfile{
 flex-grow: 0;
 height: 320px;
@@ -47,7 +33,7 @@ background-color: rgb(242, 242, 242) !important;
   align-self: flex-start;
 }
 
-.userdashbaord-center-panel #headingMessage, #headingMessageAdmin{
+.userdashboard-center-panel #headingMessage, #headingMessageAdmin{
   width: 400px;
 }
 #headingMessageAdmin{
@@ -206,12 +192,6 @@ flex-direction: column;
   width: 50%;
 }
 
-/* .status-container {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-} */
-
 .status-container {
   display: flex;
   align-items: center;
@@ -235,13 +215,10 @@ flex-direction: column;
   border-radius: 6px;
   box-shadow: oklab(0.560344 -0.00759451 -0.0144049 / 0.38725) 0px 0px 0px 1;
   padding: 30px;
-  /* background-color: #465a7e66; */
 }
 .LogInpage h1{
   text-align: center;
 }
-
-
 
 :where(.css-dev-only-do-not-override-49qm).ant-card .ant-card-body{
   padding-top: 5 !important;

@@ -20,7 +20,6 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { Invoice} from "./Invoice";
 
 
-
 export const AdminModals = (props) => {
   const id = props.memberId;
 
@@ -32,7 +31,6 @@ export const AdminModals = (props) => {
   const [isMissed, setiIsMissed] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
   const [isModify, setIsModify] = useState(false);
-  // const [isAppointmentConfirmed, setIsAppointmentConfirmed] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
   const [dateSelected, setDateSelected] = useState(false);
@@ -42,7 +40,6 @@ export const AdminModals = (props) => {
   const [remainingCredits, setRemainingCredits] = useState(0);
   const [pdfEmailAttach, setPdfEmailAttach] = useState(null);
   
-
 
   const shouldDisableDate = (date) => {
     const today = dayjs().startOf("day");
