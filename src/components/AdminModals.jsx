@@ -412,7 +412,7 @@ export const AdminModals = (props) => {
                     </p>
                   </div>
                 )}
-                <UploadFiles/>
+                <UploadFiles handleClose={handleClose} />
               </div>
             </ModalContent>
             <ModalActions className="centered-actions">

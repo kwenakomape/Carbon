@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import mysql from "mysql2";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -9,9 +10,8 @@ import {sendEmail} from './utils/emailSender.js';
 import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
 import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
 
-
-
 const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -287,29 +287,28 @@ ORDER BY
     res.send(results);
   });
 });
-app.post('/api/add-invoice', (req, res) => {
+app.post('/api/upload-invoice', upload.single('file'), (req, res) => {
+  console.log("passed here")
   const { member_id, appointment_id, total_credits_used, total_amount, payment_method } = req.body;
+  const pdfData = req.file.buffer;
 
-  // Check if an invoice already exists for the given appointment_id
   db.query('SELECT invoice_id, invoice_number FROM Invoices WHERE appointment_id = ?', [appointment_id], (err, results) => {
     if (err) {
       return res.status(500).send(err);
     }
 
     if (results.length > 0) {
-      // Invoice exists, update it with new details
       const existing_invoice_id = results[0].invoice_id;
       const existing_invoice_number = results[0].invoice_number;
 
-      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ? WHERE invoice_id = ?`;
-      db.query(updateQuery, [member_id, total_credits_used, total_amount, payment_method, existing_invoice_id], (err, result) => {
+      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ?, invoice_pdf = ?, invoice_status = 'Invoice Uploaded' WHERE invoice_id = ?`;
+      db.query(updateQuery, [member_id, total_credits_used, total_amount, payment_method, pdfData, existing_invoice_id], (err, result) => {
         if (err) {
           return res.status(500).send(err);
         }
         res.send(`Invoice updated successfully with number: ${existing_invoice_number}`);
       });
     } else {
-      // No existing invoice, create a new one
       db.query('SELECT invoice_number FROM Invoices ORDER BY invoice_id DESC LIMIT 1', (err, results) => {
         if (err) {
           return res.status(500).send(err);
@@ -326,8 +325,8 @@ app.post('/api/add-invoice', (req, res) => {
           new_invoice_number = `INV-${current_date}-001`;
         }
 
-        const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method) VALUES (?, ?, ?, ?, ?, ?)`;
-        db.query(insertQuery, [new_invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method], (err, result) => {
+        const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, invoice_pdf, invoice_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Invoice Uploaded')`;
+        db.query(insertQuery, [new_invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, pdfData], (err, result) => {
           if (err) {
             return res.status(500).send(err);
           }

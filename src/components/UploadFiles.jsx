@@ -2,32 +2,34 @@ import React, { useState } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, message, Upload } from 'antd';
 
-export const UploadFiles = () => {
+export const UploadFiles = ({ handleClose }) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
+
   const handleUpload = () => {
     const formData = new FormData();
     fileList.forEach((file) => {
-      formData.append('files[]', file);
+      formData.append('file', file);
     });
     setUploading(true);
-    // You can use any AJAX library you like
-    fetch('https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload', {
+    fetch('http://localhost:3001/api/upload-invoice', {
       method: 'POST',
       body: formData,
     })
       .then((res) => res.json())
       .then(() => {
         setFileList([]);
-        message.success('upload successfully.');
+        message.success('Invoice uploaded successfully.');
+        handleClose();
       })
       .catch(() => {
-        message.error('upload failed.');
+        message.error('Upload failed.');
       })
       .finally(() => {
         setUploading(false);
       });
   };
+
   const props = {
     onRemove: (file) => {
       const index = fileList.indexOf(file);
@@ -41,6 +43,7 @@ export const UploadFiles = () => {
     },
     fileList,
   };
+
   return (
     <>
       <Upload {...props}>
@@ -51,9 +54,7 @@ export const UploadFiles = () => {
         onClick={handleUpload}
         disabled={fileList.length === 0}
         loading={uploading}
-        style={{
-          marginTop: 16,
-        }}
+        style={{ marginTop: 16 }}
       >
         {uploading ? 'Uploading' : 'Start Upload'}
       </Button>
