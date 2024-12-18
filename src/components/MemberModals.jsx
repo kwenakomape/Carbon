@@ -102,6 +102,8 @@ export const MemberModals = (props) => {
     }
   };
   const handleDietitianName = (name) => {
+    setSelectedDate(null);
+    setTimeRange({ start: null, end: null });
     setSpecialistName(name);
   };
   const handleNext = () => {
@@ -136,8 +138,10 @@ export const MemberModals = (props) => {
         specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
         specialistName: specialistName, //investigate thsi???
         selectedSpecialist: selectedSpecialist,
-        date: null, //The the selected date(from the website wil be sent to the specialist email),but in the database it will be stored as null until confirmed by specilaist
-        status: "Pending", // Default status
+        timeRange:timeRange,
+        selectedDate:selectedDate,
+        type: "appointmentConfirmation",
+        status: "Confirmed", // Default status
       };
     } else {
       bookingData = {
@@ -156,7 +160,9 @@ export const MemberModals = (props) => {
     try {
       await axios.post("http://localhost:3001/api/bookings", bookingData);
       handleClose();
-      await axios.post("http://localhost:3001/api/send-email", bookingData);
+      if (!isDietitian) {
+        await axios.post("http://localhost:3001/api/send-email", bookingData);
+    }
     } catch (error) {
       console.error("Error booking appointment:", error);
     }
@@ -365,7 +371,6 @@ export const MemberModals = (props) => {
                 </p>
 
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  {" "}
                   <Box sx={{ my: 4 }}>
                     {" "}
                     <DatePicker
@@ -488,7 +493,7 @@ export const MemberModals = (props) => {
                   content="Previous"
                   onClick={handleBack}
                 />
-                <span>CONFIRM BOOKING</span>
+                <span>CONFIRMED BOOKING DETAILS</span>
               </ModalHeader>
               <ModalContent>
                 <div className="memberDetails">
@@ -504,6 +509,18 @@ export const MemberModals = (props) => {
                       <strong>SPECIALITY:</strong>
                     </span>
                     <span>{selectedSpecialist}</span>
+                  </div>
+                  <div>
+                    <span>
+                      <strong>Date:</strong>
+                    </span>
+                    <span>{dayjs(selectedDate).format("dddd, D MMMM YYYY")}</span>
+                  </div>
+                  <div>
+                    <span>
+                      <strong>Time:</strong>
+                    </span>
+                    <span>{dayjs(timeRange.start).format("HH:mm")}</span>
                   </div>
                   {!isDietitian ? (
                     <>
@@ -544,7 +561,7 @@ export const MemberModals = (props) => {
                 <Button
                   icon="check"
                   positive
-                  content="Book"
+                  content={ !isDietitian ?  "Book":"Submit"}
                   onClick={handleBooking}
                 />
               </ModalActions>

@@ -8,6 +8,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 
+
 export const Invoice = ({
   handleNext,
   setPdfUrl,
@@ -174,7 +175,7 @@ export const Invoice = ({
   return (
     <>
       <Button primary onClick={generateInvoicePDF}>
-        Generate Invoice
+        Submit Invoice
       </Button>
     </>
   );

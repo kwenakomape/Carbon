@@ -18,6 +18,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Invoice} from "./Invoice";
+import { UploadFiles } from "./UploadFiles";
+
 
 
 export const AdminModals = (props) => {
@@ -389,7 +391,7 @@ export const AdminModals = (props) => {
               />
               <span>
                 {selectedPaymentMethod === "CASH/CARD"
-                  ? "Confirm Payment by Card"
+                  ? "Upload Invoice"
                   : "Confirm Payment by SSISA Credits"}
               </span>
             </ModalHeader>
@@ -399,22 +401,22 @@ export const AdminModals = (props) => {
                   <div className="confirmation">
                     <p>The member has chosen to pay by Card/Cash.</p>
                     <p>
-                      Proceed to generate the invoice and confirm the session.
+                    Proceed to upload the invoice
                     </p>
                   </div>
                 ) : (
                   <div className="confirmation">
                     <p>The member has chosen to pay using SSISA Credits.</p>
                     <p>
-                      Proceed to generate the invoice, deduct credits from the
-                      member's account, and confirm the session.
+                      Proceed to upload the invoice
                     </p>
                   </div>
                 )}
+                <UploadFiles/>
               </div>
             </ModalContent>
             <ModalActions className="centered-actions">
-              <Invoice
+              {/* <Invoice
                 paymentMethod={selectedPaymentMethod}
                 handleNext={handleNext}
                 setPdfUrl={setPdfUrl}
@@ -427,7 +429,7 @@ export const AdminModals = (props) => {
                 setRemainingCredits={setRemainingCredits}
                 setPdfEmailAttach={setPdfEmailAttach}
                 UpdateAppointmentStatus={UpdateAppointmentStatus}
-              />
+              /> */}
             </ModalActions>
           </>
         )}

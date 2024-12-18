@@ -68,6 +68,7 @@ export const AdminDashboard = () => {
                   <TableHeaderCell>Payment Method</TableHeaderCell>
                   <TableHeaderCell>Confirmed Date</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
+                  <TableHeaderCell>Invoice Status</TableHeaderCell>
                 </TableRow>
               </TableHeader>
               {!data[0].request_date ? (
@@ -114,6 +115,7 @@ export const AdminDashboard = () => {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell collapsing>Awaiting Upload</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

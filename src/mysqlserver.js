@@ -469,87 +469,63 @@ app.post("/api/update-appointment-status", (req, res) => {
 // or specialist choose which servives they offered them ,point is we need an interface to add sessions(services)
 
 app.post("/api/bookings", (req, res) => {
-  const { memberId, specialistId, status, selectedDates, timeRanges} = req.body;
+  const { memberId, specialistId, status, selectedDates, timeRanges, timeRange, selectedDate } = req.body;
 
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format('HH:mm')} to ${dayjs(timeRange.end).format('HH:mm')}`
   });
 
-  const preferredTimes = selectedDates.map((date, index) => formatDateTime(date, timeRanges[index]));
-  const appointmentQuery = `
-    INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const appointmentValues = [
-    memberId, specialistId, status,
-    preferredTimes[0].date, preferredTimes[0].timeRange,
-    preferredTimes[1].date, preferredTimes[1].timeRange,
-    preferredTimes[2].date, preferredTimes[2].timeRange
-  ];
-
-  db.query(appointmentQuery, appointmentValues, (err, results) => {
-    if (err) {
-      res.status(500).send("Error booking appointment");
-      return;
-    }
-
-    const appointmentId = results.insertId;
-
-    // Fetch all services for the given specialistId
-    const servicesQuery = `
-      SELECT s.service_id, s.price, s.credit_cost
-      FROM Services s
-      JOIN SpecialistServices ss ON s.service_id = ss.service_id
-      WHERE ss.specialist_id = ?
+  if (specialistId === 2) {
+    const appointmentQuery = `
+      INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, preferred_time_range1)
+      VALUES (?, ?, ?, ?, ?)
     `;
+    const appointmentValues = [
+      memberId, specialistId, "confirmed",
+      dayjs(selectedDate).format("YYYY-MM-DD"), `${dayjs(timeRange.start).format('HH:mm')}`
+    ];
 
-    db.query(servicesQuery, [specialistId], (err, services) => {
+    db.query(appointmentQuery, appointmentValues, (err, results) => {
       if (err) {
-        res.status(500).send("Error fetching services");
+        res.status(500).send("Error booking appointment");
         return;
       }
-
-      const sessionQueries = services.map(service => {
-        return db.format(`
-          INSERT INTO Sessions (appointment_id, specialist_id, service_id, duration, credits_used, amount)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `, [appointmentId, specialistId, service.service_id, '1 hour', service.credit_cost, service.price]);
-      });
-      
-      const executeQueries = (queries, callback) => {
-        if (queries.length === 0) {
-          callback(null);
-          return;
-        }
-      
-        const query = queries.shift();
-        db.query(query, (err) => {
-          if (err) {
-            callback(err);
-            return;
-          }
-          executeQueries(queries, callback);
-        });
-      };
-      
-      executeQueries(sessionQueries, (err) => {
-        if (err) {
-          res.status(500).send("Error creating sessions");
-          return;
-        }
-        res.status(200).send("Appointment and sessions booked successfully");
-      });
+      res.status(200).send("Appointment booked successfully");
     });
-  });
+  } else {
+    const preferredTimes = selectedDates.map((date, index) => formatDateTime(date, timeRanges[index]));
+    const appointmentQuery = `
+      INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const appointmentValues = [
+      memberId, specialistId, status,
+      preferredTimes[0].date, preferredTimes[0].timeRange,
+      preferredTimes[1].date, preferredTimes[1].timeRange,
+      preferredTimes[2].date, preferredTimes[2].timeRange
+    ];
+
+    db.query(appointmentQuery, appointmentValues, (err, results) => {
+      if (err) {
+        res.status(500).send("Error booking appointment");
+        return;
+      }
+      res.status(200).send("Appointment and sessions booked successfully");
+    });
+  }
 });
+
 app.post("/api/send-email", (req, res) => {
   const {
     type,
     memberName,
+    specialistId,
     selectedSpecialist,
     selectedDates,
     timeRanges,
+    selectedDate,
+    timeRange,
     invoiceDetails,
     remainingCredits,
     paymentMethod,
@@ -565,8 +541,9 @@ app.post("/api/send-email", (req, res) => {
         html: generateAppointmentConfirmationHTML(
           memberName,
           selectedSpecialist,
-          selectedDates,
-          timeRanges
+          specialistId === 2 ? selectedDate : selectedDates,
+          specialistId === 2 ? timeRange : timeRanges,
+          specialistId
         ),
       };
       break;

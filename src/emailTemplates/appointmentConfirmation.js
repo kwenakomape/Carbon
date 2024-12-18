@@ -1,16 +1,18 @@
 import dayjs from "dayjs";
 
-export const generateAppointmentConfirmationHTML = (memberName, selectedSpecialist, selectedDates, timeRanges) => {
-  const appointmentDetailsHTML = selectedDates
-    .map((date, index) => {
-      const times = timeRanges[index];
-      return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format(
-        'YYYY-MM-DD'
-      )} | Time: From ${dayjs(times.start).format('HH:mm')} to ${dayjs(times.end).format(
-        'HH:mm'
-      )}</p>`;
-    })
-    .join('');
+export const generateAppointmentConfirmationHTML = (memberName, selectedSpecialist, selectedDates, timeRanges,specialistId) => {
+  let appointmentDetailsHTML;
+
+  if (specialistId === 2) {
+    appointmentDetailsHTML = `<p class="appointment-date">Date: ${dayjs(selectedDates).format('YYYY-MM-DD')} | Time: ${dayjs(timeRanges.start).format('HH:mm')}</p>`;
+  } else {
+    appointmentDetailsHTML = selectedDates
+      .map((date, index) => {
+        const times = timeRanges[index];
+        return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format('YYYY-MM-DD')} | Time: From ${dayjs(times.start).format('HH:mm')} to ${dayjs(times.end).format('HH:mm')}</p>`;
+      })
+      .join('');
+  }
 
   return `<!DOCTYPE html>
   <html>
