@@ -66,7 +66,8 @@ export const MemberDashboard = () => {
           </Segment>
           <div className="userdashboard-center-panel">
             <Segment id="headingMessage">
-              Hi {data[0].member_name}, You have {pendingCount} pending appointments
+              Hi {data[0].member_name}, You have {pendingCount} pending
+              appointments
             </Segment>
             <Table celled padded>
               <div className="userTable"></div>
@@ -81,7 +82,15 @@ export const MemberDashboard = () => {
               {!data[0].request_date ? (
                 <TableBody>
                   <TableRow>
-                    <TableCell colSpan="4" textAlign="center" style={{ fontSize: '1.5em', fontWeight: 'bold', color: 'red' }}>
+                    <TableCell
+                      colSpan="4"
+                      textAlign="center"
+                      style={{
+                        fontSize: "1.5em",
+                        fontWeight: "bold",
+                        color: "red",
+                      }}
+                    >
                       You have No Appointments
                     </TableCell>
                   </TableRow>
@@ -91,11 +100,19 @@ export const MemberDashboard = () => {
                   {data.map((appointment, index) => (
                     <TableRow key={index}>
                       <TableCell>
-                        {appointment.request_date ? dayjs(appointment.request_date).format('D MMMM, YYYY') : ""}
+                        {appointment.request_date
+                          ? dayjs(appointment.request_date).format(
+                              "D MMMM, YYYY"
+                            )
+                          : ""}
                       </TableCell>
                       <TableCell>{appointment.specialist_type || ""}</TableCell>
                       <TableCell>
-                        {appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "___________________________________________"}
+                        {appointment.confirmed_date
+                          ? dayjs(appointment.confirmed_date).format(
+                              "D MMMM, YYYY"
+                            )
+                          : "___________________________________________"}
                       </TableCell>
                       <TableCell>{appointment.status || ""}</TableCell>
                     </TableRow>
@@ -121,7 +138,7 @@ export const MemberDashboard = () => {
               </div>
               <br />
               <br />
-              <MemberModals memberId={id} memberName={data[0].member_name} />
+              <MemberModals memberId={id} memberName={data[0].member_name} memberCredits={data[0].credits} />
             </HeaderContent>
           </Segment>
         </div>
