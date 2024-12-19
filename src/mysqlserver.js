@@ -246,6 +246,7 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     ad.admin_id AS specialist_id,
     ad.name AS specialist_name,
     i.payment_method,
+    i.invoice_status,  -- Added invoice status
     COALESCE(SUM(s.credits_used), 0) AS total_credits_used,
     COALESCE(SUM(s.amount), 0) AS total_amount
 FROM 
@@ -276,7 +277,8 @@ GROUP BY
     a.preferred_time_range3,
     ad.admin_id,
     ad.name,
-    i.payment_method
+    i.payment_method,
+    i.invoice_status  -- Added invoice status to GROUP BY
 ORDER BY 
     a.appointment_id`;
 
@@ -288,7 +290,6 @@ ORDER BY
   });
 });
 app.post('/api/upload-invoice', upload.single('file'), (req, res) => {
-  console.log("passed here")
   const { member_id, appointment_id, total_credits_used, total_amount, payment_method } = req.body;
   const pdfData = req.file.buffer;
 
