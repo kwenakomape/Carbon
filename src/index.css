@@ -23,7 +23,6 @@ html, body, #root {
   height: 100vh;
   width: 100%;
   box-sizing: border-box;
-  /* color: rgb(106, 108, 111); */
   display: flex;
   flex-direction: row;
   scrollbar-width: thin; /* Makes the scrollbar thinner */
@@ -34,7 +33,6 @@ html, body, #root {
 
 #root {
   display: flex;
-  /* flex-grow: 1; */
   flex-direction: column;
   background-size: cover;
   background-repeat: no-repeat;

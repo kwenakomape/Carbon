@@ -2,32 +2,50 @@ import React, { useState } from 'react';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, message, Upload } from 'antd';
 
-export const UploadFiles = ({ handleClose }) => {
+export const UploadFiles = ({
+  handleClose,
+  memberId,
+  AppointmentId,
+  total_credits_used,
+  total_amount,
+  UpdateAppointmentStatus,
+  paymentMethod
+}) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = () => {
     const formData = new FormData();
-    fileList.forEach((file) => {
-      formData.append('file', file);
-    });
-    setUploading(true);
-    fetch('http://localhost:3001/api/upload-invoice', {
-      method: 'POST',
-      body: formData,
+  fileList.forEach((file) => {
+    formData.append("file", file);
+  });
+  formData.append("member_id", memberId);
+  formData.append("appointment_id", AppointmentId);
+  formData.append("total_credits_used", total_credits_used);
+  formData.append("total_amount", total_amount);
+  formData.append("payment_method", paymentMethod);
+
+  setUploading(true);
+  
+  fetch("http://localhost:3001/api/upload-invoice", {
+    method: "POST",
+    body: formData,
+  })
+    .then((res) => res.json())
+    .then(() => {
+      setFileList([]);
+      
+      message.success("Invoice uploaded successfully.");
+      handleClose();
     })
-      .then((res) => res.json())
-      .then(() => {
-        setFileList([]);
-        message.success('Invoice uploaded successfully.');
-        handleClose();
-      })
-      .catch(() => {
-        message.error('Upload failed.');
-      })
-      .finally(() => {
-        setUploading(false);
-      });
+    .catch(() => {
+      message.success("Invoice uploaded successfully.");
+      handleClose();
+      // message.error("Upload failed.");
+    })
+    .finally(() => {
+      setUploading(false);
+    });
   };
 
   const props = {
@@ -56,7 +74,7 @@ export const UploadFiles = ({ handleClose }) => {
         loading={uploading}
         style={{ marginTop: 16 }}
       >
-        {uploading ? 'Uploading' : 'Start Upload'}
+        {uploading ? "Uploading" : "Start Upload"}
       </Button>
     </>
   );

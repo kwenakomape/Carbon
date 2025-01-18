@@ -154,7 +154,8 @@ export const AdminModals = (props) => {
     }
     setSelectedStatus(status);
   };
-  const handleSelectedPaymentMethod = (paymentMethod) => {
+  const handleSelectedPaymentMethod = async (paymentMethod) => {
+    await UpdateAppointmentStatus("SEEN")
     setSelectedPaymentMethod(paymentMethod);
   };
   const handleNext = () => {
@@ -205,13 +206,15 @@ export const AdminModals = (props) => {
                 >
                   MISSED
                 </Button>
-                {(props.appointmentStatus !== "Confirmed" && props.appointmentStatus !== "Seen")  && <Button
-                  onClick={() => handleSelectedStatus("MODIFY")}
-                  className={selectedStatus === "MODIFY" ? "selected" : ""}
-                  
-                >
-                  CONFIRM
-                </Button>}
+                {props.appointmentStatus !== "Confirmed" &&
+                  props.appointmentStatus !== "Seen" && (
+                    <Button
+                      onClick={() => handleSelectedStatus("MODIFY")}
+                      className={selectedStatus === "MODIFY" ? "selected" : ""}
+                    >
+                      CONFIRM
+                    </Button>
+                  )}
                 <Button
                   onClick={() => handleSelectedStatus("CANCELED")}
                   className={selectedStatus === "CANCELED" ? "selected" : ""}
@@ -275,9 +278,11 @@ export const AdminModals = (props) => {
                 {props.preferred_time_range3}
               </div>
               <br />
-              <p style={{ color: 'red', fontWeight: 'bold', marginTop: '20px' }}>
-    Please select your preferred date and time to continue:
-  </p>
+              <p
+                style={{ color: "red", fontWeight: "bold", marginTop: "20px" }}
+              >
+                Please select your preferred date and time to continue:
+              </p>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 {" "}
                 <Box sx={{ my: 4 }}>
@@ -400,19 +405,22 @@ export const AdminModals = (props) => {
                 {selectedPaymentMethod === "CASH/CARD" ? (
                   <div className="confirmation">
                     <p>The member has chosen to pay by Card/Cash.</p>
-                    <p>
-                    Proceed to upload the invoice
-                    </p>
+                    <p>Proceed to upload the invoice</p>
                   </div>
                 ) : (
                   <div className="confirmation">
                     <p>The member has chosen to pay using SSISA Credits.</p>
-                    <p>
-                      Proceed to upload the invoice
-                    </p>
+                    <p>Proceed to upload the invoice</p>
                   </div>
                 )}
-                <UploadFiles handleClose={handleClose} />
+                <UploadFiles
+                  handleClose={handleClose}
+                  AppointmentId={props.AppointmentId}
+                  memberId={id}
+                  total_credits_used={2}
+                  total_amount={0.00}
+                  paymentMethod={selectedPaymentMethod}
+                />
               </div>
             </ModalContent>
             <ModalActions className="centered-actions">

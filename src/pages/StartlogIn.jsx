@@ -8,9 +8,11 @@ export const StartLogIn = () => {
   const MemoizedLandingForm = useMemo(() => <LandingForm />, []);
 
   return (
-    <div className="flex justify-center flex-grow items-center bg-dimBeige">
+    <>
+    <div className="signupbackground-image">
     
       {loading ? <Spin size="large" /> : MemoizedLandingForm}
     </div>
+    </>
   );
 };

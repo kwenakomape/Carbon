@@ -115,7 +115,8 @@ export const AdminDashboard = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell collapsing>Awaiting Upload</TableCell>
+                      
+                      <TableCell collapsing>{appointment.invoice_status? appointment.invoice_status : "Awaiting Upload"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
