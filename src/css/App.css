@@ -1,7 +1,13 @@
+.LogInpage{
 
+  display: flex;
+  justify-content: center;
+  flex-grow: 1;
+  align-items: center;
+}
 
-.LogInpage h1{
-  text-align: center;
+.LogInpage Button{
+  width: 100%;
 }
 
 .userDashboard{
@@ -105,10 +111,10 @@ background-color: rgb(242, 242, 242) !important;
 .username-error-alert span span{
  margin: 0px;
 }
-input:focus {
+/* input:focus {
   border-color: #80bdff !important;
   box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25) !important
-}
+} */
 
 @keyframes blink {
   0% { opacity: 1; }
@@ -120,7 +126,9 @@ input:focus {
   animation: blink 1.8s infinite;
 }
 
-
+.LogInpage .ui.form >*{
+  width: 320px !important ;
+}
 
 .specialistOptions,.dietitianOptions,.statusOptions{
   display: flex;
@@ -208,10 +216,8 @@ flex-direction: column;
   box-shadow: oklab(0.560344 -0.00759451 -0.0144049 / 0.38725) 0px 0px 0px 1;
   padding: 30px;
 }
-.signupbackground-image {
-  background-image: url("./backgroundPic4.jpg");
-  background-size: cover;
-  background-position: center;
+.LogInpage h1{
+  text-align: center;
 }
 
 :where(.css-dev-only-do-not-override-49qm).ant-card .ant-card-body{

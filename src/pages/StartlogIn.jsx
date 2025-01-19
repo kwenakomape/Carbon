@@ -9,7 +9,10 @@ export const StartLogIn = () => {
 
   return (
     <>
-    <div className="signupbackground-image">
+     <div
+  className="relative flex items-center justify-center min-h-screen bg-cover bg-center"
+  style={{ backgroundImage: "url('backgroundPic4.jpg')" }}
+>
     
       {loading ? <Spin size="large" /> : MemoizedLandingForm}
     </div>

@@ -1,3 +1,5 @@
+// import "semantic-ui-css/semantic.min.css";
+import styles from '../css/userDashboard.module.css';
 import {
   Icon,
   HeaderContent,
