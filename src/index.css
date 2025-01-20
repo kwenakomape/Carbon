@@ -21,7 +21,9 @@ html, body, #root {
   margin: 0;
   padding: 0;
   height: 100vh;
+  font-size: 15px;
   width: 100%;
+  font-family: Lato, "Helvetica Neue", Arial, Helvetica, sans-serif;
   box-sizing: border-box;
   display: flex;
   flex-direction: row;

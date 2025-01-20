@@ -1,13 +1,4 @@
 
-// import { Button } from 'aceternity-ui';
-// export const Splash = () => (
-//    <div className="splashingPage">
-//       <img src="splashphoto.jpg" alt="Carbon" className="rotating-image" />
-//    </div>
-
-   
-//   );
-
   import React from 'react';
 
   export const Splash = () => {

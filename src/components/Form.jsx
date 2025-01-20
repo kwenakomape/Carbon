@@ -1,4 +1,4 @@
-//  import "semantic-ui-css/semantic.min.css";
+
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
 import axios from 'axios';
@@ -7,10 +7,7 @@ import {
   
   Form,
 } from "semantic-ui-react";
-// import { Button as AntButton } from 'antd';
 
-// import { Card, Space } from 'antd';
-// import { Button } from "@/components/ui/button";
 
 export const LandingForm = () => {
   const [username, setUsername] = useState("");

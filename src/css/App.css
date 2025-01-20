@@ -1,3 +1,10 @@
+
+
+.my-component {
+  /* Import Semantic UI CSS here */
+  @import 'semantic-ui-css/semantic.min.css';
+}
+
 .LogInpage{
 
   display: flex;
