@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 
+
 .animate-fade-in {
   opacity: 0;
   transform: translateY(20px);
@@ -21,9 +22,12 @@ html, body, #root {
   margin: 0;
   padding: 0;
   height: 100vh;
-  font-size: 15px;
+  /* font-size: 15px;  */
   width: 100%;
-  font-family: Lato, "Helvetica Neue", Arial, Helvetica, sans-serif;
+  /* font-family: "Karla", serif;
+  font-optical-sizing: auto;
+  font-style: normal; */
+  /* font-family: Lato, "Helvetica Neue", Arial, Helvetica, sans-serif; */
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
