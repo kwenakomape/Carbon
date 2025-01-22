@@ -20,6 +20,7 @@ import { AlertDialogDemo } from "../components/AlertDialog.jsx";
 import { Spin } from "antd";
 import useLoading from "../hooks/useLoading";
 
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,14 +40,7 @@ export const MemberDashboard = () => {
   const loading = useLoading();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-  const [selectedSpecialist, setSelectedSpecialist] = useState('');
 
-  const handleButtonClick = (specialist) => {
-    setSelectedSpecialist(specialist);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -303,99 +297,38 @@ export const MemberDashboard = () => {
                   <span>{data[0].credits}</span>
                 </div>
                 <div className="mt-4">
-                {/* <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogTrigger asChild>
-        <button
-          className="w-full py-2 px-4 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300"
-          onClick={() => setIsOpen(true)}
-        >
-          BOOK APPOINTMENT
-        </button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl h-auto">
-        <AlertDialogHeader>
-          <div className="flex justify-between items-start">
-            <AlertDialogTitle className="w-full text-center">
-              Choose your Specialist
-            </AlertDialogTitle>
-            <button
-              className="absolute top-2 right-2 p-0 m-0 border-none border-0 bg-transparent shadow-none focus:outline-none rounded-none"
-              onClick={handleClose}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="mt-4 flex flex-col space-y-2">
-            <button
-              className={`w-full py-2 px-4 rounded-lg shadow-md transition duration-300 ${
-                selectedSpecialist === "BIOKINETICIST"
-                  ? "bg-green-700 text-white border-4 border-green-900"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-              onClick={() => handleButtonClick("BIOKINETICIST")}
-            >
-              BIOKINETICIST
-            </button>
-            <button
-              className={`w-full py-2 px-4 rounded-lg shadow-md transition duration-300 ${
-                selectedSpecialist === "DIETITIAN"
-                  ? "bg-green-700 text-white border-4 border-green-900"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-              onClick={() => handleButtonClick("DIETITIAN")}
-            >
-              DIETITIAN
-            </button>
-            <button
-              className={`w-full py-2 px-4 rounded-lg shadow-md transition duration-300 ${
-                selectedSpecialist === "PHYSIOTHERAPIST"
-                  ? "bg-green-700 text-white border-4 border-green-900"
-                  : "bg-green-500 text-white hover:bg-green-600"
-              }`}
-              onClick={() => handleButtonClick("PHYSIOTHERAPIST")}
-            >
-              PHYSIOTHERAPIST
-            </button>
-          </div>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <button
-            className="py-2 px-4 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 transition duration-300"
-            onClick={handleClose}
-          >
-            Cancel
-          </button>
-          <button
-            className="py-2 px-4 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition duration-300"
-            onClick={handleClose}
-          >
-            Next
-          </button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog> */}
-                </div>
-                <br />
-                <br />
                 <MemberModals
                   memberId={id}
                   memberName={data[0].member_name}
                   memberCredits={data[0].credits}
                 />
+                  {/* <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      
+                      <button className="w-full py-2 px-4 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300">BOOK APPOINTMENT</button>
+                      
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete your account and remove your data from our
+                          servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog> */}
+                </div>
+                <br />
+                <br />
+                
               </div>
             </div>
           </div>
