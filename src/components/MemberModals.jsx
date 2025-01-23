@@ -1,28 +1,22 @@
-import {
-  ModalHeader,
-  ModalDescription,
-  ModalContent,
-  ModalActions,
-  Button,
-  Icon,
-} from "semantic-ui-react";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Box, TextField} from "@mui/material";
-
+import { Box, TextField } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Button as AntButton, Modal } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
+
+
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [specialistName, setSpecialistName] = useState(null);
-const [isDietitian, setIsDietitian] = useState(false);
+  const [isDietitian, setIsDietitian] = useState(false);
   const [selectedDates, setSelectedDates] = useState([null, null, null]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
@@ -34,6 +28,10 @@ const [isDietitian, setIsDietitian] = useState(false);
   const [datesSelected, setDatesSelected] = useState(false);
   const [credits, setCredits] = useState(props.memberCredits);
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [modalText, setModalText] = useState("");
+  const [confirmationMessage, setConfirmationMessage] = useState("");
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const handleConfirmDate = (date) => {
     setSelectedDate(date);
@@ -41,9 +39,11 @@ const [isDietitian, setIsDietitian] = useState(false);
       setTimeRange({ start: null, end: null });
     }
   };
+
   const handleConfirmTime = (time, type) => {
     setTimeRange((prevTimeRange) => ({ ...prevTimeRange, [type]: time }));
   };
+
   const handleDateChange = (date, index) => {
     const newDates = [...selectedDates];
     newDates[index] = date;
@@ -54,6 +54,7 @@ const [isDietitian, setIsDietitian] = useState(false);
     }
     setTimeRanges(newTimeRanges);
   };
+
   const handleTimeChange = (index, time, type) => {
     const newTimeRanges = [...timeRanges];
     if (!newTimeRanges[index]) {
@@ -77,6 +78,7 @@ const [isDietitian, setIsDietitian] = useState(false);
     const isBeforeToday = dayjs(date).isBefore(today);
     return isWeekend || isSelected || isBeforeToday;
   };
+
   const handleClose = () => {
     setOpen(false);
     setStep(1);
@@ -84,10 +86,15 @@ const [isDietitian, setIsDietitian] = useState(false);
     setSpecialistName(null);
     setIsDietitian(false);
     setSelectedDates([null, null, null]);
-    setTimeRanges([{}, {}, {}]);
+    setTimeRanges([
+      { start: null, end: null },
+      { start: null, end: null },
+      { start: null, end: null },
+    ]);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
   };
+
   const handleSpecialistSelect = (specialist) => {
     setSelectedSpecialist(specialist);
     if (specialist === "BIOKINETICIST") {
@@ -106,7 +113,6 @@ const [isDietitian, setIsDietitian] = useState(false);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
     setSpecialistName(name);
-    console.log("Selected Dietitian:", name);
   };
 
   const handleNext = () => {
@@ -137,41 +143,72 @@ const [isDietitian, setIsDietitian] = useState(false);
   };
 
   const handleBooking = async () => {
+    setModalText("The booking is being processed...");
+    setConfirmLoading(true);
+
     let bookingData;
     if (isDietitian) {
       bookingData = {
-        memberId: props.memberId, // Assuming you have memberId in props
+        memberId: props.memberId,
         memberName: props.memberName,
-        specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
-        specialistName: specialistName, //investigate thsi???
+        specialistId: selectedSpecialistID,
+        specialistName: specialistName,
         selectedSpecialist: selectedSpecialist,
-        timeRange:timeRange,
-        selectedDate:selectedDate,
+        timeRange: timeRange,
+        selectedDate: selectedDate,
         type: "appointmentConfirmation",
-        status: "Confirmed", // Default status
+        status: "Confirmed",
       };
     } else {
       bookingData = {
-        memberId: props.memberId, // Assuming you have memberId in props
+        memberId: props.memberId,
         memberName: props.memberName,
-        specialistId: selectedSpecialistID, // You need to map this to the actual specialist ID
+        specialistId: selectedSpecialistID,
         selectedSpecialist: selectedSpecialist,
-        specialistName: specialistName, // Ask which specialist will recieve the email
+        specialistName: specialistName,
         timeRanges: timeRanges,
         selectedDates: selectedDates,
         type: "appointmentConfirmation",
-        status: "Pending", // Default status
+        status: "Pending",
       };
     }
 
     try {
       await axios.post("http://localhost:3001/api/bookings", bookingData);
-      handleClose();
+      setTimeout(() => {
+        setOpen(false);
+        setConfirmLoading(false);
+        handleClose();
+        setConfirmationMessage(
+          isDietitian
+            ? `🎉 Success! Your appointment has been booked.\n\nDetails:\n- Specialist: ${specialistName} (Dietitian)\n- Date: ${dayjs(
+                selectedDate
+              ).format("dddd, D MMMM YYYY")}\n- Time: ${dayjs(
+                timeRange.start
+              ).format(
+                "HH:mm"
+              )}\n\nThank you for choosing our services! We look forward to seeing you.`
+            : `🎉 Success! Your appointment request has been submitted.\n\nDetails:\n- Specialist: ${specialistName} (${selectedSpecialist})\n- Date: ${selectedDates
+                .map(
+                  (date, index) =>
+                    `\n  Day ${index + 1}: ${dayjs(date).format(
+                      "YYYY-MM-DD"
+                    )} From: ${dayjs(timeRanges[index].start).format(
+                      "HH:mm"
+                    )} To: ${dayjs(timeRanges[index].end).format("HH:mm")}`
+                )
+                .join(
+                  ""
+                )}\n\nNext Steps:\n- Your booking request is pending confirmation from the specialist based on their availability.\n- You will receive a confirmation email once the specialist approves your appointment.\n- If the requested time is not available, we will contact you to reschedule.\n\nThank you for choosing our services! We will keep you updated on the status of your booking.`
+        );
+        setShowConfirmationModal(true);
+      }, 2000);
       if (!isDietitian) {
         await axios.post("http://localhost:3001/api/send-email", bookingData);
-    }
+      }
     } catch (error) {
       console.error("Error booking appointment:", error);
+      setConfirmLoading(false);
     }
   };
 
@@ -181,54 +218,36 @@ const [isDietitian, setIsDietitian] = useState(false);
       (range) => range.start !== null && range.end !== null
     );
 
-    setDatesSelected(allDatesSelected && allTimesSelected);
-  }, [selectedDates, timeRanges]);
+    if (isDietitian) {
+      setDatesSelected(!!specialistName);
+    } else {
+      setDatesSelected(allDatesSelected && allTimesSelected);
+    }
+  }, [selectedDates, timeRanges, step, isDietitian, specialistName]);
+
+  useEffect(() => {}, [specialistName]);
 
   return (
     <>
-      {/* <AntButton type="primary" onClick={() => setOpenResponsive(true)}>
-        BOOK APPOINTMENT
-      </AntButton>
-      <Modal
-        title="Modal responsive width"
-        centered
-        open={openResponsive}
-        onOk={() => setOpenResponsive(false)}
-        onCancel={() => setOpenResponsive(false)}
-        footer={[
-          <AntButton key="submit" type="primary" >
-            Next
-          </AntButton>
-        ]}
-        width={{
-          xs: '90%',
-          sm: '80%',
-          md: '70%',
-          lg: '60%',
-          xl: '50%',
-          xxl: '40%',
-        }}
-      >
-      hi
-        
-      </Modal> */}
       <AntButton type="primary" onClick={() => setOpen(true)}>
         BOOK APPOINTMENT
       </AntButton>
       {!showCreditModal && (
         <Modal
           title={
-            step === 1
-              ? "Choose your Specialist"
-              : step === 2 && !isDietitian
-              ? "CHOOSE THREE DATES"
-              : step === 2 && isDietitian
-              ? "CHOOSE A DIETITIAN"
-              : step === 3 && isDietitian
-              ? "Book from this website"
-              : step === 3 && !isDietitian
-              ? "CONFIRM BOOKING"
-              : "CONFIRMED BOOKING DETAILS"
+            <div className="text-center w-full text-2xl font-bold text-blue-600">
+              {step === 1
+                ? "Choose your Specialist"
+                : step === 2 && !isDietitian
+                ? "CHOOSE THREE DATES"
+                : step === 2 && isDietitian
+                ? "CHOOSE A DIETITIAN"
+                : step === 3 && isDietitian
+                ? "Book from this website"
+                : step === 3 && !isDietitian
+                ? "CONFIRM BOOKING"
+                : "CONFIRMED BOOKING DETAILS"}
+            </div>
           }
           centered
           open={open}
@@ -242,11 +261,23 @@ const [isDietitian, setIsDietitian] = useState(false);
             <AntButton
               key="next"
               type="primary"
-              onClick={handleNext}
+              onClick={
+                (step === 3 && !isDietitian) || (step === 4 && isDietitian)
+                  ? handleBooking
+                  : handleNext
+              }
+              loading={
+                (step === 3 && !isDietitian) || (step === 4 && isDietitian)
+                  ? confirmLoading
+                  : false
+              }
               disabled={
                 (step === 1 && !selectedSpecialist) ||
                 (step === 2 && !datesSelected) ||
-                (step === 2 && isDietitian && !specialistName)
+                (step === 2 && isDietitian && !specialistName) ||
+                (step === 3 &&
+                  isDietitian &&
+                  (!selectedDate || !timeRange.start))
               }
             >
               {step === 3 && !isDietitian
@@ -257,29 +288,30 @@ const [isDietitian, setIsDietitian] = useState(false);
             </AntButton>,
           ]}
           width={1000}
-         
         >
           {step === 1 && (
             <div className="specialistOptions">
               <AntButton
                 onClick={() => handleSpecialistSelect("BIOKINETICIST")}
-                className={
+                className={`text-lg ${
                   selectedSpecialist === "BIOKINETICIST" ? "selected" : ""
-                }
+                }`}
               >
                 BIOKINETICIST
               </AntButton>
               <AntButton
                 onClick={() => handleSpecialistSelect("DIETITIAN")}
-                className={selectedSpecialist === "DIETITIAN" ? "selected" : ""}
+                className={`text-lg ${
+                  selectedSpecialist === "DIETITIAN" ? "selected" : ""
+                }`}
               >
                 DIETITIAN
               </AntButton>
               <AntButton
                 onClick={() => handleSpecialistSelect("PHYSIOTHERAPIST")}
-                className={
+                className={`text-lg ${
                   selectedSpecialist === "PHYSIOTHERAPIST" ? "selected" : ""
-                }
+                }`}
               >
                 PHYSIOTHERAPIST
               </AntButton>
@@ -287,15 +319,13 @@ const [isDietitian, setIsDietitian] = useState(false);
           )}
           {step === 2 && !isDietitian && (
             <>
-              <p>
+              <p className="text-lg">
                 Please select <strong>three</strong> dates and{" "}
                 <strong>time</strong> ranges for your availability to continue
               </p>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
-                {" "}
                 {Array.from({ length: 3 }).map((_, index) => (
                   <Box key={index} sx={{ my: 4 }}>
-                    {" "}
                     <DatePicker
                       label={`Select Date ${index + 1}`}
                       value={selectedDates[index] || null}
@@ -306,7 +336,7 @@ const [isDietitian, setIsDietitian] = useState(false);
                       renderInput={(params) => (
                         <TextField {...params} fullWidth />
                       )}
-                    />{" "}
+                    />
                     &nbsp;
                     <TimePicker
                       label="From"
@@ -328,9 +358,9 @@ const [isDietitian, setIsDietitian] = useState(false);
                         <TextField {...params} fullWidth />
                       )}
                       ampm={false}
-                    />{" "}
+                    />
                   </Box>
-                ))}{" "}
+                ))}
               </LocalizationProvider>
             </>
           )}
@@ -372,7 +402,6 @@ const [isDietitian, setIsDietitian] = useState(false);
               </p>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Box sx={{ my: 4 }}>
-                  {" "}
                   <DatePicker
                     label="Selected Date"
                     value={selectedDate || null}
@@ -381,8 +410,8 @@ const [isDietitian, setIsDietitian] = useState(false);
                     renderInput={(params) => (
                       <TextField {...params} fullWidth />
                     )}
-                  />{" "}
-                  &nbsp;{" "}
+                  />
+                  &nbsp;
                   <TimePicker
                     label="Selected Time"
                     value={timeRange.start || null}
@@ -392,7 +421,7 @@ const [isDietitian, setIsDietitian] = useState(false);
                     )}
                     ampm={false}
                   />
-                </Box>{" "}
+                </Box>
               </LocalizationProvider>
             </>
           )}
@@ -440,7 +469,11 @@ const [isDietitian, setIsDietitian] = useState(false);
         </Modal>
       )}
       <Modal
-        title="Insufficient Credits"
+        title={<div className="text-2xl">
+        <ExclamationCircleOutlined style={{ color: 'red', marginRight: '8px' }} />
+        Insufficient Credits
+      </div>}
+        
         centered
         open={showCreditModal}
         onCancel={() => setShowCreditModal(false)}
@@ -457,10 +490,27 @@ const [isDietitian, setIsDietitian] = useState(false);
           </AntButton>,
         ]}
       >
-        <p>
+        <p className="text-base" >
           You don't have enough credits to book this specialist. You will need
           to pay using cash/card.
         </p>
+      </Modal>
+      <Modal
+        title="Booking Confirmation"
+        centered
+        open={showConfirmationModal}
+        onCancel={() => setShowConfirmationModal(false)}
+        footer={[
+          <AntButton
+            key="close"
+            type="primary"
+            onClick={() => setShowConfirmationModal(false)}
+          >
+            Close
+          </AntButton>,
+        ]}
+      >
+        <p>{confirmationMessage}</p>
       </Modal>
     </>
   );
