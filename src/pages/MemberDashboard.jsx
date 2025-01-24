@@ -1,47 +1,17 @@
-import {
-  Icon,
-  HeaderContent,
-  TableRow,
-  TableHeaderCell,
-  TableHeader,
-  TableCell,
-  TableBody,
-  Header,
-  Table,
-  Segment,
-} from "semantic-ui-react";
+
 
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MemberModals } from "../components/MemberModals.jsx";
 import dayjs from "dayjs";
-import { AlertDialogDemo } from "../components/AlertDialog.jsx";
 import { Spin } from "antd";
 import useLoading from "../hooks/useLoading";
-
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
 
 export const MemberDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
   const loading = useLoading();
-  const [isOpen, setIsOpen] = useState(false);
-
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -302,29 +272,6 @@ export const MemberDashboard = () => {
                   memberName={data[0].member_name}
                   memberCredits={data[0].credits}
                 />
-                  {/* <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      
-                      <button className="w-full py-2 px-4 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300">BOOK APPOINTMENT</button>
-                      
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Are you absolutely sure?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          delete your account and remove your data from our
-                          servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction>Continue</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog> */}
                 </div>
                 <br />
                 <br />
