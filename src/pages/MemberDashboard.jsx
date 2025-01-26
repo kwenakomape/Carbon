@@ -1,29 +1,40 @@
-
-
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MemberModals } from "../components/MemberModals.jsx";
 import dayjs from "dayjs";
-import { Spin } from "antd";
+import { Spin, Dropdown } from "antd";
 import useLoading from "../hooks/useLoading";
 
 export const MemberDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
-  const loading = useLoading();
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3001/member/${id}`);
-        setData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  const [loading, setLoading] = useState(true);
+  // const loading = useLoading();
 
+  const fetchData = async () => {
+    // setLoading(true); // Set loading to true before fetching data
+    try {
+      const response = await axios.get(`http://localhost:3001/member/${id}`);
+      setData(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false); // Set loading to false after data is fetched
+        
+      }, 1500); // Adjust the delay as needed
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [id]);
+
+  const autoRefresh = () => {
+    fetchData(); // Trigger data fetch when booking is confirmed
+    console.log("should refresh");
+  };
 
   const pendingCount = data
     ? data.filter((appointment) => appointment.status === "Pending").length
@@ -35,252 +46,263 @@ export const MemberDashboard = () => {
   };
 
   return (
-    <>
-      <div className="flex h-screen bg-gray-100 font-sans">
-        {loading ? (
-          <div className="flex justify-center items-center w-full">
-            <div
-              className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
-              role="status"
-            >
-              <span className="visually-hidden">Loading...</span>
-            </div>
+    <div className="flex h-screen bg-gray-100 font-sans">
+      {loading ? (
+        <div className="flex justify-center items-center w-full">
+          <Spin size="large" />
+        </div>
+      ) : (
+        <div className="flex w-full h-full overflow-hidden transition-opacity duration-5000 opacity-100">
+          {/* Sidebar */}
+          <div className="w-64 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex flex-col h-full">
+            <div className="p-4 text-center text-2xl font-bold">Dashboard</div>
+            <nav className="flex-1 px-2 py-4 overflow-y-auto">
+              <a className="block px-4 py-2 mt-2 text-sm font-semibold bg-blue-800 rounded-lg hover:bg-blue-600 transition duration-300">
+                <svg
+                  className="w-6 h-6 inline-block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  ></path>
+                </svg>
+                <span className="ml-2">Dashboard</span>
+              </a>
+              <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
+                <svg
+                  className="w-6 h-6 inline-block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span className="ml-2">Profile</span>
+              </a>
+              <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
+                <svg
+                  className="w-6 h-6 inline-block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4l3 3"
+                  ></path>
+                </svg>
+                <span className="ml-2">Settings</span>
+              </a>
+              <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
+                <svg
+                  className="w-6 h-6 inline-block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
+                <span className="ml-2">Logout</span>
+              </a>
+            </nav>
           </div>
-        ) : (
-          <div className="flex w-full h-full overflow-hidden">
-            {/* Sidebar */}
-            <div className="w-64 bg-gradient-to-r from-blue-900 to-blue-700 text-white flex flex-col h-full">
-              <div className="p-4 text-center text-2xl font-bold">
-                Dashboard
-              </div>
-              <nav className="flex-1 px-2 py-4 overflow-y-auto">
-                <a className="block px-4 py-2 mt-2 text-sm font-semibold bg-blue-800 rounded-lg hover:bg-blue-600 transition duration-300">
-                  <svg
-                    className="w-6 h-6 inline-block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 6h16M4 12h16M4 18h16"
-                    ></path>
-                  </svg>
-                  <span className="ml-2">Dashboard</span>
-                </a>
-                <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
-                  <svg
-                    className="w-6 h-6 inline-block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                  <span className="ml-2">Profile</span>
-                </a>
-                <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
-                  <svg
-                    className="w-6 h-6 inline-block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3"
-                    ></path>
-                  </svg>
-                  <span className="ml-2">Settings</span>
-                </a>
-                <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
-                  <svg
-                    className="w-6 h-6 inline-block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    ></path>
-                  </svg>
-                  <span className="ml-2">Logout</span>
-                </a>
-              </nav>
-            </div>
 
-            {/* Main content */}
-            <div className="flex-1 flex flex-col h-full overflow-y-auto">
-              {/* Header */}
-              <header className="bg-white shadow p-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div className="flex items-center space-x-4">
-                  <div className="text-gray-600">
-                    Hi {data[0].member_name}, You have {pendingCount} pending
-                    appointments
-                  </div>
-                  <button className="relative">
-                    <svg
-                      className="w-6 h-6 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                      ></path>
-                    </svg>
-                    <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
-                  </button>
+          {/* Main content */}
+          <div className="flex-1 flex flex-col h-full overflow-y-auto">
+            {/* Header */}
+            <header className="bg-white shadow p-4 flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+              <div className="flex items-center space-x-4">
+                <div className="text-gray-600">
+                  Hi {data[0].member_name}, You have {pendingCount} pending
+                  appointments
                 </div>
-              </header>
+                <button className="relative">
+                  <svg
+                    className="w-6 h-6 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                    ></path>
+                  </svg>
+                  <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-600 rounded-full"></span>
+                </button>
+              </div>
+            </header>
 
-              {/* Content */}
-              <main className="flex-1 p-4">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">
-                    Appointments
-                  </h2>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                      <thead className="bg-gray-100">
+            {/* Content */}
+            <main className="flex-1 p-4">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Appointments
+                </h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Request Date
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Specialist
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Confirmed Date
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Time
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Status
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    {!data[0].request_date ? (
+                      <tbody>
                         <tr>
-                          <th className="py-3 px-4 border-b text-left text-gray-600">
-                            Request Date
-                          </th>
-                          <th className="py-3 px-4 border-b text-left text-gray-600">
-                            Specialist
-                          </th>
-                          <th className="py-3 px-4 border-b text-left text-gray-600">
-                            Confirmed Date
-                          </th>
-                          <th className="py-3 px-4 border-b text-left text-gray-600">
-                            Status
-                          </th>
+                          <td
+                            colSpan="4"
+                            className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg"
+                          >
+                            You have No Appointments
+                          </td>
                         </tr>
-                      </thead>
-                      {!data[0].request_date ? (
-                        <tbody>
-                          <tr>
-                            <td
-                              colSpan="4"
-                              className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg"
-                            >
-                              You have No Appointments
+                      </tbody>
+                    ) : (
+                      <tbody>
+                        {data.map((appointment, index) => (
+                          <tr
+                            key={index}
+                            className="hover:bg-gray-100 transition duration-300"
+                          >
+                            <td className="py-3 px-4 border-b">
+                              {appointment.request_date
+                                ? dayjs(appointment.request_date).format(
+                                  "D MMMM, YYYY"
+                                )
+                                : ""}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              {appointment.specialist_type || ""}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                            {appointment.confirmed_date
+                              ? dayjs(appointment.confirmed_date).format(
+                                "D MMMM, YYYY"
+                              )
+                              : "_________________"}
+                            </td>
+                            <td className="text-center py-3 px-4 border-b">
+                              {"______"}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              {appointment.status || ""}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              <div className="flex items-center justify-center">
+                                <MemberModals
+                                  memberId={id}
+                                  memberName={data[0].member_name}
+                                  memberCredits={data[0].credits}
+                                  autoRefresh={autoRefresh}
+                                  rescheduleModal={"rescheduleModal"}
+                                  specialistId={appointment.specialist_id}
+                                  AppointmentId={appointment.appointment_id}
+                                />
+                              </div>
                             </td>
                           </tr>
-                        </tbody>
-                      ) : (
-                        <tbody>
-                          {data.map((appointment, index) => (
-                            <tr
-                              key={index}
-                              className="hover:bg-gray-100 transition duration-300"
-                            >
-                              <td className="py-3 px-4 border-b">
-                                {appointment.request_date
-                                  ? dayjs(appointment.request_date).format(
-                                      "D MMMM, YYYY"
-                                    )
-                                  : ""}
-                              </td>
-                              <td className="py-3 px-4 border-b">
-                                {appointment.specialist_type || ""}
-                              </td>
-                              <td className="py-3 px-4 border-b">
-                                {appointment.confirmed_date
-                                  ? dayjs(appointment.confirmed_date).format(
-                                      "D MMMM, YYYY"
-                                    )
-                                  : "___________________________________________"}
-                              </td>
-                              <td className="py-3 px-4 border-b">
-                                {appointment.status || ""}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      )}
-                    </table>
-                  </div>
+                        ))}
+                      </tbody>
+                    )}
+                  </table>
                 </div>
-              </main>
-            </div>
-
-            {/* User Profile */}
-            <div className="bg-white p-6 rounded-lg shadow-lg m-4 w-64 max-h-96 transform transition duration-500 hover:scale-105">
-              <div className="text-center">
-                <div className="relative w-24 h-24 mx-auto mb-4">
-                  <img
-                    className="object-cover object-center h-24 w-24 rounded-full border-4 border-blue-500 shadow-lg"
-                    src="/kwenprofile1.jpg"
-                    alt="User Avatar"
-                  />
-                  <svg
-                    className="absolute bottom-0 right-0 w-6 h-6 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {data[0].member_name}
-                </h2>
-                <p className="text-gray-600">Member</p>
               </div>
-              <div className="mt-4 text-gray-600">
-                <div className="flex items-center justify-between">
-                  <strong>Joined Date</strong>
-                  <span>{formatDate(data[0].joined_date)}</span>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <strong>Appointments</strong>
-                  <span>{pendingCount}</span>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <strong>SSISA Credits</strong>
-                  <span>{data[0].credits}</span>
-                </div>
-                <div className="mt-4">
+            </main>
+          </div>
+
+          {/* User Profile */}
+          <div className="bg-white p-6 rounded-lg shadow-lg m-4 w-64 max-h-96 transform transition duration-500 hover:scale-105">
+            <div className="text-center">
+              <div className="relative w-24 h-24 mx-auto mb-4">
+                <img
+                  className="object-cover object-center h-24 w-24 rounded-full border-4 border-blue-500 shadow-lg"
+                  src="/kwenprofile1.jpg"
+                  alt="User Avatar"
+                />
+                <svg
+                  className="absolute bottom-0 right-0 w-6 h-6 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {data[0].member_name}
+              </h2>
+              <p className="text-gray-600">Member</p>
+            </div>
+            <div className="mt-4 text-gray-600">
+              <div className="flex items-center justify-between">
+                <strong>Joined Date</strong>
+                <span>{formatDate(data[0].joined_date)}</span>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <strong>Appointments</strong>
+                <span>{pendingCount}</span>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <strong>SSISA Credits</strong>
+                <span>{data[0].credits}</span>
+              </div>
+              <div className="mt-4">
                 <MemberModals
                   memberId={id}
                   memberName={data[0].member_name}
                   memberCredits={data[0].credits}
+                  autoRefresh={autoRefresh}
                 />
-                </div>
-                <br />
-                <br />
-                
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 };

@@ -203,6 +203,7 @@ app.get("/member/:id", (req, res) => {
     Appointments.request_date,
     Appointments.confirmed_date,
     Appointments.status,
+    Appointments.specialist_id,
     Admin.name AS specialist_name,
     Admin.specialist_type, -- Corrected to specialist_type
     Payments.payment_method
@@ -234,6 +235,8 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     a.member_id,
     m.name AS member_name,
     m.cell,
+    m.credits,
+    m.email,
     a.request_date,
     a.confirmed_date,
     a.status,

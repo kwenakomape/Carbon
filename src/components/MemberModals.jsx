@@ -5,14 +5,18 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
-import { Button as AntButton, Modal } from 'antd';
+import { Button as AntButton, Modal,Dropdown ,message} from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
+import { DownOutlined } from '@ant-design/icons';
+import { updateAppointmentStatus } from '../utils/apiUtils';
 
 
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
+  const [isCancel, setIsCancel] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [specialistName, setSpecialistName] = useState(null);
@@ -32,7 +36,17 @@ export const MemberModals = (props) => {
   const [modalText, setModalText] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-
+  const items = [
+    {
+      key: '1',
+      label: 'Reschedule',
+      onClick:() =>handleButtonClick(props.specialistId)
+    },
+    {
+      key: '2',
+      label: 'Follow-Up',
+    },
+  ];
   const handleConfirmDate = (date) => {
     setSelectedDate(date);
     if (!timeRange.start) {
@@ -93,6 +107,7 @@ export const MemberModals = (props) => {
     ]);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
+    setIsCancel(false);
   };
 
   const handleSpecialistSelect = (specialist) => {
@@ -141,6 +156,16 @@ export const MemberModals = (props) => {
   const handleBack = () => {
     setStep(step - 1);
   };
+  const handleAppointmentActions =()=>{
+    setIsCancel(true)
+    setOpen(true);
+    // handleSelectedStatus(status)
+    // setStep(2)
+  }
+   const handleStatus = async (status) => {
+      await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
+      handleClose();
+    };
 
   const handleBooking = async () => {
     setModalText("The booking is being processed...");
@@ -175,6 +200,7 @@ export const MemberModals = (props) => {
 
     try {
       await axios.post("http://localhost:3001/api/bookings", bookingData);
+      // props.setRefresh(true)
       setTimeout(() => {
         setOpen(false);
         setConfirmLoading(false);
@@ -202,6 +228,7 @@ export const MemberModals = (props) => {
                 )}\n\nNext Steps:\n- Your booking request is pending confirmation from the specialist based on their availability.\n- You will receive a confirmation email once the specialist approves your appointment.\n- If the requested time is not available, we will contact you to reschedule.\n\nThank you for choosing our services! We will keep you updated on the status of your booking.`
         );
         setShowConfirmationModal(true);
+        
       }, 2000);
       if (!isDietitian) {
         await axios.post("http://localhost:3001/api/send-email", bookingData);
@@ -227,16 +254,49 @@ export const MemberModals = (props) => {
 
   useEffect(() => {}, [specialistName]);
 
+  const handleButtonClick = (specialistId) => {
+    if (specialistId === 2) {
+      setIsDietitian(true);
+    }
+  
+    if (step === 1 && props.rescheduleModal === "rescheduleModal") {
+      setStep(specialistId === 2 ? 3 : 2);
+    }
+  
+    setOpen(true);
+  };
+
   return (
     <>
-      <AntButton type="primary" onClick={() => setOpen(true)}>
+      
+      {props.rescheduleModal === "rescheduleModal" ? (
+        <><div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" onClick={() => handleAppointmentActions()}>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </div>
+        <Dropdown
+        menu={{
+          items,
+        }}
+      >
+        <a>
+          More <DownOutlined />
+        </a>
+      </Dropdown>
+      </>
+      ) : (
+        <AntButton type="primary" onClick={() =>setOpen(true)}>
         BOOK APPOINTMENT
       </AntButton>
+      )}
       {!showCreditModal && (
         <Modal
           title={
             <div className="text-center w-full text-2xl font-bold text-blue-600">
-              {step === 1
+              {step === 1 && isCancel
+            ? "Confirm Action"
+            :step === 1
                 ? "Choose your Specialist"
                 : step === 2 && !isDietitian
                 ? "CHOOSE THREE DATES"
@@ -253,12 +313,24 @@ export const MemberModals = (props) => {
           open={open}
           onCancel={handleClose}
           footer={[
-            step > 1 && (
+            step > 1 && !props.rescheduleModal &&(
               <AntButton key="back" onClick={handleBack}>
                 Previous
               </AntButton>
             ),
-            <AntButton
+            step === 1 && isCancel &&([
+              <AntButton key="back" onClick={handleClose}>
+                  No
+                </AntButton>,
+                <AntButton key="confirm" type="primary" onClick={() => {
+                  handleStatus("Cancelled");
+                  props.autoRefresh();
+                  message.success("Appointment Cancelled.");
+                }}>
+                  Yes
+                </AntButton>
+          ]),
+            !isCancel && <AntButton
               key="next"
               type="primary"
               onClick={
@@ -289,7 +361,7 @@ export const MemberModals = (props) => {
           ]}
           width={1000}
         >
-          {step === 1 && (
+          {step === 1 &&  !isCancel &&(
             <div className="specialistOptions">
               <AntButton
                 onClick={() => handleSpecialistSelect("BIOKINETICIST")}
@@ -317,6 +389,11 @@ export const MemberModals = (props) => {
               </AntButton>
             </div>
           )}
+          {step === 1 && isCancel && (
+          <p>
+            Are you sure you want to <strong>cancel</strong> this appointment?
+          </p>
+        )}
           {step === 2 && !isDietitian && (
             <>
               <p className="text-lg">
@@ -499,12 +576,18 @@ export const MemberModals = (props) => {
         title="Booking Confirmation"
         centered
         open={showConfirmationModal}
-        onCancel={() => setShowConfirmationModal(false)}
+        onCancel={() => {
+          setShowConfirmationModal(false);
+          props.autoRefresh(); // Call the callback to refresh the dashboard
+        }}
         footer={[
           <AntButton
             key="close"
             type="primary"
-            onClick={() => setShowConfirmationModal(false)}
+            onClick={() => {
+              setShowConfirmationModal(false);
+              props.autoRefresh(); // Call the callback to refresh the dashboard
+            }}
           >
             Close
           </AntButton>,

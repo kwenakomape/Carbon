@@ -9,6 +9,7 @@ import {
   Table,
   Segment,
 } from "semantic-ui-react";
+import { Button} from "antd";
 
 import { Spin } from 'antd';
 import useLoading from "../hooks/useLoading";
@@ -24,22 +25,23 @@ export const AdminDashboard = () => {
   const [data, setData] = useState(null);
   const loading = useLoading();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/api/appointments-with-specialist/${id}`
-        );
-  
-        setData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/appointments-with-specialist/${id}`);
+      setData(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [id]);
 
+  const autoRefresh = () => {
+    fetchData(); // Trigger data fetch when booking is confirmed
+    console.log("admin passed")
+  };
   return (
     <>
       {loading ? (
@@ -97,9 +99,10 @@ export const AdminDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">Client</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Payment Method</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Confirmed Date</th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">Time</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Status</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Invoice Status</th>
-                        <th className="py-3 px-4 border-b text-left text-gray-600">Actions</th>
+                        <th className=" text-center py-3 px-4 border-b  text-gray-600">Actions</th>
                       </tr>
                     </thead>
                     {!data[0].request_date ? (
@@ -116,8 +119,9 @@ export const AdminDashboard = () => {
                           <tr key={index} className="hover:bg-gray-100 transition duration-300">
                             <td className="py-3 px-4 border-b">{appointment.request_date ? dayjs(appointment.request_date).format('D MMMM, YYYY') : ""}</td>
                             <td className="py-3 px-4 border-b">{appointment.member_name || ""}</td>
-                            <td className="py-3 px-4 border-b">{appointment.payment_method || "___________________________________________"}</td>
-                            <td className="py-3 px-4 border-b">{appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "___________________________________________"}</td>
+                            <td className="text-center py-3 px-4 border-b">{appointment.payment_method || "________"}</td>
+                            <td className="py-3 px-4 border-b">{appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}</td>
+                            <td className="text-center py-3 px-4 border-b">{"_____"}</td>
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center">
                                 <span>{appointment.status || ""}</span>
@@ -133,9 +137,12 @@ export const AdminDashboard = () => {
                             </td>
                             <td className="py-3 px-4 border-b">{appointment.invoice_status ? appointment.invoice_status : "Awaiting Upload"}</td>
                             <td className="py-3 px-4 border-b">
+                            <div className="flex items-center justify-center">
                             <AdminModals
                                       memberId={appointment.member_id}
                                       memberName={appointment.member_name}
+                                      memberEmail={appointment.email}
+                                      memberCredits={appointment.credits}
                                       AppointmentId={appointment.appointment_id}
                                       phoneNumber={appointment.cell}
                                       appointmentStatus={appointment.status}
@@ -147,8 +154,15 @@ export const AdminDashboard = () => {
                                       preferred_time_range2={appointment.preferred_time_range2 || ""}
                                       preferred_date3={appointment.preferred_date3 ? dayjs(appointment.preferred_date3).format('D MMMM, YYYY') : ""}
                                       preferred_time_range3={appointment.preferred_time_range3 || ""}
+                                      autoRefresh={autoRefresh}
+                                      confirmed_date={appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}
+
                                     />
+                                    
+                               </div>
+                                    
                             </td>
+                            
                           </tr>
                         ))}
                       </tbody>

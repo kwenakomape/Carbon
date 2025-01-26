@@ -6,9 +6,10 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 import { UploadFiles } from "./UploadFiles";
-
+import { DownOutlined, UserOutlined } from '@ant-design/icons';
 import React, { useState, useEffect } from "react";
-import { Modal, Button } from "antd";
+import { Modal, Select,Menu,Button,message,Dropdown } from "antd";
+import { updateAppointmentStatus } from '../utils/apiUtils';
 
 export const AdminModals = (props) => {
   const id = props.memberId;
@@ -24,6 +25,72 @@ export const AdminModals = (props) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
   const [dateSelected, setDateSelected] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedName, setSelectedName] = useState(null);
+
+  const names = [
+    "Zoe Woodman",
+    "Caitlin Miller",
+    "Yusuf Kajee",
+    "Jarrod Grunewald",
+    "Lindiwe Le Brasseur",
+    "Caitlin Miles",
+    "Jana Burger",
+    "Brittany Daniels"
+  ];
+
+  const handleChange = (value) => {
+    setSelectedName(value);
+    message.success(`Selected: ${value}`);
+  };
+
+  const items = [
+    {
+      key: '1',
+      label: 'Seen',
+      onClick: () => {
+        setOpen(true);
+        handleSelectedStatus("SEEN")
+        setStep(2)
+      }
+    },
+
+    {
+      key: '2',
+      label: 'Reschedule',
+      onClick: () => {
+        setOpen(true);
+        handleSelectedStatus("MODIFY")
+        setStep(2)
+      }
+    },
+    {
+      key: '3',
+      label: 'Missed',
+      onClick: () => {
+        setOpen(true);
+        handleSelectedStatus("MISSED")
+        setStep(2)
+      }
+    },
+    {
+      key: '4',
+      label: 'View Details',
+      onClick:() => {
+        setSelectedAppointment({
+          clientName: props.memberName,
+          phoneNumber: props.phoneNumber,
+          AppointmentId:props.AppointmentId,
+          appointmentStatus:props.appointmentStatus,
+          memberCredits:props.memberCredits,
+          confirmed_date:props.confirmed_date,
+          memberEmail:props.memberEmail
+          // Add other details you want to show
+        });
+        setOpen(true);
+      }
+    }
+  ];
 
   const shouldDisableDate = (date) => {
     const today = dayjs().startOf("day");
@@ -54,23 +121,12 @@ export const AdminModals = (props) => {
     setIsCancel(false);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
-  };
-
-  const UpdateAppointmentStatus = async (status) => {
-    let data = {
-      memberId: id,
-      newStatus: status,
-      AppointmentId: props.AppointmentId,
-    };
-    try {
-      await axios.post(`http://localhost:3001/api/update-appointment-status`, data);
-    } catch (error) {
-      console.error("Error Updating Appointment status", error);
-    }
+    setSelectedAppointment(null)
+    setSelectedName(null)
   };
 
   const handleStatus = async (status) => {
-    await UpdateAppointmentStatus(status);
+    await updateAppointmentStatus(id, props.AppointmentId, status);
     handleClose();
   };
 
@@ -87,6 +143,8 @@ export const AdminModals = (props) => {
     try {
       await axios.post("http://localhost:3001/api/confirm-date", data);
       handleClose();
+      props.autoRefresh();
+      message.success("Appointment Confirmed.");
 
       await axios.post("http://localhost:3001/api/send-appointment-details", data);
     } catch (error) {
@@ -122,7 +180,11 @@ export const AdminModals = (props) => {
   const handleSelectedPaymentMethod = (paymentMethod) => {
     setSelectedPaymentMethod(paymentMethod);
   };
-
+  const handleAppointmentActions =(status)=>{
+    setOpen(true);
+    handleSelectedStatus(status)
+    setStep(2)
+  }
   const handleNext = () => {
     if (step === 2 && selectedPaymentMethod === "CASH/CARD") {
       setStep(4); // New step for confirmation modal
@@ -147,32 +209,52 @@ export const AdminModals = (props) => {
 
   return (
     <>
-      <Button type="primary" onClick={() => setOpen(true)}>
-        Manage
-      </Button>
+      <div class="flex flex-wrap gap-2">
+        <Button color="primary" size="small" variant="solid" onClick={()=>handleAppointmentActions("MODIFY")}>
+            Accept
+          </Button>
+          <div className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110" onClick={() => handleAppointmentActions("CANCELED")}>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-full h-full">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
+</div>
+         <Dropdown
+              menu={{
+                items,
+              }}
+            >
+              <a>
+                More <DownOutlined />
+              </a>
+            </Dropdown>
+        
+      </div>
+     
       <Modal
         title={
-          step === 1
-            ? "Select Status"
-            : step === 2 && isMissed
-            ? "Confirm Action"
-            : step === 2 && isModify
-            ? "Choose a Date and Time"
-            : step === 2 && isCancel
-            ? "Confirm Action"
-            : step === 2 && isSeen
-            ? "Select Payment Method"
-            : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
-            ? "Confirm Payment by SSISA Credits"
-            : step === 4 && selectedPaymentMethod === "CASH/CARD"
-            ? "Confirm Payment Method"
-            : ""
+          step === 1 && selectedAppointment
+            ? "Full Details"
+            : step === 1
+              ? "Choose Operation"
+              : step === 2 && isMissed
+                ? "Confirm Action"
+                : step === 2 && isModify
+                  ? "Choose a Date and Time"
+                  : step === 2 && isCancel
+                    ? "Confirm Action"
+                    : step === 2 && isSeen
+                      ? "Select Payment Method"
+                      : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
+                        ? "Confirm Payment by SSISA Credits"
+                        : step === 4 && selectedPaymentMethod === "CASH/CARD"
+                          ? "Confirm Payment Method"
+                          : ""
         }
         centered
         open={open}
         onCancel={handleClose}
         footer={
-          step === 1
+          step === 1 && !selectedAppointment
             ? [
                 <Button key="next" type="primary" onClick={handleNext} disabled={!selectedStatus}>
                   Continue
@@ -183,25 +265,30 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleBack}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={() => handleStatus("Missed")}>
+                <Button key="confirm" type="primary" onClick={() => {
+                  handleStatus("Missed");
+                  props.autoRefresh();
+                  message.success("Appointment Missed.");
+                }}>
                   Yes
                 </Button>,
               ]
             : step === 2 && isModify
             ? [
-                <Button key="back" onClick={handleBack}>
-                  Previous
-                </Button>,
                 <Button key="next" type="primary" onClick={handleNext} disabled={!dateSelected}>
                   Continue
                 </Button>,
               ]
             : step === 2 && isCancel
             ? [
-                <Button key="back" onClick={handleBack}>
+                <Button key="back" onClick={handleClose}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={() => handleStatus("Cancelled")}>
+                <Button key="confirm" type="primary" onClick={() => {
+                  handleStatus("Cancelled");
+                  props.autoRefresh();
+                  message.success("Appointment Cancelled.");
+                }}>
                   Yes
                 </Button>,
               ]
@@ -210,12 +297,7 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleBack}>
                   Previous
                 </Button>,
-                <Button
-                  key="next"
-                  type="primary"
-                  onClick={handleNext}
-                  disabled={!selectedPaymentMethod}
-                >
+                <Button key="next" type="primary" onClick={handleNext} disabled={!selectedPaymentMethod}>
                   Next
                 </Button>,
               ]
@@ -227,9 +309,6 @@ export const AdminModals = (props) => {
               ]
             : step === 3 && isModify
             ? [
-                <Button key="back" onClick={handleBack}>
-                  Previous
-                </Button>,
                 <Button key="confirm" type="primary" onClick={handleDateConfirmation}>
                   Confirm
                 </Button>,
@@ -247,21 +326,21 @@ export const AdminModals = (props) => {
         }
         width={1000}
       >
-        {step === 1 && (
+        {selectedAppointment && (
+          <div className="appointment-details">
+            <p><strong>Client Name:</strong> {selectedAppointment.clientName}</p>
+            <p><strong>Phone Number:</strong> {selectedAppointment.phoneNumber}</p>
+            <p><strong>Email:</strong> {selectedAppointment.memberEmail}</p>
+            <p><strong>Appointment ID:</strong> {selectedAppointment.AppointmentId}</p>
+            <p><strong>Confirmed Date:</strong> {selectedAppointment.confirmed_date}</p>
+            <p><strong>Credits Remaining:</strong> {selectedAppointment.memberCredits}</p>
+            <p><strong>Appointment Status:</strong> {selectedAppointment.appointmentStatus}</p>
+            
+            {/* Add other details here */}
+          </div>
+        )}
+        {step === 1 && !selectedAppointment &&(
           <div className="statusOptions">
-            <Button
-              onClick={() => handleSelectedStatus("SEEN")}
-              className={selectedStatus === "SEEN" ? "selected" : ""}
-              disabled={props.appointmentStatus !== "Confirmed"}
-            >
-              SEEN
-            </Button>
-            <Button
-              onClick={() => handleSelectedStatus("MISSED")}
-              className={selectedStatus === "MISSED" ? "selected" : ""}
-            >
-              MISSED
-            </Button>
             {props.appointmentStatus !== "Confirmed" && props.appointmentStatus !== "Seen" && (
               <Button
                 onClick={() => handleSelectedStatus("MODIFY")}
@@ -270,6 +349,28 @@ export const AdminModals = (props) => {
                 CONFIRM
               </Button>
             )}
+            <Button
+              onClick={() => handleSelectedStatus("SEEN")}
+              className={selectedStatus === "SEEN" ? "selected" : ""}
+              disabled={props.appointmentStatus !== "Confirmed"}
+            >
+              SEEN
+            </Button>
+            <Button
+              onClick={() => handleSelectedStatus("RESCHEDULE")}
+              className={selectedStatus === "RESCHEDULE" ? "selected" : ""}
+              // disabled={props.appointmentStatus !== "Confirmed"}
+            >
+              RESCHEDULE
+            </Button>
+           
+            <Button
+              onClick={() => handleSelectedStatus("MISSED")}
+              className={selectedStatus === "MISSED" ? "selected" : ""}
+            >
+              MISSED
+            </Button>
+            
             <Button
               onClick={() => handleSelectedStatus("CANCELED")}
               className={selectedStatus === "CANCELED" ? "selected" : ""}
@@ -300,6 +401,31 @@ export const AdminModals = (props) => {
             <div>
               <strong>Date 3:</strong> {props.preferred_date3}, From{" "}
               {props.preferred_time_range3}</div>
+            <br />
+            <div>
+              <Select
+                placeholder="Assign Task"
+                onChange={handleChange}
+                style={{ width: 200 }}
+                value={selectedName}
+                dropdownRender={menu => (
+                  <>
+                    {menu}
+                  </>
+                )}
+              >
+                {names.map((name, index) => (
+                  <Option key={index} value={name}>
+                    <UserOutlined style={{ marginRight: 8 }} />
+                    {name}
+                  </Option>
+                ))}
+              </Select>
+              {/* <Button type="primary" className="flex items-center" style={{ marginLeft: 8 }}>
+                {selectedName ? selectedName : "Assign Task"} <DownOutlined className="ml-2" />
+              </Button> */}
+            </div>
+            
             <br />
             <p style={{ color: "red", fontWeight: "bold", marginTop: "20px" }}>
               Please select your preferred date and time to continue:
