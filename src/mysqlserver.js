@@ -16,10 +16,11 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "12345",
-  database: "carbondb",
+  host: 'mysql-1c330a6b-carbon-project.e.aivencloud.com',
+  user: 'avnadmin',
+  password: 'AVNS_G-WCS9_rpt-eNjdbqnqffffsfsreqas',
+  database: 'newcarbondatabase',
+  connectTimeout: 10000 ,
 });
 
 db.connect((err) => {
