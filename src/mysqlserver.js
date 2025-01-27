@@ -472,19 +472,29 @@ app.post("/api/update-appointment-status", (req, res) => {
 // or specialist choose which servives they offered them ,point is we need an interface to add sessions(services)
 
 app.post("/api/bookings", (req, res) => {
-  const { memberId, specialistId, status, selectedDates, timeRanges, timeRange, selectedDate } = req.body;
-
+  const { memberId, specialistId, status, selectedDates, timeRanges, timeRange, selectedDate, appointmentId } = req.body;
+  console.log(specialistId)
+  console.log(appointmentId);
+  console.log(memberId);
+  console.log(status);
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format('HH:mm')} to ${dayjs(timeRange.end).format('HH:mm')}`
   });
 
   if (specialistId === 2) {
-    const appointmentQuery = `
+    const appointmentQuery = status === "Rescheduled" ? `
+      UPDATE Appointments
+      SET status = ?, confirmed_date = ?, preferred_time_range1 = ?
+      WHERE appointment_id = ? AND member_id = ?
+    ` : `
       INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, preferred_time_range1)
       VALUES (?, ?, ?, ?, ?)
     `;
-    const appointmentValues = [
+    const appointmentValues = status === "Rescheduled" ? [
+      status, dayjs(selectedDate).format("YYYY-MM-DD"), `${dayjs(timeRange.start).format('HH:mm')}`,
+      appointmentId, memberId
+    ] : [
       memberId, specialistId, "confirmed",
       dayjs(selectedDate).format("YYYY-MM-DD"), `${dayjs(timeRange.start).format('HH:mm')}`
     ];
@@ -498,11 +508,21 @@ app.post("/api/bookings", (req, res) => {
     });
   } else {
     const preferredTimes = selectedDates.map((date, index) => formatDateTime(date, timeRanges[index]));
-    const appointmentQuery = `
+    const appointmentQuery = status === "Rescheduled" ? `
+      UPDATE Appointments
+      SET status = ?, preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?
+      WHERE appointment_id = ? AND member_id = ?
+    ` : `
       INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const appointmentValues = [
+    const appointmentValues = status === "Rescheduled" ? [
+      status,
+      preferredTimes[0].date, preferredTimes[0].timeRange,
+      preferredTimes[1].date, preferredTimes[1].timeRange,
+      preferredTimes[2].date, preferredTimes[2].timeRange,
+      appointmentId, memberId
+    ] : [
       memberId, specialistId, status,
       preferredTimes[0].date, preferredTimes[0].timeRange,
       preferredTimes[1].date, preferredTimes[1].timeRange,
@@ -518,7 +538,6 @@ app.post("/api/bookings", (req, res) => {
     });
   }
 });
-
 app.post("/api/send-email", (req, res) => {
   const {
     type,

@@ -20,10 +20,7 @@ export const MemberDashboard = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
-      setTimeout(() => {
-        setLoading(false); // Set loading to false after data is fetched
-        
-      }, 1500); // Adjust the delay as needed
+      setLoading(false); // Set loading to false after data is fetched
     }
   };
 
@@ -33,7 +30,7 @@ export const MemberDashboard = () => {
 
   const autoRefresh = () => {
     fetchData(); // Trigger data fetch when booking is confirmed
-    console.log("should refresh");
+    console.log("should refresh")
   };
 
   const pendingCount = data
@@ -189,16 +186,16 @@ export const MemberDashboard = () => {
                       </tr>
                     </thead>
                     {!data[0].request_date ? (
-                      <tbody>
-                        <tr>
-                          <td
-                            colSpan="4"
-                            className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg"
-                          >
-                            You have No Appointments
-                          </td>
-                        </tr>
-                      </tbody>
+                     <tbody>
+                     <tr className="w-full">
+                       <td
+                         colSpan="4"
+                         className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg w-full"
+                       >
+                         You have No Appointments
+                       </td>
+                     </tr>
+                   </tbody>
                     ) : (
                       <tbody>
                         {data.map((appointment, index) => (
@@ -237,6 +234,7 @@ export const MemberDashboard = () => {
                                   memberCredits={data[0].credits}
                                   autoRefresh={autoRefresh}
                                   rescheduleModal={"rescheduleModal"}
+                                  specialistName={appointment.specialist_name}
                                   specialistId={appointment.specialist_id}
                                   AppointmentId={appointment.appointment_id}
                                 />

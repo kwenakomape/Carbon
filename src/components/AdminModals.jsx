@@ -460,7 +460,10 @@ export const AdminModals = (props) => {
           </>
         )}
         {step === 2 && isCancel && (
-          <p>
+          <p className="text-xl">
+            <ExclamationCircleOutlined
+              style={{ color: "red", marginRight: "8px" }}
+            />
             Are you sure you want to <strong>cancel</strong> this appointment?
           </p>
         )}
