@@ -11,6 +11,8 @@ import React, { useState, useEffect } from "react";
 import { Modal, Select,Menu,Button,message,Dropdown } from "antd";
 import { updateAppointmentStatus } from '../utils/apiUtils';
 
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+
 export const AdminModals = (props) => {
   const id = props.memberId;
 
@@ -27,6 +29,8 @@ export const AdminModals = (props) => {
   const [dateSelected, setDateSelected] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
+  const [rescheduleModal, setRescheduleModal] = useState(false);
+
 
   const names = [
     "Zoe Woodman",
@@ -55,15 +59,16 @@ export const AdminModals = (props) => {
       }
     },
 
-    {
-      key: '2',
-      label: 'Reschedule',
-      onClick: () => {
-        setOpen(true);
-        handleSelectedStatus("MODIFY")
-        setStep(2)
-      }
-    },
+    // {
+    //   key: '2',
+    //   label: 'Reschedule',
+    //   onClick: () => {
+    //     setOpen(true);
+    //     handleSelectedStatus("MODIFY")
+    //     setRescheduleModal(true)
+    //     setStep(2)
+    //   }
+    // },
     {
       key: '3',
       label: 'Missed',
@@ -121,13 +126,15 @@ export const AdminModals = (props) => {
     setIsCancel(false);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
-    setSelectedAppointment(null)
-    setSelectedName(null)
+    setSelectedAppointment(null);
+    setSelectedName(null);
+    setRescheduleModal(false);
   };
 
   const handleStatus = async (status) => {
     await updateAppointmentStatus(id, props.AppointmentId, status);
     handleClose();
+    props.autoRefresh()
   };
 
   const handleDateConfirmation = async () => {
@@ -138,6 +145,7 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
+      status:rescheduleModal ? "Rescheduled" : "Confirmed"
     };
 
     try {
@@ -210,45 +218,69 @@ export const AdminModals = (props) => {
   return (
     <>
       <div class="flex flex-wrap gap-2">
-        <Button color="primary" size="small" variant="solid" onClick={()=>handleAppointmentActions("MODIFY")}>
+        {props.specialistId!==2 &&
+          (<Button
+            color="primary"
+            size="small"
+            variant="solid"
+            onClick={() => handleAppointmentActions("MODIFY")}
+          >
             Accept
-          </Button>
-          <div className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110" onClick={() => handleAppointmentActions("CANCELED")}>
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-full h-full">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-</div>
-         <Dropdown
-              menu={{
-                items,
-              }}
-            >
-              <a>
-                More <DownOutlined />
-              </a>
-            </Dropdown>
-        
+          </Button>)
+        }
+        <div
+          className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110"
+          onClick={() => handleAppointmentActions("CANCELED")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-full h-full"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+        </div>
+        <Dropdown
+          menu={{
+            items,
+          }}
+        >
+          <a>
+            More <DownOutlined />
+          </a>
+        </Dropdown>
       </div>
-     
+
       <Modal
         title={
-          step === 1 && selectedAppointment
-            ? "Full Details"
-            : step === 1
+          <div className="text-center w-full text-3xl font-bold text-blue-600">
+            {step === 1 && selectedAppointment
+              ? "Full Details"
+              : step === 1
               ? "Choose Operation"
               : step === 2 && isMissed
-                ? "Confirm Action"
-                : step === 2 && isModify
-                  ? "Choose a Date and Time"
-                  : step === 2 && isCancel
-                    ? "Confirm Action"
-                    : step === 2 && isSeen
-                      ? "Select Payment Method"
-                      : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
-                        ? "Confirm Payment by SSISA Credits"
-                        : step === 4 && selectedPaymentMethod === "CASH/CARD"
-                          ? "Confirm Payment Method"
-                          : ""
+              ? "Confirm Action"
+              : step === 2 && isModify
+              ? "Choose a Date and Time"
+              : step === 2 && isCancel
+              ? "Confirm Action"
+              : step === 2 && isSeen
+              ? "Select Payment Method"
+              : step === 3 && isModify
+              ? "Confirm Your Availability"
+              : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
+              ? "Confirm Payment by SSISA Credits"
+              : step === 4 && selectedPaymentMethod === "CASH/CARD"
+              ? "Confirm Payment Method"
+              : ""}
+          </div>
         }
         centered
         open={open}
@@ -256,7 +288,12 @@ export const AdminModals = (props) => {
         footer={
           step === 1 && !selectedAppointment
             ? [
-                <Button key="next" type="primary" onClick={handleNext} disabled={!selectedStatus}>
+                <Button
+                  key="next"
+                  type="primary"
+                  onClick={handleNext}
+                  disabled={!selectedStatus}
+                >
                   Continue
                 </Button>,
               ]
@@ -265,17 +302,26 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleBack}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={() => {
-                  handleStatus("Missed");
-                  props.autoRefresh();
-                  message.success("Appointment Missed.");
-                }}>
+                <Button
+                  key="confirm"
+                  type="primary"
+                  onClick={() => {
+                    handleStatus("Missed");
+                    props.autoRefresh();
+                    message.success("Appointment Missed.");
+                  }}
+                >
                   Yes
                 </Button>,
               ]
             : step === 2 && isModify
             ? [
-                <Button key="next" type="primary" onClick={handleNext} disabled={!dateSelected}>
+                <Button
+                  key="next"
+                  type="primary"
+                  onClick={handleNext}
+                  disabled={!dateSelected}
+                >
                   Continue
                 </Button>,
               ]
@@ -284,11 +330,15 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleClose}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={() => {
-                  handleStatus("Cancelled");
-                  props.autoRefresh();
-                  message.success("Appointment Cancelled.");
-                }}>
+                <Button
+                  key="confirm"
+                  type="primary"
+                  onClick={() => {
+                    handleStatus("Cancelled");
+                    props.autoRefresh();
+                    message.success("Appointment Cancelled.");
+                  }}
+                >
                   Yes
                 </Button>,
               ]
@@ -297,7 +347,12 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleBack}>
                   Previous
                 </Button>,
-                <Button key="next" type="primary" onClick={handleNext} disabled={!selectedPaymentMethod}>
+                <Button
+                  key="next"
+                  type="primary"
+                  onClick={handleNext}
+                  disabled={!selectedPaymentMethod}
+                >
                   Next
                 </Button>,
               ]
@@ -309,7 +364,14 @@ export const AdminModals = (props) => {
               ]
             : step === 3 && isModify
             ? [
-                <Button key="confirm" type="primary" onClick={handleDateConfirmation}>
+                <Button key="back" onClick={handleBack}>
+                  Previous
+                </Button>,
+                <Button
+                  key="confirm"
+                  type="primary"
+                  onClick={handleDateConfirmation}
+                >
                   Confirm
                 </Button>,
               ]
@@ -318,7 +380,7 @@ export const AdminModals = (props) => {
                 <Button key="back" onClick={handleBackToPaymentMethod}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={handleClose}>
+                <Button key="confirm" type="primary" onClick={()=>handleStatus("SEEN")}>
                   Yes
                 </Button>,
               ]
@@ -328,27 +390,46 @@ export const AdminModals = (props) => {
       >
         {selectedAppointment && (
           <div className="appointment-details">
-            <p><strong>Client Name:</strong> {selectedAppointment.clientName}</p>
-            <p><strong>Phone Number:</strong> {selectedAppointment.phoneNumber}</p>
-            <p><strong>Email:</strong> {selectedAppointment.memberEmail}</p>
-            <p><strong>Appointment ID:</strong> {selectedAppointment.AppointmentId}</p>
-            <p><strong>Confirmed Date:</strong> {selectedAppointment.confirmed_date}</p>
-            <p><strong>Credits Remaining:</strong> {selectedAppointment.memberCredits}</p>
-            <p><strong>Appointment Status:</strong> {selectedAppointment.appointmentStatus}</p>
-            
+            <p>
+              <strong>Client Name:</strong> {selectedAppointment.clientName}
+            </p>
+            <p>
+              <strong>Phone Number:</strong> {selectedAppointment.phoneNumber}
+            </p>
+            <p>
+              <strong>Email:</strong> {selectedAppointment.memberEmail}
+            </p>
+            <p>
+              <strong>Appointment ID:</strong>{" "}
+              {selectedAppointment.AppointmentId}
+            </p>
+            <p>
+              <strong>Confirmed Date:</strong>{" "}
+              {selectedAppointment.confirmed_date}
+            </p>
+            <p>
+              <strong>Credits Remaining:</strong>{" "}
+              {selectedAppointment.memberCredits}
+            </p>
+            <p>
+              <strong>Appointment Status:</strong>{" "}
+              {selectedAppointment.appointmentStatus}
+            </p>
+
             {/* Add other details here */}
           </div>
         )}
-        {step === 1 && !selectedAppointment &&(
+        {step === 1 && !selectedAppointment && (
           <div className="statusOptions">
-            {props.appointmentStatus !== "Confirmed" && props.appointmentStatus !== "Seen" && (
-              <Button
-                onClick={() => handleSelectedStatus("MODIFY")}
-                className={selectedStatus === "MODIFY" ? "selected" : ""}
-              >
-                CONFIRM
-              </Button>
-            )}
+            {props.appointmentStatus !== "Confirmed" &&
+              props.appointmentStatus !== "Seen" && (
+                <Button
+                  onClick={() => handleSelectedStatus("MODIFY")}
+                  className={selectedStatus === "MODIFY" ? "selected" : ""}
+                >
+                  CONFIRM
+                </Button>
+              )}
             <Button
               onClick={() => handleSelectedStatus("SEEN")}
               className={selectedStatus === "SEEN" ? "selected" : ""}
@@ -363,14 +444,14 @@ export const AdminModals = (props) => {
             >
               RESCHEDULE
             </Button>
-           
+
             <Button
               onClick={() => handleSelectedStatus("MISSED")}
               className={selectedStatus === "MISSED" ? "selected" : ""}
             >
               MISSED
             </Button>
-            
+
             <Button
               onClick={() => handleSelectedStatus("CANCELED")}
               className={selectedStatus === "CANCELED" ? "selected" : ""}
@@ -387,20 +468,21 @@ export const AdminModals = (props) => {
         )}
         {step === 2 && isModify && (
           <>
-            <p>
+            <p className="text-lg mb-2">
               <strong>Client's Proposed Dates</strong>
             </p>
-            <div>
+            <div className="text-lg">
               <strong>Date 1:</strong> {props.preferred_date1}, From{" "}
               {props.preferred_time_range1}
             </div>
-            <div>
+            <div className="text-lg">
               <strong>Date 2:</strong> {props.preferred_date2}, From{" "}
               {props.preferred_time_range2}
             </div>
-            <div>
+            <div className="text-lg">
               <strong>Date 3:</strong> {props.preferred_date3}, From{" "}
-              {props.preferred_time_range3}</div>
+              {props.preferred_time_range3}
+            </div>
             <br />
             <div>
               <Select
@@ -408,11 +490,7 @@ export const AdminModals = (props) => {
                 onChange={handleChange}
                 style={{ width: 200 }}
                 value={selectedName}
-                dropdownRender={menu => (
-                  <>
-                    {menu}
-                  </>
-                )}
+                dropdownRender={(menu) => <>{menu}</>}
               >
                 {names.map((name, index) => (
                   <Option key={index} value={name}>
@@ -421,13 +499,10 @@ export const AdminModals = (props) => {
                   </Option>
                 ))}
               </Select>
-              {/* <Button type="primary" className="flex items-center" style={{ marginLeft: 8 }}>
-                {selectedName ? selectedName : "Assign Task"} <DownOutlined className="ml-2" />
-              </Button> */}
             </div>
-            
+
             <br />
-            <p style={{ color: "red", fontWeight: "bold", marginTop: "20px" }}>
+            <p className="text-lg text-red-600 font-bold">
               Please select your preferred date and time to continue:
             </p>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -471,13 +546,17 @@ export const AdminModals = (props) => {
           <div className="specialistOptions">
             <Button
               onClick={() => handleSelectedPaymentMethod("CASH/CARD")}
-              className={selectedPaymentMethod === "CASH/CARD" ? "selected" : ""}
+              className={
+                selectedPaymentMethod === "CASH/CARD" ? "selected" : ""
+              }
             >
               CASH/CARD
             </Button>
             <Button
               onClick={() => handleSelectedPaymentMethod("SSISA CREDITS")}
-              className={selectedPaymentMethod === "SSISA CREDITS" ? "selected" : ""}
+              className={
+                selectedPaymentMethod === "SSISA CREDITS" ? "selected" : ""
+              }
             >
               SSISA CREDITS
             </Button>
@@ -496,6 +575,7 @@ export const AdminModals = (props) => {
               total_credits_used={2}
               total_amount={0.0}
               paymentMethod={selectedPaymentMethod}
+              autorefresh={props.autoRefresh}
             />
           </div>
         )}
@@ -507,19 +587,24 @@ export const AdminModals = (props) => {
         )}
         {step === 3 && isModify && (
           <>
-            <h3>Appointment Details</h3>
             <div className="appointment-details">
-              <p>
-                <strong>Date:</strong> {dayjs(selectedDate).format("dddd, D MMMM YYYY")}
+              <p className="text-lg">
+                <strong>Date:</strong>{" "}
+                {dayjs(selectedDate).format("dddd, D MMMM YYYY")}
               </p>
-              <p>
-                <strong>Time:</strong> {dayjs(timeRange.start).format("HH:mm")} -{" "}
-                {dayjs(timeRange.end).format("HH:mm")}
+              <p className="text-lg">
+                <strong>Time:</strong> {dayjs(timeRange.start).format("HH:mm")}{" "}
+                - {dayjs(timeRange.end).format("HH:mm")}
+              </p>
+              <p className="text-lg">
+                <strong>Biokineticist:</strong>{" "}
+                {selectedName ? selectedName : props.specialistName}
               </p>
             </div>
             <p>
-              <em>
-                Note: Confirming will send an SMS to the client with these details.
+              <em className="text-lg text-blue-600">
+                Note: Confirming will send an SMS to the client with these
+                details.
               </em>
             </p>
           </>

@@ -121,7 +121,7 @@ export const AdminDashboard = () => {
                             <td className="py-3 px-4 border-b">{appointment.member_name || ""}</td>
                             <td className="text-center py-3 px-4 border-b">{appointment.payment_method || "________"}</td>
                             <td className="py-3 px-4 border-b">{appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}</td>
-                            <td className="text-center py-3 px-4 border-b">{"_____"}</td>
+                            <td className="py-3 px-4 border-b">{appointment.confirmed_time ? appointment.confirmed_time: "________"}</td>
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center">
                                 <span>{appointment.status || ""}</span>
@@ -144,6 +144,7 @@ export const AdminDashboard = () => {
                                       memberEmail={appointment.email}
                                       memberCredits={appointment.credits}
                                       AppointmentId={appointment.appointment_id}
+                                      specialistId={appointment.specialist_id}
                                       phoneNumber={appointment.cell}
                                       appointmentStatus={appointment.status}
                                       total_credits_used={appointment.total_credits_used}
@@ -155,7 +156,9 @@ export const AdminDashboard = () => {
                                       preferred_date3={appointment.preferred_date3 ? dayjs(appointment.preferred_date3).format('D MMMM, YYYY') : ""}
                                       preferred_time_range3={appointment.preferred_time_range3 || ""}
                                       autoRefresh={autoRefresh}
+                                      specialistName={data[0].specialist_name}
                                       confirmed_date={appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}
+                                      confirmedTime={appointment.confirmed_time ? appointment.confirmed_time: "________"}
 
                                     />
                                     

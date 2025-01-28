@@ -239,6 +239,7 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     m.email,
     a.request_date,
     a.confirmed_date,
+    a.confirmed_time,
     a.status,
     a.preferred_date1,
     a.preferred_time_range1,
@@ -435,13 +436,13 @@ Please arrive early for paperwork. Thanks!
 
 
 app.post("/api/confirm-date", (req, res) => {
-  const { memberId, selectedDate, appointmentId } = req.body;
+  const { memberId, selectedDate, appointmentId,timeRange ,status} = req.body;
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-
-  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?, status = 'Confirmed' WHERE member_id = ? AND appointment_id = ?`;
+  const confirmedTime=`${dayjs(timeRange.start).format("HH:mm")}-${dayjs(timeRange.end).format("HH:mm")}`;
+  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?,confirmed_time =?, status = ? WHERE member_id = ? AND appointment_id = ?`;
   const updateSessionQuery = `UPDATE Sessions SET date = ? WHERE appointment_id = ?`;
 
-  db.query(updateAppointmentQuery, [confirmedDate, memberId, appointmentId], (err, results) => {
+  db.query(updateAppointmentQuery, [confirmedDate,confirmedTime,status, memberId, appointmentId], (err, results) => {
       if (err) {
           return res.status(500).send("Error updating appointment");
       }
