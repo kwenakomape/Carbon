@@ -11,18 +11,23 @@ import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentC
 import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
 
 import dotenv from 'dotenv';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 dotenv.config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 app.use(bodyParser.json());
 app.use(cors());
 
+
+// Get the directory name of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
 const db = mysql.createConnection({
-  // host: "localhost",
-  // user: "root",
-  // password: "12345",
-  // database: "carbondb",
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
