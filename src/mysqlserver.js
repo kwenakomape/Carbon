@@ -10,16 +10,24 @@ import {sendEmail} from './utils/emailSender.js';
 import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
 import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
 
+import dotenv from 'dotenv';
+
+dotenv.config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 app.use(bodyParser.json());
 app.use(cors());
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "12345",
-  database: "carbondb",
+  // host: "localhost",
+  // user: "root",
+  // password: "12345",
+  // database: "carbondb",
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
