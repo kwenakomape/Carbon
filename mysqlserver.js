@@ -6,35 +6,31 @@ import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import dayjs from "dayjs";
-import {sendEmail} from './utils/emailSender.js';
-import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
-import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
+import {sendEmail} from './src/utils/emailSender.js';
+import {generateAppointmentConfirmationHTML} from "./src/emailTemplates/appointmentConfirmation.js";
+import {generateInvoiceEmailHTML} from "./src/emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import path from 'path';
 
 dotenv.config();
 
-// Get the directory name using import.meta.url
+const upload = multer({ storage: multer.memoryStorage() });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Resolve the path to the dist folder in the project root
-const distPath = path.resolve(__dirname, '../dist');
 const app = express();
-
-// Serve static files from the React app
-app.use(express.static(distPath));
-
-
-const upload = multer({ storage: multer.memoryStorage() });
-app.use(bodyParser.json());
 app.use(cors());
+// Serve static files from the dist folder
+app.use(express.static(path.join(__dirname, './dist')));
 
-// Serve React app for all other routes
+// Serve the React app for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+  res.sendFile(path.join(__dirname, './dist/index.html'));
 });
+
+app.use(bodyParser.json());
+
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -183,7 +179,7 @@ app.post("/verify-otp", (req, res) => {
 });
 
 app.listen(3001, () => {
-  console.log("Database server running on port 3001..");
+  console.log("Server running on port 3001..");
 });
 
 app.post("/verify-password", (req, res) => {

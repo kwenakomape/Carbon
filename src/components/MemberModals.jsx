@@ -16,7 +16,6 @@ export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isCancel, setIsCancel] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [specialistName, setSpecialistName] = useState(null);
@@ -138,6 +137,7 @@ export const MemberModals = (props) => {
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
     setSpecialistName(name);
+    console.log(name,"kwennaaaaaa")
   };
 
   const handleNext = () => {

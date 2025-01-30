@@ -28,7 +28,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "src/pages/.jsx"]
+  "include": ["src", "src/pages/.jsx", "mysqlserver.js"]
 }
 
 
