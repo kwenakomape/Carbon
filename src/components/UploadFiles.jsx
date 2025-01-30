@@ -5,6 +5,7 @@ import { Button, message, Upload } from 'antd';
 export const UploadFiles = ({
   handleClose,
   memberId,
+  autorefresh,
   AppointmentId,
   total_credits_used,
   total_amount,
@@ -13,7 +14,7 @@ export const UploadFiles = ({
 }) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
-
+  // console.log(paymentMethod)
   const handleUpload = () => {
     const formData = new FormData();
   fileList.forEach((file) => {
@@ -40,6 +41,7 @@ export const UploadFiles = ({
     })
     .catch(() => {
       message.success("Invoice uploaded successfully.");
+      autorefresh();
       handleClose();
       // message.error("Upload failed.");
     })

@@ -6,21 +6,46 @@ import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import dayjs from "dayjs";
-import {sendEmail} from './utils/emailSender.js';
-import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
-import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
+import {sendEmail} from './src/utils/emailSender.js';
+import {generateAppointmentConfirmationHTML} from "./src/emailTemplates/appointmentConfirmation.js";
+import {generateInvoiceEmailHTML} from "./src/emailTemplates/invoiceEmail.js";
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config();
+
+const upload = multer({ storage: multer.memoryStorage() });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
-app.use(bodyParser.json());
 app.use(cors());
+// Serve static files from the dist folder
+app.use(express.static(path.join(__dirname, './dist')));
+
+// Serve the React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, './dist/index.html'));
+});
+
+app.use(bodyParser.json());
+
 
 const db = mysql.createConnection({
+<<<<<<< HEAD:src/mysqlserver.js
   host: 'mysql-1c330a6b-carbon-project.e.aivencloud.com',
   user: 'avnadmin',
   password: 'AVNS_G-WCS9_rpt-eNjdbqnqffffsfsreqas',
   database: 'newcarbondatabase',
   connectTimeout: 10000 ,
+=======
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+>>>>>>> 533cf1e62f17d55485d0e6ca78d1a0ab017db609:mysqlserver.js
 });
 
 db.connect((err) => {
@@ -162,7 +187,7 @@ app.post("/verify-otp", (req, res) => {
 });
 
 app.listen(3001, () => {
-  console.log("Database server running on port 3001..");
+  console.log("Server running on port 3001..");
 });
 
 app.post("/verify-password", (req, res) => {
@@ -240,6 +265,7 @@ app.get("/api/appointments-with-specialist/:id", (req, res) => {
     m.email,
     a.request_date,
     a.confirmed_date,
+    a.confirmed_time,
     a.status,
     a.preferred_date1,
     a.preferred_time_range1,
@@ -436,13 +462,13 @@ Please arrive early for paperwork. Thanks!
 
 
 app.post("/api/confirm-date", (req, res) => {
-  const { memberId, selectedDate, appointmentId } = req.body;
+  const { memberId, selectedDate, appointmentId,timeRange ,status} = req.body;
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
-
-  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?, status = 'Confirmed' WHERE member_id = ? AND appointment_id = ?`;
+  const confirmedTime=`${dayjs(timeRange.start).format("HH:mm")}-${dayjs(timeRange.end).format("HH:mm")}`;
+  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?,confirmed_time =?, status = ? WHERE member_id = ? AND appointment_id = ?`;
   const updateSessionQuery = `UPDATE Sessions SET date = ? WHERE appointment_id = ?`;
 
-  db.query(updateAppointmentQuery, [confirmedDate, memberId, appointmentId], (err, results) => {
+  db.query(updateAppointmentQuery, [confirmedDate,confirmedTime,status, memberId, appointmentId], (err, results) => {
       if (err) {
           return res.status(500).send("Error updating appointment");
       }

@@ -10,13 +10,12 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
 import { updateAppointmentStatus } from '../utils/apiUtils';
-import { ConfirmbookingMessage } from "../messageTemplates/confirmbookingMessage";
+import { ConfirmbookingMessage } from "../messageTemplates/confirmbookingMessage.jsx";
 
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isCancel, setIsCancel] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedSpecialist, setSelectedSpecialist] = useState(null);
   const [selectedSpecialistID, setSelectedSpecialistID] = useState(null);
   const [specialistName, setSpecialistName] = useState(null);
@@ -138,6 +137,7 @@ export const MemberModals = (props) => {
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
     setSpecialistName(name);
+    console.log(name,"kwennaaaaaa")
   };
 
   const handleNext = () => {

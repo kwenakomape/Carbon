@@ -33,7 +33,10 @@ export const MemberDashboard = () => {
     console.log("should refresh")
   };
 
-  const pendingCount = data
+  // const pendingCount = data
+  //   ? data.filter((appointment) => appointment.status === "Pending").length
+  //   : 0;
+    const pendingCount = data && Array.isArray(data)
     ? data.filter((appointment) => appointment.status === "Pending").length
     : 0;
 
