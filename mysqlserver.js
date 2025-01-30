@@ -33,19 +33,11 @@ app.use(bodyParser.json());
 
 
 const db = mysql.createConnection({
-<<<<<<< HEAD:src/mysqlserver.js
-  host: 'mysql-1c330a6b-carbon-project.e.aivencloud.com',
-  user: 'avnadmin',
-  password: 'AVNS_G-WCS9_rpt-eNjdbqnqffffsfsreqas',
-  database: 'newcarbondatabase',
-  connectTimeout: 10000 ,
-=======
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
->>>>>>> 533cf1e62f17d55485d0e6ca78d1a0ab017db609:mysqlserver.js
 });
 
 db.connect((err) => {
