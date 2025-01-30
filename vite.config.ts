@@ -25,7 +25,7 @@
 //       "@": path.resolve(__dirname, "./src"),
 //     },
 //   },
-// });
+// });v
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';

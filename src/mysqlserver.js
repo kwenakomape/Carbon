@@ -9,23 +9,32 @@ import dayjs from "dayjs";
 import {sendEmail} from './utils/emailSender.js';
 import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
 import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
-
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+
 dotenv.config();
+
+// Get the directory name using import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Resolve the path to the dist folder in the project root
+const distPath = path.resolve(__dirname, '../dist');
 const app = express();
+
+// Serve static files from the React app
+app.use(express.static(distPath));
+
+
 const upload = multer({ storage: multer.memoryStorage() });
 app.use(bodyParser.json());
 app.use(cors());
 
-
-// Get the directory name of the current module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-app.use(express.static(path.join(__dirname, 'dist')));
+// Serve React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
