@@ -24,10 +24,6 @@ app.use(cors());
 // Serve static files from the dist folder
 app.use(express.static(path.join(__dirname, './dist')));
 
-// Serve the React app for all other routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './dist/index.html'));
-});
 
 app.use(bodyParser.json());
 
@@ -612,4 +608,9 @@ app.post("/api/send-email", (req, res) => {
       return;
   }
   sendEmail(mailOptions, res);
+});
+
+// Serve the React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, './dist/index.html'));
 });
