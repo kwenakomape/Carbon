@@ -177,7 +177,6 @@ export const MemberModals = (props) => {
     };
 
   const handleBooking = async () => {
-    console.log(specialistName,"this the name")
     setModalText("The booking is being processed...");
     setConfirmLoading(true);
 

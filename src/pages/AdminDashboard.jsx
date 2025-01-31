@@ -1,17 +1,4 @@
-import {
-  Card,
-  Icon,
-  TableRow,
-  TableHeaderCell,
-  TableHeader,
-  TableCell,
-  TableBody,
-  Table,
-  Segment,
-} from "semantic-ui-react";
-import { Button} from "antd";
 
-import { Spin } from 'antd';
 import useLoading from "../hooks/useLoading";
 
 import axios from "axios";

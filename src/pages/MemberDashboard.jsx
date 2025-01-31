@@ -4,18 +4,15 @@ import { useParams } from "react-router-dom";
 import { MemberModals } from "../components/MemberModals.jsx";
 import dayjs from "dayjs";
 import { Spin, Dropdown } from "antd";
-import useLoading from "../hooks/useLoading";
 
 export const MemberDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // const loading = useLoading();
-
   const fetchData = async () => {
     // setLoading(true); // Set loading to true before fetching data
     try {
-      const response = await axios.get(`/member/${id}`);
+      const response = await axios.get(`http://localhost:3001/member/${id}`);
       console.log("API Response:",response.data)
       setData(response.data);
     } catch (error) {
@@ -31,13 +28,10 @@ export const MemberDashboard = () => {
 
   const autoRefresh = () => {
     fetchData(); // Trigger data fetch when booking is confirmed
-    console.log("should refresh")
+    // console.log("should refresh")
   };
 
-  // const pendingCount = data
-  //   ? data.filter((appointment) => appointment.status === "Pending").length
-  //   : 0;
-    const pendingCount = data && Array.isArray(data)
+  const pendingCount = data
     ? data.filter((appointment) => appointment.status === "Pending").length
     : 0;
 

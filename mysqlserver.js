@@ -16,6 +16,7 @@ import path from 'path';
 dotenv.config();
 
 const upload = multer({ storage: multer.memoryStorage() });
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -174,9 +175,7 @@ app.post("/verify-otp", (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("Server running on port 3001..");
-});
+
 
 app.post("/verify-password", (req, res) => {
   const { username, password } = req.body;
@@ -488,10 +487,6 @@ app.post("/api/update-appointment-status", (req, res) => {
 
 app.post("/api/bookings", (req, res) => {
   const { memberId, specialistId, status, selectedDates, timeRanges, timeRange, selectedDate, appointmentId } = req.body;
-  console.log(specialistId)
-  console.log(appointmentId);
-  console.log(memberId);
-  console.log(status);
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format('HH:mm')} to ${dayjs(timeRange.end).format('HH:mm')}`
@@ -613,4 +608,7 @@ app.post("/api/send-email", (req, res) => {
 // Serve the React app for all other routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, './dist/index.html'));
+});
+app.listen(3001, () => {
+  console.log("Server running on port 3001..");
 });

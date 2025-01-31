@@ -58,17 +58,6 @@ export const AdminModals = (props) => {
         setStep(2)
       }
     },
-
-    // {
-    //   key: '2',
-    //   label: 'Reschedule',
-    //   onClick: () => {
-    //     setOpen(true);
-    //     handleSelectedStatus("MODIFY")
-    //     setRescheduleModal(true)
-    //     setStep(2)
-    //   }
-    // },
     {
       key: '3',
       label: 'Missed',
