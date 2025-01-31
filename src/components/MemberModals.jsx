@@ -10,7 +10,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
 import { updateAppointmentStatus } from '../utils/apiUtils';
-import { ConfirmbookingMessage } from "../messageTemplates/confirmbookingMessage.jsx";
+import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
 
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
