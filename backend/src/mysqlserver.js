@@ -29,7 +29,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
 
-app.use(bodyParser.json());
+app.use(express.json());
 console.log("DB_HOST:", process.env.DB_HOST);
 console.log("DB_PORT:", process.env.DB_PORT);
 console.log("DB_USER:", process.env.DB_USER);
