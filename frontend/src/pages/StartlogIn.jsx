@@ -1,8 +1,7 @@
 import React, { useMemo } from "react";
 import { LandingForm } from "../components/Form.jsx";
 import { Spin } from 'antd';
-import useLoading from "../hooks/useLoading.js";
-
+import useLoading from "../utils/hooks/useLoading.js";
 export const StartLogIn = () => {
   const loading = useLoading();
   const MemoizedLandingForm = useMemo(() => <LandingForm />, []);

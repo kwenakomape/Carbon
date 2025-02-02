@@ -9,7 +9,7 @@ import { Button as AntButton, Modal,Dropdown ,message,Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
-import { updateAppointmentStatus } from '../utils/apiUtils';
+import { updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
 import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
 
 export const MemberModals = (props) => {
@@ -210,7 +210,7 @@ export const MemberModals = (props) => {
     }
 
     try {
-      await axios.post("http://localhost:3001/api/bookings", bookingData);
+      await axios.post("/api/bookings", bookingData);
       // props.setRefresh(true)
       setTimeout(() => {
         setOpen(false);
@@ -232,7 +232,7 @@ export const MemberModals = (props) => {
         
       }, 2000);
       if (!isDietitian) {
-        await axios.post("http://localhost:3001/api/send-email", bookingData);
+        await axios.post("/api/send-email", bookingData);
       }
     } catch (error) {
       console.error("Error booking appointment:", error);

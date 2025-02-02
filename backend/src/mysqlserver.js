@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from "express";
 import multer from "multer";
 import mysql from "mysql2";
@@ -6,14 +9,11 @@ import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import dayjs from "dayjs";
-import {sendEmail} from './src/utils/emailSender.js';
-import {generateAppointmentConfirmationHTML} from "./src/emailTemplates/appointmentConfirmation.js";
-import {generateInvoiceEmailHTML} from "./src/emailTemplates/invoiceEmail.js";
+import {sendEmail} from '../utils/emailSender.js';
+import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
+import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
 import path from 'path';
-
-dotenv.config();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -21,9 +21,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+const port =3001;
 app.use(cors());
-// Serve static files from the dist folder
-app.use(express.static(path.join(__dirname, './dist')));
+// Serve static files from the dist folderdss
+// app.use(express.static(path.join(__dirname, '../')));
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
 
 
 app.use(bodyParser.json());
@@ -99,7 +102,7 @@ function verifyOtp(phoneNumber, otp) {
   return false;
 }
 
-app.post("/check-username", (req, res) => {
+app.post("/api/check-username", (req, res) => {
   const { username } = req.body;
 
   const checkEmailQuery = "SELECT * FROM Admin WHERE email = ?";
@@ -153,7 +156,7 @@ app.post("/check-username", (req, res) => {
 });
 
 
-app.post("/send-otp", async (req, res) => {
+app.post("/api/send-otp", async (req, res) => {
   const { Cell } = req.body;
   const phoneNumber = Cell; // Assuming username is the phone number
   const success = await sendOtp(phoneNumber);
@@ -164,7 +167,7 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
-app.post("/verify-otp", (req, res) => {
+app.post("/api/verify-otp", (req, res) => {
   const { Cell, otp } = req.body;
   const phoneNumber = Cell; // Assuming username is the phone number
   const isValid = verifyOtp(phoneNumber, otp);
@@ -177,7 +180,7 @@ app.post("/verify-otp", (req, res) => {
 
 
 
-app.post("/verify-password", (req, res) => {
+app.post("api/verify-password", (req, res) => {
   const { username, password } = req.body;
   const query = "SELECT * FROM Admin WHERE email = ?";
   db.query(query, [username], (err, results) => {
@@ -202,7 +205,7 @@ app.post("/verify-password", (req, res) => {
     }
   });
 });
-app.get("/member/:id", (req, res) => {
+app.get("/api/member/:id", (req, res) => {
   const memberId = req.params.id;
   const query = `
   SELECT 
@@ -309,18 +312,20 @@ ORDER BY
 app.post('/api/upload-invoice', upload.single('file'), (req, res) => {
   const { member_id, appointment_id, total_credits_used, total_amount, payment_method } = req.body;
   const pdfData = req.file.buffer;
-
+  
   db.query('SELECT invoice_id, invoice_number FROM Invoices WHERE appointment_id = ?', [appointment_id], (err, results) => {
     if (err) {
+      
       return res.status(500).send(err);
     }
 
     if (results.length > 0) {
+      
       const existing_invoice_id = results[0].invoice_id;
       const existing_invoice_number = results[0].invoice_number;
-
-      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ?, invoice_pdf = ?, invoice_status = 'Invoice Uploaded' WHERE invoice_id = ?`;
-      db.query(updateQuery, [member_id, total_credits_used, total_amount, payment_method, pdfData, existing_invoice_id], (err, result) => {
+      
+      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ?, invoice_status = 'Invoice Uploaded' WHERE invoice_id = ?`;
+      db.query(updateQuery, [member_id, total_credits_used, total_amount, payment_method, existing_invoice_id], (err, result) => {
         if (err) {
           return res.status(500).send(err);
         }
@@ -329,6 +334,7 @@ app.post('/api/upload-invoice', upload.single('file'), (req, res) => {
     } else {
       db.query('SELECT invoice_number FROM Invoices ORDER BY invoice_id DESC LIMIT 1', (err, results) => {
         if (err) {
+          
           return res.status(500).send(err);
         }
 
@@ -343,9 +349,10 @@ app.post('/api/upload-invoice', upload.single('file'), (req, res) => {
           new_invoice_number = `INV-${current_date}-001`;
         }
 
-        const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, invoice_pdf, invoice_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Invoice Uploaded')`;
-        db.query(insertQuery, [new_invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, pdfData], (err, result) => {
+        const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, invoice_status) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        db.query(insertQuery, [new_invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method,'Invoice Uploaded'], (err, result) => {
           if (err) {
+            console.log(err);
             return res.status(500).send(err);
           }
 
@@ -605,10 +612,16 @@ app.post("/api/send-email", (req, res) => {
   sendEmail(mailOptions, res);
 });
 
-// Serve the React app for all other routes
+// Serve React app in production
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static(path.join(__dirname, "../frontend/dist")));
+//   app.get("*", (req, res) => {
+//     res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+//   });
+// }
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
-app.listen(3001, () => {
+app.listen(port, () => {
   console.log("Server running on port 3001..");
 });

@@ -12,7 +12,7 @@ export const MemberDashboard = () => {
   const fetchData = async () => {
     // setLoading(true); // Set loading to true before fetching data
     try {
-      const response = await axios.get(`http://localhost:3001/member/${id}`);
+      const response = await axios.get(`/api/member/${id}`);
       console.log("API Response:",response.data)
       setData(response.data);
     } catch (error) {

@@ -1,0 +1,35 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "clean": "rimraf dist",
+    "build": "npm run clean && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "start": "nodemon src/mysqlserver.js"
+  },
+  "dependencies": {
+    "@infobip-api/sdk": "^0.3.2",
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.4",
+    "nodemailer": "^6.10.0",
+    "rimraf": "^6.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "autoprefixer": "^10.4.20",
+    "nodemon": "^3.1.7",
+    "tailwindcss": "^3.4.16"
+  }
+}

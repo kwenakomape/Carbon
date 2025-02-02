@@ -9,7 +9,7 @@ import { UploadFiles } from "./UploadFiles";
 import { DownOutlined, UserOutlined } from '@ant-design/icons';
 import React, { useState, useEffect } from "react";
 import { Modal, Select,Menu,Button,message,Dropdown } from "antd";
-import { updateAppointmentStatus } from '../utils/apiUtils';
+import { updateAppointmentStatus } from '../../../backend/utils/apiUtils';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
@@ -138,12 +138,12 @@ export const AdminModals = (props) => {
     };
 
     try {
-      await axios.post("http://localhost:3001/api/confirm-date", data);
+      await axios.post("/api/confirm-date", data);
       handleClose();
       props.autoRefresh();
       message.success("Appointment Confirmed.");
 
-      await axios.post("http://localhost:3001/api/send-appointment-details", data);
+      await axios.post("/api/send-appointment-details", data);
     } catch (error) {
       console.error("Error Confirming SMS:", error);
     }

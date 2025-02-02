@@ -28,7 +28,7 @@ export const Invoice = ({
   const fetchInvoiceData = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/invoices/details/${AppointmentId}`
+        `/api/invoices/details/${AppointmentId}`
       );
       setInvoiceData(response.data);
       setinvoiceDetails(response.data);
@@ -40,7 +40,7 @@ export const Invoice = ({
   const deductMemberCredits = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/paywith-credits/${memberId}`
+        `/api/paywith-credits/${memberId}`
       );
       return response.data;
     } catch (error) {
@@ -57,7 +57,7 @@ export const Invoice = ({
       payment_method: paymentMethod,
     };
     try {
-      await axios.post("http://localhost:3001/api/add-invoice", data);
+      await axios.post("/api/add-invoice", data);
     } catch (error) {
       console.error("Error Adding Invoice:", error);
     }

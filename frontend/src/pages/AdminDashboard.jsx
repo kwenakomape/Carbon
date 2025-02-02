@@ -1,5 +1,5 @@
 
-import useLoading from "../hooks/useLoading";
+import useLoading from "../utils/hooks/useLoading.js";
 
 import axios from "axios";
 import React, { useState, useEffect } from "react";
@@ -14,7 +14,7 @@ export const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/appointments-with-specialist/${id}`);
+      const response = await axios.get(`/api/appointments-with-specialist/${id}`);
       setData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);

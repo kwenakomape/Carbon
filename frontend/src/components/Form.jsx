@@ -24,7 +24,7 @@ export const LandingForm = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3001/check-username",
+        "/api/check-username",
         { username }
       );
       const { exists, type, Cell, erroMessage } = response.data;
@@ -38,7 +38,7 @@ export const LandingForm = () => {
         setShowPasswordField(false);
         setErrorMessage("");
         setCell(Cell);
-        await axios.post("http://localhost:3001/send-otp", { Cell });
+        await axios.post("/api/send-otp", { Cell });
       } else {
         setErrorMessage(erroMessage);
       }
@@ -52,7 +52,7 @@ export const LandingForm = () => {
     if (showPasswordField) {
       try {
         const response = await axios.post(
-          "http://localhost:3001/verify-password",
+          "/api/verify-password",
           { username, password }
         );
 
@@ -68,7 +68,7 @@ export const LandingForm = () => {
       }
     } else if (showOTPField) {
       try {
-        const response = await axios.post("http://localhost:3001/verify-otp", {
+        const response = await axios.post("/api/verify-otp", {
           Cell: cell,
           otp,
         });

@@ -28,7 +28,7 @@ export const UploadFiles = ({
 
   setUploading(true);
   
-  fetch("http://localhost:3001/api/upload-invoice", {
+  fetch("/api/upload-invoice", {
     method: "POST",
     body: formData,
   })
