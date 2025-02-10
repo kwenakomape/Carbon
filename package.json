@@ -9,7 +9,7 @@
     "build": "npm run clean && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "nodemon src/mysqlserver.js"
+    "start": "nodemon mysqlserver.js"
   },
   "dependencies": {
     "@infobip-api/sdk": "^0.3.2",

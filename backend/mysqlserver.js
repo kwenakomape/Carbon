@@ -4,12 +4,11 @@ dotenv.config();
 import express from "express";
 import multer from "multer";
 import mysql from "mysql2";
-import bodyParser from "body-parser";
 import cors from "cors";
 import { Infobip, AuthType } from "@infobip-api/sdk";
 import crypto from "crypto";
 import dayjs from "dayjs";
-import {sendEmail} from '../utils/emailSender.js';
+import {sendEmail} from './utils/emailSender.js';
 import {generateAppointmentConfirmationHTML} from "./emailTemplates/appointmentConfirmation.js";
 import {generateInvoiceEmailHTML} from "./emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from 'url';
@@ -21,14 +20,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
-const port =3001;
+const PORT = process.env.PORT || 3001;
 app.use(cors());
 // Serve static files from the dist folderdss
 // app.use(express.static(path.join(__dirname, '../')));
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
-
-
 app.use(express.json());
 console.log("DB_HOST:", process.env.DB_HOST);
 console.log("DB_PORT:", process.env.DB_PORT);
@@ -37,11 +33,11 @@ console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
 console.log("DB_NAME:", process.env.DB_NAME);
 
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: 'mysql-1c330a6b-carbon-project.e.aivencloud.com',
+  port: 15878,
+  user: 'avnadmin',
+  password: 'AVNS_G-WCS9_rpt-eNjdbqnq',
+  database: 'newcarbondatabase',
 });
 
 db.connect((err) => {
@@ -626,6 +622,7 @@ app.post("/api/send-email", (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
-app.listen(port, () => {
+
+app.listen(PORT, () => {
   console.log("Server running on port 3001..");
 });
