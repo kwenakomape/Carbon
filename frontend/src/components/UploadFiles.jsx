@@ -9,7 +9,6 @@ export const UploadFiles = ({
   AppointmentId,
   total_credits_used,
   total_amount,
-  UpdateAppointmentStatus,
   paymentMethod
 }) => {
   const [fileList, setFileList] = useState([]);
