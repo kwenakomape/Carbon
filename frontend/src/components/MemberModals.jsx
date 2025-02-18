@@ -211,7 +211,6 @@ export const MemberModals = (props) => {
 
     try {
       await axios.post("/api/bookings", bookingData);
-      // props.setRefresh(true)
       setTimeout(() => {
         setOpen(false);
         setConfirmLoading(false);

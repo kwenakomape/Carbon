@@ -13,7 +13,6 @@ export const UploadFiles = ({
 }) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
-  // console.log(paymentMethod)
   const handleUpload = () => {
     const formData = new FormData();
   fileList.forEach((file) => {

@@ -83,6 +83,15 @@ export const AdminModals = (props) => {
         });
         setOpen(true);
       }
+    },
+    {
+      key: '4',
+      label: 'Upload Invoice',
+      onClick: () => {
+        setOpen(true);
+        // handleSelectedStatus("SEEN")
+        // setStep(2)
+      }
     }
   ];
 
@@ -121,7 +130,7 @@ export const AdminModals = (props) => {
   };
 
   const handleStatus = async (status) => {
-    await updateAppointmentStatus(id, props.AppointmentId, status);
+    await updateAppointmentStatus(id, props.AppointmentId, status,selectedPaymentMethod);
     handleClose();
     props.autoRefresh()
   };
@@ -207,7 +216,7 @@ export const AdminModals = (props) => {
   return (
     <>
       <div class="flex flex-wrap gap-2">
-        {props.specialistId!==2 &&
+        {props.specialistId!==2 && props.appointmentStatus ==='Pending' &&
           (<Button
             color="primary"
             size="small"
@@ -217,6 +226,7 @@ export const AdminModals = (props) => {
             Accept
           </Button>)
         }
+        
         <div
           className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110"
           onClick={() => handleAppointmentActions("CANCELED")}
@@ -236,6 +246,7 @@ export const AdminModals = (props) => {
             />
           </svg>
         </div>
+        {props.appointmentStatus ==='Confirmed' && (<>
         <Dropdown
           menu={{
             items,
@@ -245,6 +256,7 @@ export const AdminModals = (props) => {
             More <DownOutlined />
           </a>
         </Dropdown>
+        </>)}
       </div>
 
       <Modal
@@ -252,8 +264,6 @@ export const AdminModals = (props) => {
           <div className="text-center w-full text-3xl font-bold text-blue-600">
             {step === 1 && selectedAppointment
               ? "Full Details"
-              : step === 1
-              ? "Choose Operation"
               : step === 2 && isMissed
               ? "Confirm Action"
               : step === 2 && isModify
@@ -266,6 +276,8 @@ export const AdminModals = (props) => {
               ? "Confirm Your Availability"
               : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
               ? "Confirm Payment by SSISA Credits"
+              : step === 3 && selectedPaymentMethod === "PAY LATER"
+              ? "Confirm DEFFERED PAYMENT"
               : step === 4 && selectedPaymentMethod === "CASH/CARD"
               ? "Confirm Payment Method"
               : ""}
@@ -333,9 +345,6 @@ export const AdminModals = (props) => {
               ]
             : step === 2 && isSeen
             ? [
-                <Button key="back" onClick={handleBack}>
-                  Previous
-                </Button>,
                 <Button
                   key="next"
                   type="primary"
@@ -345,7 +354,7 @@ export const AdminModals = (props) => {
                   Next
                 </Button>,
               ]
-            : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
+            : step === 3 && selectedPaymentMethod=== "SSISA CREDITS" 
             ? [
                 <Button key="back" onClick={handleBack}>
                   Previous
@@ -364,7 +373,7 @@ export const AdminModals = (props) => {
                   Confirm
                 </Button>,
               ]
-            : step === 4 && selectedPaymentMethod === "CASH/CARD"
+            : step === 4  && selectedPaymentMethod === "CASH/CARD" || step === 3 && selectedPaymentMethod ==="PAY LATER"
             ? [
                 <Button key="back" onClick={handleBackToPaymentMethod}>
                   No
@@ -408,47 +417,7 @@ export const AdminModals = (props) => {
             {/* Add other details here */}
           </div>
         )}
-        {step === 1 && !selectedAppointment && (
-          <div className="statusOptions">
-            {props.appointmentStatus !== "Confirmed" &&
-              props.appointmentStatus !== "Seen" && (
-                <Button
-                  onClick={() => handleSelectedStatus("MODIFY")}
-                  className={selectedStatus === "MODIFY" ? "selected" : ""}
-                >
-                  CONFIRM
-                </Button>
-              )}
-            <Button
-              onClick={() => handleSelectedStatus("SEEN")}
-              className={selectedStatus === "SEEN" ? "selected" : ""}
-              disabled={props.appointmentStatus !== "Confirmed"}
-            >
-              SEEN
-            </Button>
-            <Button
-              onClick={() => handleSelectedStatus("RESCHEDULE")}
-              className={selectedStatus === "RESCHEDULE" ? "selected" : ""}
-              // disabled={props.appointmentStatus !== "Confirmed"}
-            >
-              RESCHEDULE
-            </Button>
-
-            <Button
-              onClick={() => handleSelectedStatus("MISSED")}
-              className={selectedStatus === "MISSED" ? "selected" : ""}
-            >
-              MISSED
-            </Button>
-
-            <Button
-              onClick={() => handleSelectedStatus("CANCELED")}
-              className={selectedStatus === "CANCELED" ? "selected" : ""}
-            >
-              CANCEL
-            </Button>
-          </div>
-        )}
+        
         {step === 2 && isMissed && (
           <p>
             Are you sure you want to mark this appointment as{" "}
@@ -549,6 +518,14 @@ export const AdminModals = (props) => {
             >
               SSISA CREDITS
             </Button>
+            <Button
+              onClick={() => handleSelectedPaymentMethod("PAY LATER")}
+              className={
+                selectedPaymentMethod === "PAY LATER" ? "selected" : ""
+              }
+            >
+              PAY LATER
+            </Button>
           </div>
         )}
         {step === 3 && selectedPaymentMethod === "SSISA CREDITS" && (
@@ -572,6 +549,12 @@ export const AdminModals = (props) => {
           <div className="confirmation">
             <p>The member has chosen to pay by Card/Cash.</p>
             <p>Confirm this payment method?</p>
+          </div>
+        )}
+          {step === 3 && selectedPaymentMethod === "PAY LATER" && (
+          <div className="confirmation">
+            <p>The member has chosen to pay the session at later stage.</p>
+            <p>Confirm to approve this?</p>
           </div>
         )}
         {step === 3 && isModify && (

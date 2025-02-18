@@ -164,19 +164,25 @@ export const MemberDashboard = () => {
                     <thead className="bg-gray-100">
                       <tr>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
-                          Request Date
+                          Request on
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Specialist
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
-                          Confirmed Date
+                          Confirmed on
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
-                          Time
+                          Appointment Time
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Status
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Invoice
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Payment
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Action
@@ -223,6 +229,12 @@ export const MemberDashboard = () => {
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              {appointment.invoice_status}
+                            </td>
+                            <td className="py-3 px-4 border-b">
+                              {appointment.payment_status}
                             </td>
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center justify-center">

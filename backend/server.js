@@ -194,17 +194,16 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.confirmed_date,
       Appointments.status,
       Appointments.specialist_id,
+      Appointments.invoice_status,
+      Appointments.payment_status,
       Admin.name AS specialist_name,
-      Admin.specialist_type,
-      Payments.payment_method
+      Admin.specialist_type
     FROM 
       Members
     LEFT JOIN 
       Appointments ON Members.member_id = Appointments.member_id
     LEFT JOIN 
       Admin ON Appointments.specialist_id = Admin.admin_id
-    LEFT JOIN 
-      Payments ON Appointments.appointment_id = Payments.appointment_id
     WHERE 
       Members.member_id = ?
     ORDER BY 
@@ -233,6 +232,10 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.confirmed_date,
       a.confirmed_time,
       a.status,
+      a.payment_method,
+      a.payment_status,
+      a.invoice_status,
+      a.credits_used,
       a.preferred_date1,
       a.preferred_time_range1,
       a.preferred_date2,
@@ -240,19 +243,13 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_date3,
       a.preferred_time_range3,
       ad.admin_id AS specialist_id,
-      ad.name AS specialist_name,
-      i.payment_method,
-      i.invoice_status,
-      COALESCE(SUM(s.credits_used), 0) AS total_credits_used,
-      COALESCE(SUM(s.amount), 0) AS total_amount
+      ad.name AS specialist_name
     FROM 
       Admin ad
     LEFT JOIN 
       Appointments a ON ad.admin_id = a.specialist_id
     LEFT JOIN 
       Members m ON a.member_id = m.member_id
-    LEFT JOIN 
-      Invoices i ON a.appointment_id = i.appointment_id
     LEFT JOIN 
       Sessions s ON a.appointment_id = s.appointment_id
     WHERE 
@@ -262,6 +259,10 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.member_id,
       m.name,
       m.cell,
+      a.payment_method,
+      a.payment_status,
+      a.invoice_status,
+      a.credits_used,
       a.request_date,
       a.confirmed_date,
       a.status,
@@ -272,9 +273,7 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_date3,
       a.preferred_time_range3,
       ad.admin_id,
-      ad.name,
-      i.payment_method,
-      i.invoice_status
+      ad.name
     ORDER BY 
       a.appointment_id`;
 
@@ -471,11 +470,24 @@ app.post("/api/confirm-date", async (req, res) => {
 });
 
 app.post("/api/update-appointment-status", async (req, res) => {
-  const { newStatus, memberId, AppointmentId } = req.body;
-  const query = `UPDATE Appointments SET status = ? WHERE member_id = ? AND appointment_id = ?`;
+  const { newStatus, memberId, appointmentId,payment_method,paymentMethod } = req.body;
+
+  let query;
+  let params;
+
+  // Check if the new status is "SEEN"
+  if (newStatus === "SEEN") {
+    // Update both status and payment_method
+    query = `UPDATE Appointments SET status = ?, payment_method = ? WHERE member_id = ? AND appointment_id = ?`;
+    params = [newStatus, paymentMethod, memberId, appointmentId]; // Assuming payment_method should be set to "CREDITS"
+  } else {
+    // Update only the status
+    query = `UPDATE Appointments SET status = ? WHERE member_id = ? AND appointment_id = ?`;
+    params = [newStatus, memberId, appointmentId];
+  }
 
   try {
-    await pool.query(query, [newStatus, memberId, AppointmentId]);
+    await pool.query(query, params);
     res.send(`Status Updated Successfully`);
   } catch (err) {
     console.error("Error updating status:", err);
