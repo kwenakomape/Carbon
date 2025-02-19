@@ -8,7 +8,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { UploadFiles } from "./UploadFiles";
 import { DownOutlined, UserOutlined } from '@ant-design/icons';
 import React, { useState, useEffect } from "react";
-import { Modal, Select,Menu,Button,message,Dropdown } from "antd";
+import { Modal, Select,Button,message,Dropdown } from "antd";
 import { updateAppointmentStatus } from '../../../backend/utils/apiUtils';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -28,6 +28,7 @@ export const AdminModals = (props) => {
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
   const [dateSelected, setDateSelected] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showUploadInvoiceModal,setShowUploadInvoiceModal] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
   const [rescheduleModal, setRescheduleModal] = useState(false);
 
@@ -59,7 +60,7 @@ export const AdminModals = (props) => {
       }
     },
     {
-      key: '3',
+      key: '2',
       label: 'Missed',
       onClick: () => {
         setOpen(true);
@@ -68,7 +69,7 @@ export const AdminModals = (props) => {
       }
     },
     {
-      key: '4',
+      key: '3',
       label: 'View Details',
       onClick:() => {
         setSelectedAppointment({
@@ -79,7 +80,6 @@ export const AdminModals = (props) => {
           memberCredits:props.memberCredits,
           confirmed_date:props.confirmed_date,
           memberEmail:props.memberEmail
-          // Add other details you want to show
         });
         setOpen(true);
       }
@@ -89,12 +89,43 @@ export const AdminModals = (props) => {
       label: 'Upload Invoice',
       onClick: () => {
         setOpen(true);
+        setShowUploadInvoiceModal(true);
+      }
+    },
+    {
+      key: '5',
+      label: 'Make Payment',
+      onClick: () => {
+        setOpen(true);
+        handleSelectedStatus("SEEN")
+        setStep(2)
+      },
+      
+    },
+    {
+      key: '6',
+      label: 'View Invoice',
+      onClick: () => {
+        setOpen(true);
         // handleSelectedStatus("SEEN")
         // setStep(2)
-      }
+      },
+      
     }
   ];
 
+  const filteredItems = items.filter(item => {
+    if (props.appointmentStatus === 'Confirmed') {
+      // Show only items with key '1', '2', and '3'
+      return item.key === '1' || item.key === '2' || item.key === '3';
+    } else if (props.payment_method === 'DEFERRED') {
+      // Include all items except '1' and '2', and include '5'
+      return item.key !== '1' && item.key !== '2';
+    } else {
+      // Default behavior: exclude '1', '2', and '5'
+      return item.key !== '1' && item.key !== '2' && item.key !== '5';
+    }
+  });
   const shouldDisableDate = (date) => {
     const today = dayjs().startOf("day");
     const day = dayjs(date).day();
@@ -127,6 +158,7 @@ export const AdminModals = (props) => {
     setSelectedAppointment(null);
     setSelectedName(null);
     setRescheduleModal(false);
+    setShowUploadInvoiceModal(false);
   };
 
   const handleStatus = async (status) => {
@@ -216,47 +248,55 @@ export const AdminModals = (props) => {
   return (
     <>
       <div class="flex flex-wrap gap-2">
-        {props.specialistId!==2 && props.appointmentStatus ==='Pending' &&
-          (<Button
+        {props.specialistId !== 2 && props.appointmentStatus === "Pending" && (
+          <Button
             color="primary"
             size="small"
             variant="solid"
             onClick={() => handleAppointmentActions("MODIFY")}
           >
             Accept
-          </Button>)
-        }
-        
-        <div
-          className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110"
-          onClick={() => handleAppointmentActions("CANCELED")}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="w-full h-full"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </div>
-        {props.appointmentStatus ==='Confirmed' && (<>
-        <Dropdown
-          menu={{
-            items,
-          }}
-        >
-          <a>
-            More <DownOutlined />
-          </a>
-        </Dropdown>
-        </>)}
+          </Button>
+        )}
+
+        {props.appointmentStatus !== "Cancelled" &&
+          props.appointmentStatus !== "Missed" && (
+            <div
+              className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110"
+              onClick={() => handleAppointmentActions("CANCELED")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-full h-full"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </div>
+          )}
+        {(props.payment_method === "DEFERRED" ||
+          props.appointmentStatus === "Confirmed" ||
+          props.appointmentStatus === "Seen") && (
+          <>
+            <Dropdown
+              // placement="bottomRight"
+              menu={{
+                items: filteredItems,
+              }}
+            >
+              <a>
+                More <DownOutlined />
+              </a>
+            </Dropdown>
+          </>
+        )}
       </div>
 
       <Modal
@@ -276,11 +316,12 @@ export const AdminModals = (props) => {
               ? "Confirm Your Availability"
               : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
               ? "Confirm Payment by SSISA Credits"
-              : step === 3 && selectedPaymentMethod === "PAY LATER"
+              : step === 3 && selectedPaymentMethod === "DEFERRED"
               ? "Confirm DEFFERED PAYMENT"
               : step === 4 && selectedPaymentMethod === "CASH/CARD"
               ? "Confirm Payment Method"
               : ""}
+            {step === 1 && showUploadInvoiceModal && <div>Upload Invoice</div>}
           </div>
         }
         centered
@@ -354,12 +395,6 @@ export const AdminModals = (props) => {
                   Next
                 </Button>,
               ]
-            : step === 3 && selectedPaymentMethod=== "SSISA CREDITS" 
-            ? [
-                <Button key="back" onClick={handleBack}>
-                  Previous
-                </Button>,
-              ]
             : step === 3 && isModify
             ? [
                 <Button key="back" onClick={handleBack}>
@@ -373,12 +408,18 @@ export const AdminModals = (props) => {
                   Confirm
                 </Button>,
               ]
-            : step === 4  && selectedPaymentMethod === "CASH/CARD" || step === 3 && selectedPaymentMethod ==="PAY LATER"
+            : (step === 4 && selectedPaymentMethod === "CASH/CARD") ||
+              (step === 3 && selectedPaymentMethod === "SSISA CREDITS") ||
+              (step === 3 && selectedPaymentMethod === "DEFERRED")
             ? [
                 <Button key="back" onClick={handleBackToPaymentMethod}>
                   No
                 </Button>,
-                <Button key="confirm" type="primary" onClick={()=>handleStatus("SEEN")}>
+                <Button
+                  key="confirm"
+                  type="primary"
+                  onClick={() => handleStatus("SEEN")}
+                >
                   Yes
                 </Button>,
               ]
@@ -417,7 +458,17 @@ export const AdminModals = (props) => {
             {/* Add other details here */}
           </div>
         )}
-        
+        {showUploadInvoiceModal && (
+          <UploadFiles
+            handleClose={handleClose}
+            AppointmentId={props.AppointmentId}
+            AppointmentStatus={props.appointmentStatus}
+            memberId={id}
+            paymentMethod={selectedPaymentMethod}
+            autorefresh={props.autoRefresh}
+          />
+        )}
+
         {step === 2 && isMissed && (
           <p>
             Are you sure you want to mark this appointment as{" "}
@@ -519,10 +570,8 @@ export const AdminModals = (props) => {
               SSISA CREDITS
             </Button>
             <Button
-              onClick={() => handleSelectedPaymentMethod("PAY LATER")}
-              className={
-                selectedPaymentMethod === "PAY LATER" ? "selected" : ""
-              }
+              onClick={() => handleSelectedPaymentMethod("DEFERRED")}
+              className={selectedPaymentMethod === "DEFERRED" ? "selected" : ""}
             >
               PAY LATER
             </Button>
@@ -532,17 +581,8 @@ export const AdminModals = (props) => {
           <div>
             <div className="confirmation">
               <p>The member has chosen to pay using SSISA Credits.</p>
-              <p>Proceed to upload the invoice</p>
+              <p>Confirm this payment method</p>
             </div>
-            <UploadFiles
-              handleClose={handleClose}
-              AppointmentId={props.AppointmentId}
-              memberId={id}
-              total_credits_used={2}
-              total_amount={0.0}
-              paymentMethod={selectedPaymentMethod}
-              autorefresh={props.autoRefresh}
-            />
           </div>
         )}
         {step === 4 && selectedPaymentMethod === "CASH/CARD" && (
@@ -551,7 +591,7 @@ export const AdminModals = (props) => {
             <p>Confirm this payment method?</p>
           </div>
         )}
-          {step === 3 && selectedPaymentMethod === "PAY LATER" && (
+        {step === 3 && selectedPaymentMethod === "DEFERRED" && (
           <div className="confirmation">
             <p>The member has chosen to pay the session at later stage.</p>
             <p>Confirm to approve this?</p>

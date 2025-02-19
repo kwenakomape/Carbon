@@ -132,6 +132,7 @@ export const AdminDashboard = () => {
                                       memberName={appointment.member_name}
                                       memberEmail={appointment.email}
                                       memberCredits={appointment.credits}
+                                      payment_method={appointment.payment_method}
                                       AppointmentId={appointment.appointment_id}
                                       specialistId={appointment.specialist_id}
                                       phoneNumber={appointment.cell}

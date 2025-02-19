@@ -7,65 +7,60 @@ export const UploadFiles = ({
   memberId,
   autorefresh,
   AppointmentId,
-  total_credits_used,
-  total_amount,
-  paymentMethod
+  AppointmentStatus,
+  paymentMethod,
 }) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
+
   const handleUpload = () => {
     const formData = new FormData();
-  fileList.forEach((file) => {
-    formData.append("file", file);
-  });
-  formData.append("member_id", memberId);
-  formData.append("appointment_id", AppointmentId);
-  formData.append("total_credits_used", total_credits_used);
-  formData.append("total_amount", total_amount);
-  formData.append("payment_method", paymentMethod);
-
-  setUploading(true);
-  
-  fetch("/api/upload-invoice", {
-    method: "POST",
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then(() => {
-      setFileList([]);
-      
-      message.success("Invoice uploaded successfully.");
-      handleClose();
-    })
-    .catch(() => {
-      message.success("Invoice uploaded successfully.");
-      autorefresh();
-      handleClose();
-      // message.error("Upload failed.");
-    })
-    .finally(() => {
-      setUploading(false);
+    fileList.forEach((file) => {
+      formData.append('file', file); // Append the file
     });
+    formData.append('memberId', memberId);
+    formData.append('appointmentId', AppointmentId);
+    formData.append('newStatus', AppointmentStatus);
+    formData.append('paymentMethod', paymentMethod);
+
+    setUploading(true);
+
+    fetch('/api/upload-invoice', {
+      method: 'POST',
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then(() => {
+        setFileList([]);
+        message.success('Invoice uploaded successfully.');
+        autorefresh();
+        handleClose();
+      })
+      .catch(() => {
+        message.error('Upload failed. Please try again.');
+        handleClose();
+      })
+      .finally(() => {
+        setUploading(false);
+      });
   };
 
-  const props = {
+  const uploadProps = {
     onRemove: (file) => {
-      const index = fileList.indexOf(file);
-      const newFileList = fileList.slice();
-      newFileList.splice(index, 1);
-      setFileList(newFileList);
+      const updatedFileList = fileList.filter((f) => f.uid !== file.uid);
+      setFileList(updatedFileList);
     },
     beforeUpload: (file) => {
       setFileList([...fileList, file]);
-      return false;
+      return false; // Prevent automatic upload
     },
     fileList,
   };
 
   return (
-    <>
-      <Upload {...props}>
-        <Button icon={<UploadOutlined />}>Select File</Button>
+    <div style={{ textAlign: 'center' }}>
+      <Upload {...uploadProps} style={{ display: 'inline-block' }}>
+        <Button icon={<UploadOutlined />}>Select Invoice</Button>
       </Upload>
       <Button
         type="primary"
@@ -74,8 +69,8 @@ export const UploadFiles = ({
         loading={uploading}
         style={{ marginTop: 16 }}
       >
-        {uploading ? "Uploading" : "Start Upload"}
+        {uploading ? 'Uploading...' : 'Upload Invoice'}
       </Button>
-    </>
+    </div>
   );
 };

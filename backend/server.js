@@ -12,6 +12,7 @@ import { generateAppointmentConfirmationHTML } from "./emailTemplates/appointmen
 import { generateInvoiceEmailHTML } from "./emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from "url";
 import path from "path";
+import fs from 'fs';
 import pool from "./config/db.js"; // Ensure this exports a promise-based pool
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -285,132 +286,60 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
     res.status(500).send("Database error");
   }
 });
+app.post('/api/upload-invoice', upload.single('file'), async (req, res) => {
+  const { memberId, appointmentId} = req.body;
+  const file = req.file;
 
-app.post("/api/upload-invoice", upload.single("file"), async (req, res) => {
-  const {
-    member_id,
-    appointment_id,
-    total_credits_used,
-    total_amount,
-    payment_method,
-  } = req.body;
-  const pdfData = req.file.buffer;
+  if (!file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded.' });
+  }
 
+  // Convert the file buffer to a BLOB
+  const fileBlob = file.buffer;
+
+  // Update the database with the new file path and status
+  const updateQuery = `UPDATE Appointments 
+       SET invoice_file = ?, invoice_status = ?
+       WHERE member_id = ? AND appointment_id = ?`;
   try {
-    const [existingInvoices] = await pool.query(
-      "SELECT invoice_id, invoice_number FROM Invoices WHERE appointment_id = ?",
-      [appointment_id]
-    );
+    await pool.query(updateQuery, [fileBlob,'INVOICE_UPLOADED',memberId,appointmentId]);
+    res.json({ success: true, message: 'Invoice uploaded successfully.' });
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    res.status(500).json({ success: false, message: 'Failed to update appointment.' });
+  }
+});
 
-    if (existingInvoices.length > 0) {
-      const existing_invoice_id = existingInvoices[0].invoice_id;
-      const existing_invoice_number = existingInvoices[0].invoice_number;
+app.post("/api/update-appointment-status", async (req, res) => {
+  const { newStatus, memberId, AppointmentId,paymentMethod } = req.body;
+  let query;
+  let params;
+  console.log(req.body)
 
-      const updateQuery = `UPDATE Invoices SET member_id = ?, total_credits_used = ?, total_amount = ?, payment_method = ?, invoice_status = 'Invoice Uploaded' WHERE invoice_id = ?`;
-      await pool.query(updateQuery, [
-        member_id,
-        total_credits_used,
-        total_amount,
-        payment_method,
-        existing_invoice_id,
-      ]);
-
-      res.send(
-        `Invoice updated successfully with number: ${existing_invoice_number}`
-      );
-    } else {
-      const [lastInvoice] = await pool.query(
-        "SELECT invoice_number FROM Invoices ORDER BY invoice_id DESC LIMIT 1"
-      );
-
-      let last_invoice_number = lastInvoice.length
-        ? lastInvoice[0].invoice_number
-        : null;
-      let new_invoice_number;
-      const current_date = new Date()
-        .toISOString()
-        .slice(0, 10)
-        .replace(/-/g, "");
-
-      if (last_invoice_number) {
-        const last_number = parseInt(last_invoice_number.split("-")[2], 10);
-        new_invoice_number = `INV-${current_date}-${String(
-          last_number + 1
-        ).padStart(3, "0")}`;
-      } else {
-        new_invoice_number = `INV-${current_date}-001`;
-      }
-
-      const insertQuery = `INSERT INTO Invoices (invoice_number, member_id, appointment_id, total_credits_used, total_amount, payment_method, invoice_status) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-      await pool.query(insertQuery, [
-        new_invoice_number,
-        member_id,
-        appointment_id,
-        total_credits_used,
-        total_amount,
-        payment_method,
-        "Invoice Uploaded",
-      ]);
-
-      res.send(`Invoice added successfully with number: ${new_invoice_number}`);
+  // Check if the new status is "SEEN"
+  if (newStatus === "SEEN") {
+    // Update both status and payment_method
+    if(paymentMethod!=='DEFERRED'){
+      query = `UPDATE Appointments SET status = ?, payment_method = ?, payment_status = ? WHERE member_id = ? AND appointment_id = ?`;
+      params = [newStatus,paymentMethod ,'PAID', memberId, AppointmentId]
+    }else{
+      query = `UPDATE Appointments SET status = ?, payment_method = ? WHERE member_id = ? AND appointment_id = ?`;
+      params = [newStatus,paymentMethod , memberId, AppointmentId];
     }
-  } catch (err) {
-    console.error("Error uploading invoice:", err);
-    res.status(500).send("Error uploading invoice");
+  } else {
+    // Update only the status
+    query = `UPDATE Appointments SET status = ? WHERE member_id = ? AND appointment_id = ?`;
+    params = [newStatus, memberId, AppointmentId];
   }
-});
-
-app.get("/api/invoices/details/:id", async (req, res) => {
-  const appointmentId = req.params.id;
-  const query = `
-    SELECT 
-      i.invoice_id,
-      i.invoice_number,
-      i.date AS invoice_date,
-      i.total_credits_used,
-      i.total_amount,
-      i.payment_method,
-      m.member_id,
-      m.name AS member_name,
-      m.email AS member_email,
-      m.cell AS member_cell,
-      s.session_id,
-      s.date AS session_date,
-      s.duration AS session_duration,
-      s.credits_used AS session_credits_used,
-      s.amount AS session_amount,
-      sv.service_id,
-      sv.service_name,
-      sv.service_description,
-      sp.admin_id AS specialist_id,
-      sp.name AS specialist_name,
-      sp.email AS specialist_email,
-      sp.specialist_type
-    FROM 
-      Invoices i
-    JOIN 
-      Members m ON i.member_id = m.member_id
-    JOIN 
-      Appointments a ON i.appointment_id = a.appointment_id
-    JOIN 
-      Sessions s ON a.appointment_id = s.appointment_id
-    JOIN 
-      Services sv ON s.service_id = sv.service_id
-    JOIN 
-      Admin sp ON s.specialist_id = sp.admin_id
-    WHERE 
-      i.appointment_id = ?;
-  `;
 
   try {
-    const [results] = await pool.query(query, [appointmentId]);
-    res.send(results);
+    await pool.query(query, params);
+    res.send(`Status Updated Successfully`);
   } catch (err) {
-    console.error("Error fetching invoice details:", err);
-    res.status(500).send("Error fetching invoice details");
+    console.error("Error updating status:", err);
+    res.status(500).send("Error updating status");
   }
 });
-
 app.get("/api/paywith-credits/:id", async (req, res) => {
   const memberId = req.params.id;
   const updateQuery = `UPDATE Members SET credits = credits - 80 WHERE member_id = ?`;
@@ -469,31 +398,7 @@ app.post("/api/confirm-date", async (req, res) => {
   }
 });
 
-app.post("/api/update-appointment-status", async (req, res) => {
-  const { newStatus, memberId, appointmentId,payment_method,paymentMethod } = req.body;
 
-  let query;
-  let params;
-
-  // Check if the new status is "SEEN"
-  if (newStatus === "SEEN") {
-    // Update both status and payment_method
-    query = `UPDATE Appointments SET status = ?, payment_method = ? WHERE member_id = ? AND appointment_id = ?`;
-    params = [newStatus, paymentMethod, memberId, appointmentId]; // Assuming payment_method should be set to "CREDITS"
-  } else {
-    // Update only the status
-    query = `UPDATE Appointments SET status = ? WHERE member_id = ? AND appointment_id = ?`;
-    params = [newStatus, memberId, appointmentId];
-  }
-
-  try {
-    await pool.query(query, params);
-    res.send(`Status Updated Successfully`);
-  } catch (err) {
-    console.error("Error updating status:", err);
-    res.status(500).send("Error updating status");
-  }
-});
 
 app.post("/api/bookings", async (req, res) => {
   const {
