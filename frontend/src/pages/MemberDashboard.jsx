@@ -10,10 +10,8 @@ export const MemberDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const fetchData = async () => {
-    // setLoading(true); // Set loading to true before fetching data
     try {
       const response = await axios.get(`/api/member/${id}`);
-      console.log("API Response:",response.data)
       setData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -225,7 +223,9 @@ export const MemberDashboard = () => {
                               : "_________________"}
                             </td>
                             <td className="text-center py-3 px-4 border-b">
-                              {"______"}
+                            {appointment.confirmed_date
+                              ? appointment.confirmed_time
+                              : "_________________"}
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}

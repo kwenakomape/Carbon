@@ -11,6 +11,7 @@ import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
 import { updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
 import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
+import { AlertMessage } from "./AlertMessage.jsx";
 
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
@@ -124,7 +125,7 @@ export const MemberModals = (props) => {
       setSelectedSpecialistID(1);
       setIsDietitian(false);
     } else if (specialist === "DIETITIAN") {
-      setSelectedSpecialistID(2);
+      
       setIsDietitian(true);
     } else if (specialist === "PHYSIOTHERAPIST") {
       resetDatesAndTime()
@@ -136,8 +137,13 @@ export const MemberModals = (props) => {
   const handleDietitianName = (name) => {
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
+    if(name ==='NATASHA'){
+      setSelectedSpecialistID(4);
+    }else if(name ==='MARIE'){
+      setSelectedSpecialistID(2);
+    }
+    
     setSpecialistName(name);
-    console.log(name,"kwennaaaaaa")
   };
 
   const handleNext = () => {
@@ -174,6 +180,7 @@ export const MemberModals = (props) => {
    const handleStatus = async (status) => {
       await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
       handleClose();
+      props.autoRefresh()
     };
 
   const handleBooking = async () => {
@@ -185,8 +192,8 @@ export const MemberModals = (props) => {
       bookingData = {
         memberId: props.memberId,
         memberName: props.memberName,
-        specialistId: selectedSpecialistID ?selectedSpecialistID:2,
-        specialistName: specialistName,
+        specialistId: props.rescheduleModal ? props.specialistId:selectedSpecialistID,
+        specialistName: props.rescheduleModal ? props.specialistName:specialistName,
         selectedSpecialist: selectedSpecialist,
         timeRange: timeRange,
         selectedDate: selectedDate,
@@ -255,12 +262,12 @@ export const MemberModals = (props) => {
   useEffect(() => {}, [specialistName]);
 
   const handleButtonClick = (specialistId) => {
-    if (specialistId === 2) {
+    if (specialistId === 2 || specialistId==4) {
       setIsDietitian(true);
     }
   
     if (step === 1 && props.rescheduleModal === "rescheduleModal") {
-      setStep(specialistId === 2 ? 3 : 2);
+      setStep(specialistId === 2 || specialistId === 4  ? 3 : 2);
     }
   
     setOpen(true);
@@ -329,6 +336,16 @@ export const MemberModals = (props) => {
                 Previous
               </AntButton>
             ),
+            step >2 && props.rescheduleModal && !isDietitian &&(
+              <AntButton key="back" onClick={handleBack}>
+                Previous
+              </AntButton>
+            ),
+            step >3 && props.rescheduleModal && isDietitian &&(
+              <AntButton key="back" onClick={handleBack}>
+                Previous
+              </AntButton>
+            ),
             step === 1 &&
               isCancel && [
                 <AntButton key="back" onClick={handleClose}>
@@ -339,7 +356,7 @@ export const MemberModals = (props) => {
                   type="primary"
                   onClick={() => {
                     handleStatus("Cancelled");
-                    props.autoRefresh();
+                    
                     message.success("Appointment Cancelled.");
                   }}
                 >
@@ -421,30 +438,9 @@ export const MemberModals = (props) => {
                 Please select <strong>three</strong> dates and corresponding{" "}
                 <strong>time</strong> ranges for your availability to continue
               </p>
-              {props.rescheduleModal && (<div className="flex space-x-4">
-                <Alert
-                  message="Reminder"
-                  description="To reschedule, please do so at least 24 hours in advance. Otherwise, credits will be used or payment will be required by the practice."
-                  type="warning"
-                  showIcon
-                  style={{
-                    marginBottom: "8px",
-                    maxWidth: "400px",
-                    padding: "4px 14px",
-                  }}
-                />
-                <Alert
-                  message="Note"
-                  description="Please ensure that the new dates and times you select do not conflict with any other commitments."
-                  type="info"
-                  showIcon
-                  style={{
-                    marginBottom: "8px",
-                    maxWidth: "400px",
-                    padding: "4px 14px",
-                  }}
-                />
-              </div>)}
+              {props.rescheduleModal && (
+                <AlertMessage/>
+              )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 {" "}
                 {Array.from({ length: 3 }).map((_, index) => (
@@ -491,12 +487,12 @@ export const MemberModals = (props) => {
           {step === 2 && isDietitian && (
             <div className="dietitianOptions">
               <AntButton
-                onClick={() => handleDietitianName("NATASHIA")}
+                onClick={() => handleDietitianName("NATASHA")}
                 className={`text-lg ${
-                  specialistName === "NATASHIA" ? "selected" : ""
+                  specialistName === "NATASHA" ? "selected" : ""
                 }`}
               >
-                NATASHIA
+                NATASHA
               </AntButton>
               <AntButton
                 onClick={() => handleDietitianName("MARIE")}
@@ -510,6 +506,7 @@ export const MemberModals = (props) => {
           )}
           {step === 3 && isDietitian && (
             <>
+            {props.rescheduleModal && (<AlertMessage/>)}
               <p className="text-lg font-medium text-gray-800 mb-4">
                 Please click the following button to make a booking with the
                 dietitian. The link will open in a new tab.

@@ -107,23 +107,42 @@ export const AdminModals = (props) => {
       label: 'View Invoice',
       onClick: () => {
         setOpen(true);
-        // handleSelectedStatus("SEEN")
-        // setStep(2)
+      },
+      
+    },
+    {
+      key: '7',
+      label: 'Reschedule',
+      onClick: () => {
+        setOpen(true);
       },
       
     }
   ];
 
-  const filteredItems = items.filter(item => {
-    if (props.appointmentStatus === 'Confirmed') {
-      // Show only items with key '1', '2', and '3'
-      return item.key === '1' || item.key === '2' || item.key === '3';
-    } else if (props.payment_method === 'DEFERRED') {
-      // Include all items except '1' and '2', and include '5'
-      return item.key !== '1' && item.key !== '2';
+  const filteredItems = items.filter((item) => {
+    if(props.appointmentStatus==="Pending" ){
+      return ["2", "3", "7"].includes(item.key);
+    }
+    else if (
+      props.appointmentStatus === "Confirmed" ||
+      props.appointmentStatus === "Rescheduled"
+    ) {
+      return ["1", "2", "3"].includes(item.key);
+    } else if (props.payment_method === "DEFERRED") {
+      if (props.invoice_status === "INVOICE_PENDING") {
+        return !["1", "2", "6"].includes(item.key);
+      } else if (props.invoice_status === "INVOICE_UPLOADED") {
+        return !["1", "2", "4"].includes(item.key);
+      }
     } else {
-      // Default behavior: exclude '1', '2', and '5'
-      return item.key !== '1' && item.key !== '2' && item.key !== '5';
+      if (props.invoice_status === "INVOICE_PENDING") {
+        return !["1", "2", "5", "6"].includes(item.key);
+      } else if (props.invoice_status === "INVOICE_UPLOADED") {
+        return !["1", "2", "5", "4"].includes(item.key);
+      } else {
+        return !["1", "2", "5"].includes(item.key);
+      }
     }
   });
   const shouldDisableDate = (date) => {
@@ -283,6 +302,8 @@ export const AdminModals = (props) => {
           )}
         {(props.payment_method === "DEFERRED" ||
           props.appointmentStatus === "Confirmed" ||
+          props.appointmentStatus === "Pending" ||
+          props.appointmentStatus === "Rescheduled" ||
           props.appointmentStatus === "Seen") && (
           <>
             <Dropdown
@@ -328,7 +349,7 @@ export const AdminModals = (props) => {
         open={open}
         onCancel={handleClose}
         footer={
-          step === 1 && !selectedAppointment
+          step === 1 && !selectedAppointment && !showUploadInvoiceModal
             ? [
                 <Button
                   key="next"

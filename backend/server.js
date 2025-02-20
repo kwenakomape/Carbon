@@ -12,7 +12,7 @@ import { generateAppointmentConfirmationHTML } from "./emailTemplates/appointmen
 import { generateInvoiceEmailHTML } from "./emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from "url";
 import path from "path";
-import fs from 'fs';
+import fs, { stat } from 'fs';
 import pool from "./config/db.js"; // Ensure this exports a promise-based pool
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -193,11 +193,12 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.appointment_id,
       Appointments.request_date,
       Appointments.confirmed_date,
+      Appointments.confirmed_time,
       Appointments.status,
       Appointments.specialist_id,
       Appointments.invoice_status,
       Appointments.payment_status,
-      Admin.name AS specialist_name,
+      Appointments.specialist_name,
       Admin.specialist_type
     FROM 
       Members
@@ -236,6 +237,7 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.payment_method,
       a.payment_status,
       a.invoice_status,
+      a.specialist_name,
       a.credits_used,
       a.preferred_date1,
       a.preferred_time_range1,
@@ -243,8 +245,8 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_time_range2,
       a.preferred_date3,
       a.preferred_time_range3,
-      ad.admin_id AS specialist_id,
-      ad.name AS specialist_name
+      ad.name as admin_name,
+      ad.admin_id AS specialist_id
     FROM 
       Admin ad
     LEFT JOIN 
@@ -410,7 +412,10 @@ app.post("/api/bookings", async (req, res) => {
     timeRange,
     selectedDate,
     appointmentId,
+    specialistName,
   } = req.body;
+
+  
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(
@@ -419,17 +424,17 @@ app.post("/api/bookings", async (req, res) => {
   });
 
   try {
-    if (specialistId === 2) {
+    if (specialistId === 2 || specialistId==4) {
       const appointmentQuery =
         status === "Rescheduled"
           ? `
         UPDATE Appointments
-        SET status = ?, confirmed_date = ?, preferred_time_range1 = ?
+        SET status = ?, confirmed_date = ?, confirmed_time = ?
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
-        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, preferred_time_range1)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, confirmed_time,specialist_name)
+        VALUES (?, ?, ?, ?, ?,?)
       `;
       const appointmentValues =
         status === "Rescheduled"
@@ -446,6 +451,7 @@ app.post("/api/bookings", async (req, res) => {
               "confirmed",
               dayjs(selectedDate).format("YYYY-MM-DD"),
               `${dayjs(timeRange.start).format("HH:mm")}`,
+              specialistName,
             ];
 
       await pool.query(appointmentQuery, appointmentValues);

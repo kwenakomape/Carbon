@@ -72,7 +72,7 @@ export const AdminDashboard = () => {
           <div className="flex-1 flex flex-col h-full overflow-y-auto">
             <header className="bg-white shadow p-4 flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-              <div className="text-gray-600">Welcome <strong>{data[0].specialist_name}</strong></div>
+              <div className="text-gray-600">Welcome <strong>{data[0].admin_name}</strong></div>
             </header>
   
             <main className="flex-1 p-4">
@@ -137,8 +137,7 @@ export const AdminDashboard = () => {
                                       specialistId={appointment.specialist_id}
                                       phoneNumber={appointment.cell}
                                       appointmentStatus={appointment.status}
-                                      total_credits_used={appointment.total_credits_used}
-                                      total_amount={appointment.total_amount}
+                                      invoice_status ={appointment.invoice_status}
                                       preferred_date1={appointment.preferred_date1 ? dayjs(appointment.preferred_date1).format('D MMMM, YYYY') : ""}
                                       preferred_time_range1={appointment.preferred_time_range1 || ""}
                                       preferred_date2={appointment.preferred_date2 ? dayjs(appointment.preferred_date2).format('D MMMM, YYYY') : ""}
