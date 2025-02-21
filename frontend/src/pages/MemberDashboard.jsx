@@ -188,16 +188,16 @@ export const MemberDashboard = () => {
                       </tr>
                     </thead>
                     {!data[0].request_date ? (
-                     <tbody>
-                     <tr className="w-full">
-                       <td
-                         colSpan="4"
-                         className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg w-full"
-                       >
-                         You have No Appointments
-                       </td>
-                     </tr>
-                   </tbody>
+                      <tbody>
+                        <tr className="w-full">
+                          <td
+                            colSpan="4"
+                            className="py-4 px-4 border-b text-center text-red-500 font-bold text-lg w-full"
+                          >
+                            You have No Appointments
+                          </td>
+                        </tr>
+                      </tbody>
                     ) : (
                       <tbody>
                         {data.map((appointment, index) => (
@@ -208,24 +208,24 @@ export const MemberDashboard = () => {
                             <td className="py-3 px-4 border-b">
                               {appointment.request_date
                                 ? dayjs(appointment.request_date).format(
-                                  "D MMMM, YYYY"
-                                )
+                                    "D MMMM, YYYY"
+                                  )
                                 : ""}
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.specialist_type || ""}
                             </td>
                             <td className="py-3 px-4 border-b">
-                            {appointment.confirmed_date
-                              ? dayjs(appointment.confirmed_date).format(
-                                "D MMMM, YYYY"
-                              )
-                              : "_________________"}
+                              {appointment.confirmed_date
+                                ? dayjs(appointment.confirmed_date).format(
+                                    "D MMMM, YYYY"
+                                  )
+                                : "_________________"}
                             </td>
                             <td className="text-center py-3 px-4 border-b">
-                            {appointment.confirmed_date
-                              ? appointment.confirmed_time
-                              : "_________________"}
+                              {appointment.confirmed_date
+                                ? appointment.confirmed_time
+                                : "_________________"}
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}
@@ -243,10 +243,41 @@ export const MemberDashboard = () => {
                                   memberName={data[0].member_name}
                                   memberCredits={data[0].credits}
                                   autoRefresh={autoRefresh}
-                                  rescheduleModal={"rescheduleModal"}
+                                  modalType={"More Actions"}
                                   specialistName={appointment.specialist_name}
                                   specialistId={appointment.specialist_id}
                                   AppointmentId={appointment.appointment_id}
+                                  specialistType={appointment.specialist_type}
+                                  preferred_date1={
+                                    appointment.preferred_date1
+                                      ? dayjs(
+                                          appointment.preferred_date1
+                                        ).format("D MMMM, YYYY")
+                                      : ""
+                                  }
+                                  preferred_time_range1={
+                                    appointment.preferred_time_range1 || ""
+                                  }
+                                  preferred_date2={
+                                    appointment.preferred_date2
+                                      ? dayjs(
+                                          appointment.preferred_date2
+                                        ).format("D MMMM, YYYY")
+                                      : ""
+                                  }
+                                  preferred_time_range2={
+                                    appointment.preferred_time_range2 || ""
+                                  }
+                                  preferred_date3={
+                                    appointment.preferred_date3
+                                      ? dayjs(
+                                          appointment.preferred_date3
+                                        ).format("D MMMM, YYYY")
+                                      : ""
+                                  }
+                                  preferred_time_range3={
+                                    appointment.preferred_time_range3 || ""
+                                  }
                                 />
                               </div>
                             </td>

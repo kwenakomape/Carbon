@@ -12,6 +12,7 @@ import { DownOutlined } from '@ant-design/icons';
 import { updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
 import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
 import { AlertMessage } from "./AlertMessage.jsx";
+import { NoteAlert } from "./Alert/NoteAlert.jsx";
 
 export const MemberModals = (props) => {
   const [open, setOpen] = useState(false);
@@ -32,19 +33,32 @@ export const MemberModals = (props) => {
   const [datesSelected, setDatesSelected] = useState(false);
   const [credits, setCredits] = useState(props.memberCredits);
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState("");
   const [confirmationMessage, setConfirmationMessage] = useState("");
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [modify ,setIsModify] = useState(false);
+  const [reschedule ,setReschedule] = useState(false);
+  const [actionType,setActionType]= useState(false);
   const items = [
     {
       key: '1',
       label: 'Reschedule',
-      onClick:() =>handleButtonClick(props.specialistId)
+      onClick: () => {
+        setReschedule(true);
+        setActionType('Reschedule')
+        handleButtonClick(props.specialistId);
+      }
     },
     {
       key: '2',
-      label: 'Follow-Up',
+      label: 'Modify',
+      onClick: () => {
+        setIsModify(true);
+        setActionType('Modify')
+        handleButtonClick(props.specialistId);
+      }
     },
   ];
   const handleConfirmDate = (date) => {
@@ -109,6 +123,8 @@ export const MemberModals = (props) => {
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
     setDatesSelected(false)
+    setIsModify(false)
+    setReschedule(false)
   };
   const resetDatesAndTime =()=>{
     setSelectedDates([null, null, null]);
@@ -150,6 +166,8 @@ export const MemberModals = (props) => {
     const requiredCredits = selectedSpecialist === "DIETITIAN" ? 3 : 1;
     if (step === 1 && credits < requiredCredits) {
       setShowCreditModal(true);
+    }else if(step === 2 && !isDietitian && modify){
+      setShowUpdateModal(true);
     } else {
       if (step === 1 && selectedSpecialist === "DIETITIAN") {
         setStep(2); // Proceed to dietitian selection
@@ -192,33 +210,37 @@ export const MemberModals = (props) => {
       bookingData = {
         memberId: props.memberId,
         memberName: props.memberName,
-        specialistId: props.rescheduleModal ? props.specialistId:selectedSpecialistID,
-        specialistName: props.rescheduleModal ? props.specialistName:specialistName,
-        selectedSpecialist: selectedSpecialist,
+        specialistId: reschedule ? props.specialistId:selectedSpecialistID,
+        specialistName: reschedule ? props.specialistName:specialistName,
+        selectedSpecialist:reschedule ? props.specialistType:selectedSpecialist,
         timeRange: timeRange,
         selectedDate: selectedDate,
         appointmentId:props.AppointmentId,
         type: "appointmentConfirmation",
-        status: props.rescheduleModal ? "Rescheduled" : "Pending"
+        actionType:actionType,
+        status: "Pending"
       };
     } else {
       bookingData = {
         memberId: props.memberId,
         memberName: props.memberName,
         specialistId: selectedSpecialistID,
-        selectedSpecialist: selectedSpecialist,
+        selectedSpecialist: reschedule ? props.specialistType:selectedSpecialist,
         specialistName: specialistName,
         timeRanges: timeRanges,
         selectedDates: selectedDates,
         appointmentId:props.AppointmentId,
+        actionType:actionType,
         type: "appointmentConfirmation",
-        status: props.rescheduleModal ? "Rescheduled" : "Pending"
+        status: "Pending"
       };
     }
 
     try {
       await axios.post("/api/bookings", bookingData);
+      
       setTimeout(() => {
+        
         setOpen(false);
         setConfirmLoading(false);
         handleClose();
@@ -228,7 +250,7 @@ export const MemberModals = (props) => {
             specialistName={specialistName}
             selectedDate={selectedDate}
             timeRange={timeRange}
-            selectedSpecialist={selectedSpecialist}
+            selectedSpecialist={reschedule ? props.specialistType:selectedSpecialist}
             selectedDates={selectedDates}
             timeRanges={timeRanges}
           />
@@ -237,6 +259,7 @@ export const MemberModals = (props) => {
         setShowConfirmationModal(true);
         
       }, 2000);
+      setShowUpdateModal(false)
       if (!isDietitian) {
         await axios.post("/api/send-email", bookingData);
       }
@@ -265,17 +288,22 @@ export const MemberModals = (props) => {
     if (specialistId === 2 || specialistId==4) {
       setIsDietitian(true);
     }
-  
-    if (step === 1 && props.rescheduleModal === "rescheduleModal") {
-      setStep(specialistId === 2 || specialistId === 4  ? 3 : 2);
-    }
+    // if (step === 1 && (reschedule || modify)) {
+      
+    //   setStep(specialistId === 2 || specialistId === 4  ? 3 : 2);
+    // }
   
     setOpen(true);
   };
+  useEffect(() => {
+    if (step === 1 && (reschedule || modify)) {
+      setStep(props.specialistId === 2 || props.specialistId === 4 ? 3 : 2);
+    }
+  }, [reschedule, modify, step, props.specialistId])
 
   return (
     <>
-      {props.rescheduleModal === "rescheduleModal" ? (
+      {props.modalType==="More Actions" ? (
         <>
           <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
             <svg
@@ -316,8 +344,10 @@ export const MemberModals = (props) => {
                 ? "Confirm Action"
                 : step === 1
                 ? "Choose your Specialist"
-                : step === 2 && !isDietitian
+                : step === 2 && !isDietitian && !modify
                 ? "CHOOSE THREE DATES"
+                : step === 2 && !isDietitian && modify
+                ? "MODIFY DATES AND TIME"
                 : step === 2 && isDietitian
                 ? "CHOOSE A DIETITIAN"
                 : step === 3 && isDietitian
@@ -331,17 +361,17 @@ export const MemberModals = (props) => {
           open={open}
           onCancel={handleClose}
           footer={[
-            step > 1 && !props.rescheduleModal &&(
+            step > 1 && !modify && (
               <AntButton key="back" onClick={handleBack}>
                 Previous
               </AntButton>
             ),
-            step >2 && props.rescheduleModal && !isDietitian &&(
+            step > 2 && reschedule && !isDietitian && (
               <AntButton key="back" onClick={handleBack}>
                 Previous
               </AntButton>
             ),
-            step >3 && props.rescheduleModal && isDietitian &&(
+            step > 3 && reschedule && isDietitian && (
               <AntButton key="back" onClick={handleBack}>
                 Previous
               </AntButton>
@@ -356,7 +386,7 @@ export const MemberModals = (props) => {
                   type="primary"
                   onClick={() => {
                     handleStatus("Cancelled");
-                    
+
                     message.success("Appointment Cancelled.");
                   }}
                 >
@@ -390,6 +420,8 @@ export const MemberModals = (props) => {
                   ? "Book"
                   : step === 4 && isDietitian
                   ? "Submit"
+                  : step === 2 && !isDietitian && modify
+                  ? "Update"
                   : "Next"}
               </AntButton>
             ),
@@ -434,12 +466,40 @@ export const MemberModals = (props) => {
           )}
           {step === 2 && !isDietitian && (
             <>
-              <p className="text-lg mb-2">
-                Please select <strong>three</strong> dates and corresponding{" "}
-                <strong>time</strong> ranges for your availability to continue
-              </p>
-              {props.rescheduleModal && (
-                <AlertMessage/>
+              {modify ? (
+                <p className="text-lg mb-2">
+                  Update/Change Your Selected <strong>Dates</strong> and
+                  <strong> time</strong> ranges
+                </p>
+              ) : (
+                <p className="text-lg mb-2">
+                  Please select <strong>three</strong> dates and corresponding{" "}
+                  <strong>time</strong> ranges for your availability to continue
+                </p>
+              )}
+              {reschedule && !modify && <AlertMessage />}
+              {modify && (
+                <>
+                  <NoteAlert />
+                  <p className="text-lg mb-2">
+                    <strong>Previous Selected Dates/Times:</strong>
+                  </p>
+                  <div className="text-lg">
+                    <strong>Date 1:</strong> {props.preferred_date1}, From{" "}
+                    {props.preferred_time_range1}
+                  </div>
+                  <div className="text-lg">
+                    <strong>Date 2:</strong> {props.preferred_date2}, From{" "}
+                    {props.preferred_time_range2}
+                  </div>
+                  <div className="text-lg">
+                    <strong>Date 3:</strong> {props.preferred_date3}, From{" "}
+                    {props.preferred_time_range3}
+                  </div>
+                  <p className="text-lg mt-4  text-orange-600">
+                    <strong>Please Enter New Dates/Times Below:</strong>
+                  </p>
+                </>
               )}
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 {" "}
@@ -506,7 +566,7 @@ export const MemberModals = (props) => {
           )}
           {step === 3 && isDietitian && (
             <>
-            {props.rescheduleModal && (<AlertMessage/>)}
+              {reschedule && <AlertMessage />}
               <p className="text-lg font-medium text-gray-800 mb-4">
                 Please click the following button to make a booking with the
                 dietitian. The link will open in a new tab.
@@ -518,7 +578,8 @@ export const MemberModals = (props) => {
                 rel="noopener noreferrer"
                 type="primary"
               >
-                Book a consultation with {specialistName?specialistName:props.specialistName}
+                Book a consultation with{" "}
+                {specialistName ? specialistName : props.specialistName}
               </AntButton>
               <br />
               <br />
@@ -562,7 +623,10 @@ export const MemberModals = (props) => {
                 <strong>NAME:</strong> {props.memberName}
               </div>
               <div>
-                <strong>SPECIALITY:</strong> {selectedSpecialist}
+                <strong>SPECIALITY:</strong>{" "}
+                {reschedule
+                  ? props.specialistType
+                  : selectedSpecialist}
               </div>
               {selectedDates.map((date, index) => (
                 <div key={index}>
@@ -590,7 +654,10 @@ export const MemberModals = (props) => {
                 <strong>NAME:</strong> {props.memberName}
               </div>
               <div>
-                <strong>SPECIALITY:</strong> {selectedSpecialist}
+                <strong>SPECIALITY:</strong>{" "}
+                {reschedule
+                  ? props.specialistType
+                  : selectedSpecialist}
               </div>
               <div>
                 <strong>Date:</strong>{" "}
@@ -601,6 +668,32 @@ export const MemberModals = (props) => {
               </div>
             </div>
           )}
+          <Modal
+            title={<div className="text-2xl">Updating Appointment Details</div>}
+            centered
+            open={showUpdateModal}
+            onCancel={() => {
+              setShowUpdateModal(false);
+              props.autoRefresh(); // Call the callback to refresh the dashboard
+            }}
+            footer={[
+              <AntButton
+                key="close"
+                
+                onClick={() => {
+                  setShowUpdateModal(false);
+                  props.autoRefresh(); // Call the callback to refresh the dashboard
+                }}
+              >
+                No
+              </AntButton>,
+              <AntButton key="close" type="primary" onClick={handleBooking}>
+                Yes
+              </AntButton>,
+            ]}
+          >
+            <p>Are you sure you want to update your appointment details?</p>
+          </Modal>
         </Modal>
       )}
       <Modal

@@ -199,6 +199,12 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.invoice_status,
       Appointments.payment_status,
       Appointments.specialist_name,
+      Appointments.preferred_date1,
+      Appointments.preferred_time_range1,
+      Appointments.preferred_date2,
+      Appointments.preferred_time_range2,
+      Appointments.preferred_date3,
+      Appointments.preferred_time_range3,
       Admin.specialist_type
     FROM 
       Members
@@ -413,6 +419,7 @@ app.post("/api/bookings", async (req, res) => {
     selectedDate,
     appointmentId,
     specialistName,
+    actionType
   } = req.body;
 
   
@@ -426,7 +433,7 @@ app.post("/api/bookings", async (req, res) => {
   try {
     if (specialistId === 2 || specialistId==4) {
       const appointmentQuery =
-        status === "Rescheduled"
+      actionType === "Rescheduled" || "Modify"
           ? `
         UPDATE Appointments
         SET status = ?, confirmed_date = ?, confirmed_time = ?
@@ -437,7 +444,7 @@ app.post("/api/bookings", async (req, res) => {
         VALUES (?, ?, ?, ?, ?,?)
       `;
       const appointmentValues =
-        status === "Rescheduled"
+      actionType === "Rescheduled" || "Modify"
           ? [
               status,
               dayjs(selectedDate).format("YYYY-MM-DD"),
@@ -461,7 +468,7 @@ app.post("/api/bookings", async (req, res) => {
         formatDateTime(date, timeRanges[index])
       );
       const appointmentQuery =
-        status === "Rescheduled"
+        status === "Rescheduled" || "Modify"
           ? `
         UPDATE Appointments
         SET status = ?, preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?
@@ -472,7 +479,7 @@ app.post("/api/bookings", async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const appointmentValues =
-        status === "Rescheduled"
+        status === "Rescheduled" || "Modify"
           ? [
               status,
               preferredTimes[0].date,
