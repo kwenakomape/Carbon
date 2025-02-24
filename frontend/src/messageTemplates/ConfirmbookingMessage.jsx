@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 
-export const ConfirmbookingMessage = ({ isDietitian, specialistName, selectedDate, timeRange, selectedSpecialist, selectedDates, timeRanges }) => {
+export const ConfirmbookingMessage = ({ isDietitian, specialistName, selectedDate, timeRange, selectedSpecialist, selectedDates, timeRanges,actionType }) => {
   return isDietitian ? (
     <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
       <h2 className="text-xl font-bold mb-2">🎉 Success! Your appointment has been scheduled.</h2>
@@ -15,10 +15,12 @@ export const ConfirmbookingMessage = ({ isDietitian, specialistName, selectedDat
     </div>
   ) : (
     <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded-md">
-      <h2 className="text-xl font-bold mb-2">🎉 Success! Your appointment request has been submitted.</h2>
+      {actionType==="Reschedule" && (<h2 className="text-xl font-bold mb-2">🎉 Success! Your request to reschedule the appointment has been submitted.</h2>)}
+      {actionType==="Modify" && (<h2 className="text-xl font-bold mb-2">🎉 Success! Your appointment request details have been updated and submitted</h2>)}
+      {actionType==="Book" &&(<h2 className="text-xl font-bold mb-2">🎉 Success! Your appointment request has been submitted.</h2>)}
       <p className="mb-2"><strong>Details:</strong></p>
       <ul className="list-disc list-inside mb-2">
-        <li><strong>Specialist:</strong> {specialistName} ({selectedSpecialist})</li>
+        <li><strong>Specialist:</strong>({selectedSpecialist})</li>
         {selectedDates.map((date, index) => (
           <li key={index}>
             <strong>Day {index + 1}:</strong> {dayjs(date).format("YYYY-MM-DD")} <strong>From:</strong> {dayjs(timeRanges[index].start).format("HH:mm")} <strong>To:</strong> {dayjs(timeRanges[index].end).format("HH:mm")}

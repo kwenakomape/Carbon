@@ -1,19 +1,45 @@
-import dayjs from "dayjs";
+import dayjs from 'dayjs'; // Ensure dayjs is imported
 
-export const generateAppointmentConfirmationHTML = (memberName, selectedSpecialist, selectedDates, timeRanges,specialistId) => {
-  let appointmentDetailsHTML;
+export const generateAppointmentConfirmationHTML = (
+  memberName,
+  selectedSpecialist,
+  selectedDates,
+  timeRanges,
+  specialistId,
+  actionType
+) => {
+  // Function to generate appointment details HTML based on specialistId
+  const generateAppointmentDetailsHTML = () => {
+    if (specialistId === 2) {
+      return `<p class="appointment-date">Date: ${dayjs(selectedDates).format('YYYY-MM-DD')} | Time: ${dayjs(timeRanges.start).format('HH:mm')}</p>`;
+    } else {
+      return selectedDates
+        .map((date, index) => {
+          const times = timeRanges[index];
+          return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format('YYYY-MM-DD')} | Time: From ${dayjs(times.start).format('HH:mm')} to ${dayjs(times.end).format('HH:mm')}</p>`;
+        })
+        .join('');
+    }
+  };
 
-  if (specialistId === 2) {
-    appointmentDetailsHTML = `<p class="appointment-date">Date: ${dayjs(selectedDates).format('YYYY-MM-DD')} | Time: ${dayjs(timeRanges.start).format('HH:mm')}</p>`;
-  } else {
-    appointmentDetailsHTML = selectedDates
-      .map((date, index) => {
-        const times = timeRanges[index];
-        return `<p class="appointment-date">Day ${index + 1}: ${dayjs(date).format('YYYY-MM-DD')} | Time: From ${dayjs(times.start).format('HH:mm')} to ${dayjs(times.end).format('HH:mm')}</p>`;
-      })
-      .join('');
-  }
+  // Function to get the action-specific message based on actionType
+  const getActionMessage = () => {
+    switch (actionType) {
+      case 'Book':
+        return '<p>You have a new appointment request with the following details:</p>';
+      case 'Modify':
+        return '<p>The following appointment request has been updated by the client. Please review the new details:</p>';
+      case 'Reschedule':
+        return '<p>A request has been made to reschedule the appointment. Please review the updated details below:</p>';
+      default:
+        return '<p>An action has been performed on the appointment. Please review the details below:</p>';
+    }
+  };
 
+  // Generate the appointment details HTML
+  const appointmentDetailsHTML = generateAppointmentDetailsHTML();
+
+  // Generate the email template
   return `<!DOCTYPE html>
   <html>
   <head>
@@ -32,7 +58,7 @@ export const generateAppointmentConfirmationHTML = (memberName, selectedSpeciali
         <h2>Your SSISA Carbon Team</h2>
       </div>
       <div class="email-content">
-        <p>You have a new appointment request with the following details:</p>
+        ${getActionMessage()}
         <p>Client Name: <strong>${memberName}</strong></p>
         <p>Specialist: <strong>${selectedSpecialist}</strong></p>
       </div>

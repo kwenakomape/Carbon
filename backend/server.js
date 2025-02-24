@@ -422,7 +422,7 @@ app.post("/api/bookings", async (req, res) => {
     actionType
   } = req.body;
 
-  
+  console.log(actionType)
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(
@@ -433,10 +433,10 @@ app.post("/api/bookings", async (req, res) => {
   try {
     if (specialistId === 2 || specialistId==4) {
       const appointmentQuery =
-      actionType === "Rescheduled" || "Modify"
+      actionType === "Reschedule" || actionType === "Modify"
           ? `
         UPDATE Appointments
-        SET status = ?, confirmed_date = ?, confirmed_time = ?
+        SET confirmed_date = ?, confirmed_time = ?
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
@@ -444,9 +444,8 @@ app.post("/api/bookings", async (req, res) => {
         VALUES (?, ?, ?, ?, ?,?)
       `;
       const appointmentValues =
-      actionType === "Rescheduled" || "Modify"
+      actionType === "Reschedule" || actionType === "Modify"
           ? [
-              status,
               dayjs(selectedDate).format("YYYY-MM-DD"),
               `${dayjs(timeRange.start).format("HH:mm")}`,
               appointmentId,
@@ -468,10 +467,10 @@ app.post("/api/bookings", async (req, res) => {
         formatDateTime(date, timeRanges[index])
       );
       const appointmentQuery =
-        status === "Rescheduled" || "Modify"
+        actionType === "Reschedule" || actionType === "Modify"
           ? `
         UPDATE Appointments
-        SET status = ?, preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?
+        SET preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
@@ -479,9 +478,8 @@ app.post("/api/bookings", async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const appointmentValues =
-        status === "Rescheduled" || "Modify"
+        actionType === "Reschedule" || actionType === "Modify"
           ? [
-              status,
               preferredTimes[0].date,
               preferredTimes[0].timeRange,
               preferredTimes[1].date,
@@ -526,6 +524,7 @@ app.post("/api/send-email", (req, res) => {
     remainingCredits,
     paymentMethod,
     pdfEmailAttach,
+    actionType,
   } = req.body;
   let mailOptions;
   switch (type) {
@@ -539,7 +538,8 @@ app.post("/api/send-email", (req, res) => {
           selectedSpecialist,
           specialistId === 2 ? selectedDate : selectedDates,
           specialistId === 2 ? timeRange : timeRanges,
-          specialistId
+          specialistId,
+          actionType
         ),
       };
       break;
