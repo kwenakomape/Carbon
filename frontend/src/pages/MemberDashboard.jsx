@@ -241,12 +241,18 @@ export const MemberDashboard = () => {
                                 <MemberModals
                                   memberId={id}
                                   memberName={data[0].member_name}
-                                  memberCredits={data[0].credits}
+                                  phoneNumber={data[0].cell}
+                                  memberEmail={data[0].email}
                                   autoRefresh={autoRefresh}
                                   modalType={"More Actions"}
                                   specialistName={appointment.specialist_name}
+                                  invoice_status={appointment.invoice_status}
                                   specialistId={appointment.specialist_id}
                                   AppointmentId={appointment.appointment_id}
+                                  confirmed_date={appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}
+                                  confirmed_time={appointment.confirmed_time ? appointment.confirmed_time: "________"}
+                                  credits_used={appointment.credits_used}
+                                  appointmentStatus={appointment.status}
                                   specialistType={appointment.specialist_type}
                                   preferred_date1={
                                     appointment.preferred_date1

@@ -195,6 +195,7 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.confirmed_date,
       Appointments.confirmed_time,
       Appointments.status,
+      Appointments.credits_used,
       Appointments.specialist_id,
       Appointments.invoice_status,
       Appointments.payment_status,
@@ -433,7 +434,7 @@ app.post("/api/bookings", async (req, res) => {
   try {
     if (specialistId === 2 || specialistId==4) {
       const appointmentQuery =
-      actionType === "Reschedule" || actionType === "Modify"
+      actionType === "Reschedule"
           ? `
         UPDATE Appointments
         SET confirmed_date = ?, confirmed_time = ?
@@ -444,7 +445,7 @@ app.post("/api/bookings", async (req, res) => {
         VALUES (?, ?, ?, ?, ?,?)
       `;
       const appointmentValues =
-      actionType === "Reschedule" || actionType === "Modify"
+      actionType === "Reschedule"
           ? [
               dayjs(selectedDate).format("YYYY-MM-DD"),
               `${dayjs(timeRange.start).format("HH:mm")}`,
@@ -470,7 +471,7 @@ app.post("/api/bookings", async (req, res) => {
         actionType === "Reschedule" || actionType === "Modify"
           ? `
         UPDATE Appointments
-        SET preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?
+        SET preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?,confirmed_date = NULL, confirmed_time = NULL,status='Pending'
         WHERE appointment_id = ? AND member_id = ?
       `
           : `

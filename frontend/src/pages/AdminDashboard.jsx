@@ -136,6 +136,7 @@ export const AdminDashboard = () => {
                                       AppointmentId={appointment.appointment_id}
                                       specialistId={appointment.specialist_id}
                                       phoneNumber={appointment.cell}
+                                      credits_used={appointment.credits_used}
                                       appointmentStatus={appointment.status}
                                       invoice_status ={appointment.invoice_status}
                                       preferred_date1={appointment.preferred_date1 ? dayjs(appointment.preferred_date1).format('D MMMM, YYYY') : ""}
@@ -147,8 +148,8 @@ export const AdminDashboard = () => {
                                       autoRefresh={autoRefresh}
                                       specialistName={data[0].specialist_name}
                                       confirmed_date={appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}
-                                      confirmedTime={appointment.confirmed_time ? appointment.confirmed_time: "________"}
-
+                                      confirmed_time={appointment.confirmed_time ? appointment.confirmed_time: "________"}
+                                  
                                     />
                                     
                                </div>

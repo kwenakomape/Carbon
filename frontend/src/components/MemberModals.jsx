@@ -79,6 +79,34 @@ export const MemberModals = (props) => {
       
     }
   ];
+
+  const filteredItems = items.filter((item) => {
+    if(props.appointmentStatus==="Pending"){
+      return ["2", "3"].includes(item.key);
+    }
+    else if(props.appointmentStatus==="Cancelled" || props.appointmentStatus==="Missed"){
+      return ["3"].includes(item.key);
+    }
+    else if(props.appointmentStatus==="Seen"){
+      if(props.invoice_status === "INVOICE_PENDING"){
+        return ["3"].includes(item.key);
+      }
+      else if(props.invoice_status === "INVOICE_UPLOADED"){
+        return ["3","4"].includes(item.key);
+      }
+      
+    }
+    else if(props.appointmentStatus==="Confirmed" ){
+      if(props.invoice_status === "INVOICE_PENDING"){
+        return ["1", "3"].includes(item.key);
+      }
+      else if(props.invoice_status === "INVOICE_PENDING"){
+        return ["1", "3","4"].includes(item.key);
+      }
+      
+    }
+
+  });
   const handleBookingButtonClick = () => {
     setActionType('Book');
     setOpen(true)
@@ -233,9 +261,9 @@ export const MemberModals = (props) => {
       bookingData = {
         memberId: props.memberId,
         memberName: props.memberName,
-        specialistId: reschedule ? props.specialistId:selectedSpecialistID,
-        specialistName: reschedule ? props.specialistName:specialistName,
-        selectedSpecialist:reschedule || modify ? props.specialistType :selectedSpecialist,
+        specialistId: reschedule? props.specialistId:selectedSpecialistID,
+        specialistName: reschedule? props.specialistName:specialistName,
+        selectedSpecialist:reschedule? props.specialistType :selectedSpecialist,
         timeRange: timeRange,
         selectedDate: selectedDate,
         appointmentId:props.AppointmentId,
@@ -320,16 +348,13 @@ export const MemberModals = (props) => {
     if (step === 1 && (reschedule || modify)) {
       setStep(props.specialistId === 2 || props.specialistId === 4 ? 3 : 2);
     }
-    // else if(step==1 && viewAppointmentDetails){
-    //   setStep(1);
-    // }
   }, [reschedule, modify, step, props.specialistId])
 
   return (
     <>
       {props.modalType === "More Actions" ? (
         <>
-          <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+          {props.appointmentStatus!=="Cancelled" && props.appointmentStatus!=="Missed" && <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -344,10 +369,10 @@ export const MemberModals = (props) => {
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
               />
             </svg>
-          </div>
+          </div>}
           <Dropdown
             menu={{
-              items,
+              items: filteredItems,
             }}
           >
             <a>
@@ -419,7 +444,7 @@ export const MemberModals = (props) => {
                   Yes
                 </AntButton>,
               ],
-            !isCancel && (
+            !isCancel && !viewAppointmentDetails && (
               <AntButton
                 key="next"
                 type="primary"
@@ -482,16 +507,25 @@ export const MemberModals = (props) => {
               </AntButton>
             </div>
           ) : (
-            <AppointmentDetails
-              clientName={clientName}
-              phoneNumber={phoneNumber}
-              memberEmail={memberEmail}
-              appointmentId={appointmentId}
-              confirmed_date={confirmed_date}
-              confirmed_time={confirmed_time}
-              credits_used={credits_used}
-              appointmentStatus={appointmentStatus}
-            />
+            viewAppointmentDetails && (
+              <AppointmentDetails
+                clientName={props.memberName}
+                phoneNumber={props.phoneNumber}
+                memberEmail={props.memberEmail}
+                appointmentId={props.AppointmentId}
+                confirmed_date={props.confirmed_date}
+                confirmed_time={props.confirmed_time}
+                credits_used={props.credits_used}
+                appointmentStatus={props.appointmentStatus}
+                preferred_date1={props.preferred_date1}
+                preferred_time_range1={props.preferred_time_range1}
+                preferred_date2={props.preferred_date2}
+                preferred_time_range2={props.preferred_time_range2}
+                preferred_date3={props.preferred_date3}
+                preferred_time_range3={props.preferred_time_range3}
+                specialistId={props.specialistId}
+              />
+            )
           )}
           {step === 1 && isCancel && (
             <p className="text-xl">
@@ -517,7 +551,7 @@ export const MemberModals = (props) => {
               {reschedule && !modify && <AlertMessage />}
               {modify && (
                 <>
-                  <NoteAlert />
+                  <NoteAlert description/>
                   <p className="text-lg mb-2">
                     <strong>Previous Selected Dates/Times:</strong>
                   </p>
@@ -692,9 +726,7 @@ export const MemberModals = (props) => {
               </div>
               <div>
                 <strong>SPECIALITY:</strong>{" "}
-                {reschedule || modify
-                  ? props.specialistType
-                  : selectedSpecialist}
+                {reschedule ? props.specialistType : selectedSpecialist}
               </div>
               <div>
                 <strong>Date:</strong>{" "}

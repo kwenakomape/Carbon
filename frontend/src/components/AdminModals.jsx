@@ -12,6 +12,7 @@ import { Modal, Select,Button,message,Dropdown } from "antd";
 import { updateAppointmentStatus } from '../../../backend/utils/apiUtils';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { AppointmentDetails } from "./AppointmentDetails";
 
 export const AdminModals = (props) => {
   const id = props.memberId;
@@ -23,14 +24,15 @@ export const AdminModals = (props) => {
   const [isSeen, setIsSeen] = useState(false);
   const [isMissed, setIsMissed] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
-  const [isModify, setIsModify] = useState(false);
+  const [isAccept, setIsAccept] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
   const [dateSelected, setDateSelected] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [viewAppointmentDetails,SetViewAppointmentDetails] = useState(false);
   const [showUploadInvoiceModal,setShowUploadInvoiceModal] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
-  const [rescheduleModal, setRescheduleModal] = useState(false);
+  const [reschedule ,setReschedule] = useState(false);
+  const [actionType,setActionType]= useState(false);
 
 
   const names = [
@@ -71,16 +73,8 @@ export const AdminModals = (props) => {
     {
       key: '3',
       label: 'View Details',
-      onClick:() => {
-        setSelectedAppointment({
-          clientName: props.memberName,
-          phoneNumber: props.phoneNumber,
-          AppointmentId:props.AppointmentId,
-          appointmentStatus:props.appointmentStatus,
-          memberCredits:props.memberCredits,
-          confirmed_date:props.confirmed_date,
-          memberEmail:props.memberEmail
-        });
+      onClick: () => {
+        SetViewAppointmentDetails(true)
         setOpen(true);
       }
     },
@@ -114,6 +108,8 @@ export const AdminModals = (props) => {
       key: '7',
       label: 'Reschedule',
       onClick: () => {
+        setReschedule(true)
+        setStep(2)
         setOpen(true);
       },
       
@@ -174,10 +170,11 @@ export const AdminModals = (props) => {
     setIsCancel(false);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
-    setSelectedAppointment(null);
     setSelectedName(null);
-    setRescheduleModal(false);
     setShowUploadInvoiceModal(false);
+    SetViewAppointmentDetails(false);
+    setReschedule(false);
+    setIsAccept(false);
   };
 
   const handleStatus = async (status) => {
@@ -194,7 +191,7 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
-      status:rescheduleModal ? "Rescheduled" : "Confirmed"
+      status:"Confirmed"
     };
 
     try {
@@ -214,21 +211,21 @@ export const AdminModals = (props) => {
       setIsMissed(true);
       setIsSeen(false);
       setIsCancel(false);
-      setIsModify(false);
+      setIsAccept(false);
     } else if (status === "CANCELED") {
       setIsMissed(false);
       setIsSeen(false);
       setIsCancel(true);
-      setIsModify(false);
+      setIsAccept(false);
     } else if (status === "SEEN") {
       setIsMissed(false);
       setIsSeen(true);
       setIsCancel(false);
-      setIsModify(false);
+      setIsAccept(false);
     } else if (status === "MODIFY") {
       setIsMissed(false);
       setIsSeen(false);
-      setIsModify(true);
+      setIsAccept(true);
       setIsCancel(false);
     }
     setSelectedStatus(status);
@@ -323,17 +320,17 @@ export const AdminModals = (props) => {
       <Modal
         title={
           <div className="text-center w-full text-3xl font-bold text-blue-600">
-            {step === 1 && selectedAppointment
+            {step === 1 && viewAppointmentDetails
               ? "Full Details"
               : step === 2 && isMissed
               ? "Confirm Action"
-              : step === 2 && isModify
+              : step === 2 && isAccept
               ? "Choose a Date and Time"
               : step === 2 && isCancel
               ? "Confirm Action"
               : step === 2 && isSeen
               ? "Select Payment Method"
-              : step === 3 && isModify
+              : step === 3 && isAccept
               ? "Confirm Your Availability"
               : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
               ? "Confirm Payment by SSISA Credits"
@@ -349,7 +346,7 @@ export const AdminModals = (props) => {
         open={open}
         onCancel={handleClose}
         footer={
-          step === 1 && !selectedAppointment && !showUploadInvoiceModal
+          step === 1 && !viewAppointmentDetails && !showUploadInvoiceModal
             ? [
                 <Button
                   key="next"
@@ -377,7 +374,7 @@ export const AdminModals = (props) => {
                   Yes
                 </Button>,
               ]
-            : step === 2 && isModify
+            : step === 2 && isAccept
             ? [
                 <Button
                   key="next"
@@ -416,7 +413,7 @@ export const AdminModals = (props) => {
                   Next
                 </Button>,
               ]
-            : step === 3 && isModify
+            : step === 3 && isAccept
             ? [
                 <Button key="back" onClick={handleBack}>
                   Previous
@@ -448,36 +445,24 @@ export const AdminModals = (props) => {
         }
         width={1000}
       >
-        {selectedAppointment && (
-          <div className="appointment-details">
-            <p>
-              <strong>Client Name:</strong> {selectedAppointment.clientName}
-            </p>
-            <p>
-              <strong>Phone Number:</strong> {selectedAppointment.phoneNumber}
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedAppointment.memberEmail}
-            </p>
-            <p>
-              <strong>Appointment ID:</strong>{" "}
-              {selectedAppointment.AppointmentId}
-            </p>
-            <p>
-              <strong>Confirmed Date:</strong>{" "}
-              {selectedAppointment.confirmed_date}
-            </p>
-            <p>
-              <strong>Credits Remaining:</strong>{" "}
-              {selectedAppointment.memberCredits}
-            </p>
-            <p>
-              <strong>Appointment Status:</strong>{" "}
-              {selectedAppointment.appointmentStatus}
-            </p>
-
-            {/* Add other details here */}
-          </div>
+        {viewAppointmentDetails && (
+          <AppointmentDetails
+            clientName={props.memberName}
+            phoneNumber={props.phoneNumber}
+            memberEmail={props.memberEmail}
+            appointmentId={props.AppointmentId}
+            confirmed_date={props.confirmed_date}
+            confirmed_time={props.confirmed_time}
+            credits_used={props.credits_used}
+            appointmentStatus={props.appointmentStatus}
+            preferred_date1={props.preferred_date1}
+            preferred_time_range1={props.preferred_time_range1}
+            preferred_date2={props.preferred_date2}
+            preferred_time_range2={props.preferred_time_range2}
+            preferred_date3={props.preferred_date3}
+            preferred_time_range3={props.preferred_time_range3}
+            specialistId={props.specialistId}
+          />
         )}
         {showUploadInvoiceModal && (
           <UploadFiles
@@ -496,7 +481,7 @@ export const AdminModals = (props) => {
             <strong>{selectedStatus.toLowerCase()}</strong>?
           </p>
         )}
-        {step === 2 && isModify && (
+        {step === 2 && (isAccept ||reschedule) && (
           <>
             <p className="text-lg mb-2">
               <strong>Client's Proposed Dates</strong>
@@ -618,7 +603,7 @@ export const AdminModals = (props) => {
             <p>Confirm to approve this?</p>
           </div>
         )}
-        {step === 3 && isModify && (
+        {step === 3 && isAccept && (
           <>
             <div className="appointment-details">
               <p className="text-lg">

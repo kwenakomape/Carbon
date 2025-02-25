@@ -205,6 +205,12 @@ SELECT
       Appointments.invoice_status,
       Appointments.payment_status,
       Appointments.specialist_name,
+      Appointments.preferred_date1,
+      Appointments.preferred_time_range1,
+      Appointments.preferred_date2,
+      Appointments.preferred_time_range2,
+      Appointments.preferred_date3,
+      Appointments.preferred_time_range3,
       Admin.specialist_type
     FROM 
       Members
@@ -215,6 +221,6 @@ SELECT
     WHERE 
       Members.member_id = 920811
     ORDER BY 
-      Members.member_id, Appointments.appointment_id
+      Members.member_id, Appointments.appointment_id;
 
 
