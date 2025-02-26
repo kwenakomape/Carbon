@@ -190,6 +190,7 @@ app.get("/api/member/:id", async (req, res) => {
       Members.cell,
       Members.joined_date,
       Members.credits,
+      Members.role_id,
       Appointments.appointment_id,
       Appointments.request_date,
       Appointments.confirmed_date,
@@ -253,6 +254,7 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_date3,
       a.preferred_time_range3,
       ad.name as admin_name,
+      ad.role_id,
       ad.admin_id AS specialist_id
     FROM 
       Admin ad
@@ -422,8 +424,8 @@ app.post("/api/bookings", async (req, res) => {
     specialistName,
     actionType
   } = req.body;
-
-  console.log(actionType)
+   console.log(status);
+   console.log(actionType);
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(
@@ -471,7 +473,7 @@ app.post("/api/bookings", async (req, res) => {
         actionType === "Reschedule" || actionType === "Modify"
           ? `
         UPDATE Appointments
-        SET preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?,confirmed_date = NULL, confirmed_time = NULL,status='Pending'
+        SET status = ? , preferred_date1 = ?, preferred_time_range1 = ?, preferred_date2 = ?, preferred_time_range2 = ?, preferred_date3 = ?, preferred_time_range3 = ?,confirmed_date = NULL, confirmed_time = NULL
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
@@ -481,6 +483,7 @@ app.post("/api/bookings", async (req, res) => {
       const appointmentValues =
         actionType === "Reschedule" || actionType === "Modify"
           ? [
+              status,
               preferredTimes[0].date,
               preferredTimes[0].timeRange,
               preferredTimes[1].date,

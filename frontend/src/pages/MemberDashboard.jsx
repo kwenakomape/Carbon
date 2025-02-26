@@ -244,6 +244,7 @@ export const MemberDashboard = () => {
                                   phoneNumber={data[0].cell}
                                   memberEmail={data[0].email}
                                   autoRefresh={autoRefresh}
+                                  role_id ={data[0].role_id}
                                   modalType={"More Actions"}
                                   specialistName={appointment.specialist_name}
                                   invoice_status={appointment.invoice_status}

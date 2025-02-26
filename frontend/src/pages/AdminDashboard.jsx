@@ -135,6 +135,7 @@ export const AdminDashboard = () => {
                                       payment_method={appointment.payment_method}
                                       AppointmentId={appointment.appointment_id}
                                       specialistId={appointment.specialist_id}
+                                      role_id ={data[0].role_id}
                                       phoneNumber={appointment.cell}
                                       credits_used={appointment.credits_used}
                                       appointmentStatus={appointment.status}

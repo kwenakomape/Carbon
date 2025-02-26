@@ -13,6 +13,7 @@ import { updateAppointmentStatus } from '../../../backend/utils/apiUtils';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { AppointmentDetails } from "./AppointmentDetails";
+import { NoteAlert } from "./Alert/NoteAlert";
 
 export const AdminModals = (props) => {
   const id = props.memberId;
@@ -109,6 +110,7 @@ export const AdminModals = (props) => {
       label: 'Reschedule',
       onClick: () => {
         setReschedule(true)
+        setActionType("Reschedule")
         setStep(2)
         setOpen(true);
       },
@@ -117,7 +119,7 @@ export const AdminModals = (props) => {
   ];
 
   const filteredItems = items.filter((item) => {
-    if(props.appointmentStatus==="Pending" ){
+    if(props.appointmentStatus==="Pending" || props.appointmentStatus === "Pending Reschedule" ){
       return ["2", "3", "7"].includes(item.key);
     }
     else if (
@@ -173,8 +175,8 @@ export const AdminModals = (props) => {
     setSelectedName(null);
     setShowUploadInvoiceModal(false);
     SetViewAppointmentDetails(false);
-    setReschedule(false);
     setIsAccept(false);
+    setReschedule(false)
   };
 
   const handleStatus = async (status) => {
@@ -191,7 +193,8 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
-      status:"Confirmed"
+      status:"Confirmed",
+      role :props.role_id,
     };
 
     try {
@@ -222,7 +225,7 @@ export const AdminModals = (props) => {
       setIsSeen(true);
       setIsCancel(false);
       setIsAccept(false);
-    } else if (status === "MODIFY") {
+    } else if (status === "ACCEPT") {
       setIsMissed(false);
       setIsSeen(false);
       setIsAccept(true);
@@ -264,17 +267,16 @@ export const AdminModals = (props) => {
   return (
     <>
       <div class="flex flex-wrap gap-2">
-        {props.specialistId !== 2 && props.appointmentStatus === "Pending" && (
+        {props.specialistId !== 2 && (props.appointmentStatus === "Pending" || props.appointmentStatus === "Pending Reschedule")  && (
           <Button
             color="primary"
             size="small"
             variant="solid"
-            onClick={() => handleAppointmentActions("MODIFY")}
+            onClick={() => handleAppointmentActions("ACCEPT")}
           >
             Accept
           </Button>
         )}
-
         {props.appointmentStatus !== "Cancelled" &&
           props.appointmentStatus !== "Missed" && (
             <div
@@ -300,6 +302,7 @@ export const AdminModals = (props) => {
         {(props.payment_method === "DEFERRED" ||
           props.appointmentStatus === "Confirmed" ||
           props.appointmentStatus === "Pending" ||
+          props.appointmentStatus === "Pending Reschedule" ||
           props.appointmentStatus === "Rescheduled" ||
           props.appointmentStatus === "Seen") && (
           <>
@@ -324,13 +327,13 @@ export const AdminModals = (props) => {
               ? "Full Details"
               : step === 2 && isMissed
               ? "Confirm Action"
-              : step === 2 && isAccept
+              : step === 2 && (isAccept || reschedule)
               ? "Choose a Date and Time"
               : step === 2 && isCancel
               ? "Confirm Action"
               : step === 2 && isSeen
               ? "Select Payment Method"
-              : step === 3 && isAccept
+              : step === 3 && (isAccept || reschedule)
               ? "Confirm Your Availability"
               : step === 3 && selectedPaymentMethod === "SSISA CREDITS"
               ? "Confirm Payment by SSISA Credits"
@@ -374,7 +377,7 @@ export const AdminModals = (props) => {
                   Yes
                 </Button>,
               ]
-            : step === 2 && isAccept
+            : step === 2 && (isAccept || reschedule)
             ? [
                 <Button
                   key="next"
@@ -413,7 +416,7 @@ export const AdminModals = (props) => {
                   Next
                 </Button>,
               ]
-            : step === 3 && isAccept
+            : step === 3 && (isAccept || reschedule)
             ? [
                 <Button key="back" onClick={handleBack}>
                   Previous
@@ -481,23 +484,46 @@ export const AdminModals = (props) => {
             <strong>{selectedStatus.toLowerCase()}</strong>?
           </p>
         )}
-        {step === 2 && (isAccept ||reschedule) && (
+        {step === 2 && (isAccept || reschedule) && (
           <>
-            <p className="text-lg mb-2">
-              <strong>Client's Proposed Dates</strong>
-            </p>
-            <div className="text-lg">
-              <strong>Date 1:</strong> {props.preferred_date1}, From{" "}
-              {props.preferred_time_range1}
-            </div>
-            <div className="text-lg">
-              <strong>Date 2:</strong> {props.preferred_date2}, From{" "}
-              {props.preferred_time_range2}
-            </div>
-            <div className="text-lg">
-              <strong>Date 3:</strong> {props.preferred_date3}, From{" "}
-              {props.preferred_time_range3}
-            </div>
+            {reschedule && (
+              <>
+                <NoteAlert
+                  description={
+                    "Before confirming the new date and time for rescheduling, please contact the client to verify their availability. This ensures that the rescheduled appointment works for both parties and minimizes the risk of further changes."
+                  }
+                />
+                <p>
+                  <strong>Client Name:</strong> {props.memberName}
+                </p>
+                <p>
+                  <strong>Phone Number:</strong> {props.phoneNumber}
+                </p>
+                <p>
+                  <strong>Email:</strong> {props.memberEmail}
+                </p>
+                <p></p>
+              </>
+            )}
+            {!reschedule && (
+              <>
+                <p className="text-lg mb-2">
+                  <strong>Client's Proposed Dates</strong>
+                </p>
+                <div className="text-lg">
+                  <strong>Date 1:</strong> {props.preferred_date1}, From{" "}
+                  {props.preferred_time_range1}
+                </div>
+                <div className="text-lg">
+                  <strong>Date 2:</strong> {props.preferred_date2}, From{" "}
+                  {props.preferred_time_range2}
+                </div>
+                <div className="text-lg">
+                  <strong>Date 3:</strong> {props.preferred_date3}, From{" "}
+                  {props.preferred_time_range3}
+                </div>
+              </>
+            )}
             <br />
             <div>
               <Select
@@ -517,9 +543,9 @@ export const AdminModals = (props) => {
             </div>
 
             <br />
-            <p className="text-lg text-red-600 font-bold">
+            {!reschedule ? (<p className="text-lg text-red-600 font-bold">
               Please select your preferred date and time to continue:
-            </p>
+            </p>):<p className="text-lg text-red-600 font-bold">Please select your new preferred date and time to continue:</p>}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box sx={{ my: 4 }}>
                 <DatePicker
@@ -603,7 +629,7 @@ export const AdminModals = (props) => {
             <p>Confirm to approve this?</p>
           </div>
         )}
-        {step === 3 && isAccept && (
+        {step === 3 && (isAccept || reschedule) && (
           <>
             <div className="appointment-details">
               <p className="text-lg">

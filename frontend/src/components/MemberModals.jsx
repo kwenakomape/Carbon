@@ -79,9 +79,9 @@ export const MemberModals = (props) => {
       
     }
   ];
-
+ 
   const filteredItems = items.filter((item) => {
-    if(props.appointmentStatus==="Pending"){
+    if(props.appointmentStatus==="Pending" || props.appointmentStatus==="Pending Reschedule"){
       return ["2", "3"].includes(item.key);
     }
     else if(props.appointmentStatus==="Cancelled" || props.appointmentStatus==="Missed"){
@@ -269,6 +269,7 @@ export const MemberModals = (props) => {
         appointmentId:props.AppointmentId,
         type: "appointmentConfirmation",
         actionType:actionType,
+        role :props.role_id,
         status: "Pending"
       };
     } else {
@@ -282,8 +283,9 @@ export const MemberModals = (props) => {
         selectedDates: selectedDates,
         appointmentId:props.AppointmentId,
         actionType:actionType,
+        role :props.role_id,
         type: "appointmentConfirmation",
-        status: "Pending"
+        status: reschedule ?"Pending Reschedule":"Pending"
       };
     }
 
@@ -551,7 +553,7 @@ export const MemberModals = (props) => {
               {reschedule && !modify && <AlertMessage />}
               {modify && (
                 <>
-                  <NoteAlert description/>
+                  <NoteAlert description ="Please ensure that the new dates and times you select do not conflict with any other commitments."/>
                   <p className="text-lg mb-2">
                     <strong>Previous Selected Dates/Times:</strong>
                   </p>

@@ -7,7 +7,7 @@ export const AlertMessage = () => {
     <>
       <div className="flex space-x-4">
       <ReminderAlert/>
-       <NoteAlert/>
+       <NoteAlert description={"Please ensure that the new dates and times you select do not conflict with any other commitments."}/>
        
       </div>
     </>

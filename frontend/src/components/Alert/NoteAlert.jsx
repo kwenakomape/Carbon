@@ -1,10 +1,10 @@
 import { Alert } from "antd";
 
-export const NoteAlert = () => {
+export const NoteAlert = ({description}) => {
   return (
     <Alert
       message="Note"
-      description="Please ensure that the new dates and times you select do not conflict with any other commitments."
+      description={description}
       type="info"
       showIcon
       style={{
@@ -15,3 +15,6 @@ export const NoteAlert = () => {
     />
   );
 };
+
+
+// "Please ensure that the new dates and times you select do not conflict with any other commitments."
