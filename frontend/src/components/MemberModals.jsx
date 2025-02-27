@@ -69,43 +69,25 @@ export const MemberModals = (props) => {
         SetViewAppointmentDetails(true)
         handleButtonClick(props.specialistId);
       }
-    },
-    {
-      key: '4',
-      label: 'View Invoice',
-      onClick: () => {
-        setOpen(true);
-      },
-      
     }
   ];
  
   const filteredItems = items.filter((item) => {
-    if(props.appointmentStatus==="Pending" || props.appointmentStatus==="Pending Reschedule"){
+    if (
+      props.appointmentStatus === "Pending" ||
+      props.appointmentStatus === "Pending Reschedule"
+    ) {
       return ["2", "3"].includes(item.key);
-    }
-    else if(props.appointmentStatus==="Cancelled" || props.appointmentStatus==="Missed"){
+    } else if (
+      props.appointmentStatus === "Cancelled" ||
+      props.appointmentStatus === "Missed"
+    ) {
       return ["3"].includes(item.key);
+    } else if (props.appointmentStatus === "Seen") {
+      return ["3"].includes(item.key);
+    } else if (props.appointmentStatus === "Confirmed") {
+      return ["1", "3"].includes(item.key);
     }
-    else if(props.appointmentStatus==="Seen"){
-      if(props.invoice_status === "INVOICE_PENDING"){
-        return ["3"].includes(item.key);
-      }
-      else if(props.invoice_status === "INVOICE_UPLOADED"){
-        return ["3","4"].includes(item.key);
-      }
-      
-    }
-    else if(props.appointmentStatus==="Confirmed" ){
-      if(props.invoice_status === "INVOICE_PENDING"){
-        return ["1", "3"].includes(item.key);
-      }
-      else if(props.invoice_status === "INVOICE_PENDING"){
-        return ["1", "3","4"].includes(item.key);
-      }
-      
-    }
-
   });
   const handleBookingButtonClick = () => {
     setActionType('Book');

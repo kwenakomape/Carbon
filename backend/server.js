@@ -199,6 +199,7 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.credits_used,
       Appointments.specialist_id,
       Appointments.invoice_status,
+      Appointments.payment_method,
       Appointments.payment_status,
       Appointments.specialist_name,
       Appointments.preferred_date1,

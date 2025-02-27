@@ -119,27 +119,28 @@ export const AdminModals = (props) => {
   ];
 
   const filteredItems = items.filter((item) => {
-    if(props.appointmentStatus==="Pending" || props.appointmentStatus === "Pending Reschedule" ){
-      return ["2", "3", "7"].includes(item.key);
-    }
-    else if (
-      props.appointmentStatus === "Confirmed" ||
-      props.appointmentStatus === "Rescheduled"
+    if (
+      props.appointmentStatus === "Pending" ||
+      props.appointmentStatus === "Pending Reschedule"
     ) {
-      return ["1", "2", "3"].includes(item.key);
-    } else if (props.payment_method === "DEFERRED") {
+      return ["3", "7"].includes(item.key);
+    } 
+    else if (props.appointmentStatus === "Cancelled" || props.appointmentStatus === "Missed" ) {
+      return ["3"].includes(item.key);
+    }
+    else if (props.appointmentStatus === "Confirmed") {
+      return ["1", "2", "3", "7"].includes(item.key);
+    } else if (props.appointmentStatus === "Seen") {
       if (props.invoice_status === "INVOICE_PENDING") {
-        return !["1", "2", "6"].includes(item.key);
+        if (props.payment_method !== "DEFERRED") {
+          return !["1", "2", "5", "6","7"].includes(item.key);
+        }
+        return !["1", "2", "6","7"].includes(item.key);
       } else if (props.invoice_status === "INVOICE_UPLOADED") {
-        return !["1", "2", "4"].includes(item.key);
-      }
-    } else {
-      if (props.invoice_status === "INVOICE_PENDING") {
-        return !["1", "2", "5", "6"].includes(item.key);
-      } else if (props.invoice_status === "INVOICE_UPLOADED") {
-        return !["1", "2", "5", "4"].includes(item.key);
-      } else {
-        return !["1", "2", "5"].includes(item.key);
+        if (props.payment_method !== "DEFERRED") {
+          return !["1", "2", "5", "4","7"].includes(item.key);
+        }
+        return !["1", "2", "4","7"].includes(item.key);
       }
     }
   });
@@ -186,6 +187,7 @@ export const AdminModals = (props) => {
   };
 
   const handleDateConfirmation = async () => {
+    // console.lo(selectedDate);
     let data = {
       memberId: id,
       memberName: props.memberName,
@@ -302,8 +304,9 @@ export const AdminModals = (props) => {
         {(props.payment_method === "DEFERRED" ||
           props.appointmentStatus === "Confirmed" ||
           props.appointmentStatus === "Pending" ||
+          props.appointmentStatus === "Missed" ||
+          props.appointmentStatus === "Cancelled" ||
           props.appointmentStatus === "Pending Reschedule" ||
-          props.appointmentStatus === "Rescheduled" ||
           props.appointmentStatus === "Seen") && (
           <>
             <Dropdown
@@ -548,13 +551,24 @@ export const AdminModals = (props) => {
             </p>):<p className="text-lg text-red-600 font-bold">Please select your new preferred date and time to continue:</p>}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box sx={{ my: 4 }}>
-                <DatePicker
+                {reschedule  ? (<DatePicker
                   label="Select Date"
                   value={selectedDate || null}
                   onChange={handleDateChange}
                   shouldDisableDate={(date) => shouldDisableDate(date)}
                   renderInput={(params) => <TextField {...params} fullWidth />}
-                />
+                />):
+                <Select
+          placeholder="Select Date"
+          onChange={handleDateChange}
+          style={{ width: 200 }}
+        >
+          <Option value={props.preferred_date1}>{props.preferred_date1}</Option>
+          <Option value={props.preferred_date2}>{props.preferred_date2}</Option>
+          <Option value={props.preferred_date3}>{props.preferred_date3}</Option>
+        </Select>
+                
+                }
                 &nbsp;
                 <TimePicker
                   label="From"

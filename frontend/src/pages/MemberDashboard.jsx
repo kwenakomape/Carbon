@@ -165,6 +165,9 @@ export const MemberDashboard = () => {
                           Request on
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Payment Type
+                        </th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
                           Specialist
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
@@ -176,9 +179,8 @@ export const MemberDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Status
                         </th>
-                        <th className="py-3 px-4 border-b text-left text-gray-600">
-                          Invoice
-                        </th>
+                        
+                        
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Payment
                         </th>
@@ -213,6 +215,9 @@ export const MemberDashboard = () => {
                                 : ""}
                             </td>
                             <td className="py-3 px-4 border-b">
+                            {appointment.payment_method || "________"}
+                            </td>
+                            <td className="py-3 px-4 border-b">
                               {appointment.specialist_type || ""}
                             </td>
                             <td className="py-3 px-4 border-b">
@@ -230,9 +235,8 @@ export const MemberDashboard = () => {
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}
                             </td>
-                            <td className="py-3 px-4 border-b">
-                              {appointment.invoice_status}
-                            </td>
+                            
+                           
                             <td className="py-3 px-4 border-b">
                               {appointment.payment_status}
                             </td>
@@ -246,6 +250,7 @@ export const MemberDashboard = () => {
                                   autoRefresh={autoRefresh}
                                   role_id ={data[0].role_id}
                                   modalType={"More Actions"}
+                                  payment_method={appointment.payment_method}
                                   specialistName={appointment.specialist_name}
                                   invoice_status={appointment.invoice_status}
                                   specialistId={appointment.specialist_id}
