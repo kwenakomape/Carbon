@@ -1,6 +1,6 @@
 import axios from "axios";
 import dayjs from "dayjs";
-import { Box, TextField, Typography } from "@mui/material";
+import { Box, TextField, Typography,Select as MuSelect, MenuItem , InputLabel, FormControl} from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -37,6 +37,7 @@ export const AdminModals = (props) => {
 
 
   const names = [
+    "Me",
     "Zoe Woodman",
     "Caitlin Miller",
     "Yusuf Kajee",
@@ -44,7 +45,8 @@ export const AdminModals = (props) => {
     "Lindiwe Le Brasseur",
     "Caitlin Miles",
     "Jana Burger",
-    "Brittany Daniels"
+    "Brittany Daniels",
+    
   ];
 
   const handleChange = (value) => {
@@ -195,6 +197,7 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
+      specialistName:selectedName,
       status:"Confirmed",
       role :props.role_id,
     };
@@ -269,16 +272,18 @@ export const AdminModals = (props) => {
   return (
     <>
       <div class="flex flex-wrap gap-2">
-        {props.specialistId !== 2 && (props.appointmentStatus === "Pending" || props.appointmentStatus === "Pending Reschedule")  && (
-          <Button
-            color="primary"
-            size="small"
-            variant="solid"
-            onClick={() => handleAppointmentActions("ACCEPT")}
-          >
-            Accept
-          </Button>
-        )}
+        {props.specialistId !== 2 &&
+          (props.appointmentStatus === "Pending" ||
+            props.appointmentStatus === "Pending Reschedule") && (
+            <Button
+              color="primary"
+              size="small"
+              variant="solid"
+              onClick={() => handleAppointmentActions("ACCEPT")}
+            >
+              Accept
+            </Button>
+          )}
         {props.appointmentStatus !== "Cancelled" &&
           props.appointmentStatus !== "Missed" && (
             <div
@@ -468,6 +473,7 @@ export const AdminModals = (props) => {
             preferred_date3={props.preferred_date3}
             preferred_time_range3={props.preferred_time_range3}
             specialistId={props.specialistId}
+            specialistName={props.specialistName}
           />
         )}
         {showUploadInvoiceModal && (
@@ -527,48 +533,72 @@ export const AdminModals = (props) => {
                 </div>
               </>
             )}
-            <br />
-            <div>
-              <Select
-                placeholder="Assign Task"
-                onChange={handleChange}
-                style={{ width: 200 }}
-                value={selectedName}
-                dropdownRender={(menu) => <>{menu}</>}
-              >
-                {names.map((name, index) => (
-                  <Option key={index} value={name}>
-                    <UserOutlined style={{ marginRight: 8 }} />
-                    {name}
-                  </Option>
-                ))}
-              </Select>
-            </div>
+            {props.specialistType === "Biokineticist" && (
+              <>
+                <br />
+                <div>
+                  <Select
+                    placeholder="Assign Task"
+                    onChange={handleChange}
+                    style={{ width: 200 }}
+                    value={selectedName}
+                    dropdownRender={(menu) => <>{menu}</>}
+                  >
+                    {names.map((name, index) => (
+                      <Option key={index} value={name}>
+                        <UserOutlined style={{ marginRight: 8 }} />
+                        {name}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              </>
+            )}
 
             <br />
-            {!reschedule ? (<p className="text-lg text-red-600 font-bold">
-              Please select your preferred date and time to continue:
-            </p>):<p className="text-lg text-red-600 font-bold">Please select your new preferred date and time to continue:</p>}
+            {!reschedule ? (
+              <p className="text-lg text-red-600 font-bold">
+                Please select your preferred date and time to continue:
+              </p>
+            ) : (
+              <p className="text-lg text-red-600 font-bold">
+                Please select your new preferred date and time to continue:
+              </p>
+            )}
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box sx={{ my: 4 }}>
-                {reschedule  ? (<DatePicker
-                  label="Select Date"
-                  value={selectedDate || null}
-                  onChange={handleDateChange}
-                  shouldDisableDate={(date) => shouldDisableDate(date)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
-                />):
-                <Select
-          placeholder="Select Date"
-          onChange={handleDateChange}
-          style={{ width: 200 }}
-        >
-          <Option value={props.preferred_date1}>{props.preferred_date1}</Option>
-          <Option value={props.preferred_date2}>{props.preferred_date2}</Option>
-          <Option value={props.preferred_date3}>{props.preferred_date3}</Option>
-        </Select>
-                
-                }
+                {reschedule ? (
+                  <DatePicker
+                    label="Select Date"
+                    value={selectedDate || null}
+                    onChange={handleDateChange}
+                    shouldDisableDate={(date) => shouldDisableDate(date)}
+                    renderInput={(params) => (
+                      <TextField {...params} fullWidth />
+                    )}
+                  />
+                ) : (
+                  <FormControl>
+                    <InputLabel id="date-select-label">Select Date</InputLabel>
+                    <MuSelect
+                      labelId="date-select-label"
+                      value={selectedDate || null}
+                      onChange={(event) => handleDateChange(event.target.value)}
+                      label="Select Date"
+                      style={{ width: 246 }}
+                    >
+                      <MenuItem value={props.preferred_date1}>
+                        {props.preferred_date1}
+                      </MenuItem>
+                      <MenuItem value={props.preferred_date2}>
+                        {props.preferred_date2}
+                      </MenuItem>
+                      <MenuItem value={props.preferred_date3}>
+                        {props.preferred_date3}
+                      </MenuItem>
+                    </MuSelect>
+                  </FormControl>
+                )}
                 &nbsp;
                 <TimePicker
                   label="From"
@@ -655,8 +685,12 @@ export const AdminModals = (props) => {
                 - {dayjs(timeRange.end).format("HH:mm")}
               </p>
               <p className="text-lg">
-                <strong>Biokineticist:</strong>{" "}
-                {selectedName ? selectedName : props.specialistName}
+                <strong>{props.specialistType}:</strong>{" "}
+                {props.specialistType !== "Physiotherapist"
+                  ? selectedName === "Me"
+                    ? props.admin_name
+                    : selectedName || props.specialistName
+                  : props.admin_name}
               </p>
             </div>
             <p>

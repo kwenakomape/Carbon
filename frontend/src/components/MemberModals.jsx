@@ -123,6 +123,8 @@ export const MemberModals = (props) => {
     newTimeRanges[index][type] = time;
     setTimeRanges(newTimeRanges);
   };
+  const minTime = dayjs().set("hour", 5).set("minute", 29); // 5:30 AM
+  const maxTime = dayjs().set("hour", 21).set("minute", 0); // 9:00 PM
 
   const shouldDisableDate = (date, currentIndex) => {
     const today = dayjs().startOf("day");
@@ -260,7 +262,6 @@ export const MemberModals = (props) => {
         memberName: props.memberName,
         specialistId: selectedSpecialistID,
         selectedSpecialist: reschedule || modify ? props.specialistType :selectedSpecialist,
-        specialistName: specialistName,
         timeRanges: timeRanges,
         selectedDates: selectedDates,
         appointmentId:props.AppointmentId,
@@ -338,22 +339,25 @@ export const MemberModals = (props) => {
     <>
       {props.modalType === "More Actions" ? (
         <>
-          {props.appointmentStatus!=="Cancelled" && props.appointmentStatus!=="Missed" && <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              onClick={() => handleAppointmentActions()}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </div>}
+          {props.appointmentStatus !== "Cancelled" &&
+            props.appointmentStatus !== "Missed" && (
+              <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  onClick={() => handleAppointmentActions()}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </div>
+            )}
           <Dropdown
             menu={{
               items: filteredItems,
@@ -508,6 +512,7 @@ export const MemberModals = (props) => {
                 preferred_date3={props.preferred_date3}
                 preferred_time_range3={props.preferred_time_range3}
                 specialistId={props.specialistId}
+                specialistName={props.specialistName}
               />
             )
           )}
@@ -535,7 +540,7 @@ export const MemberModals = (props) => {
               {reschedule && !modify && <AlertMessage />}
               {modify && (
                 <>
-                  <NoteAlert description ="Please ensure that the new dates and times you select do not conflict with any other commitments."/>
+                  <NoteAlert description="Please ensure that the new dates and times you select do not conflict with any other commitments." />
                   <p className="text-lg mb-2">
                     <strong>Previous Selected Dates/Times:</strong>
                   </p>
@@ -583,6 +588,8 @@ export const MemberModals = (props) => {
                         <TextField {...params} fullWidth />
                       )}
                       ampm={false}
+                      minTime={minTime}
+                      maxTime={maxTime} 
                     />{" "}
                     &nbsp;{" "}
                     <TimePicker
@@ -593,6 +600,8 @@ export const MemberModals = (props) => {
                         <TextField {...params} fullWidth />
                       )}
                       ampm={false}
+                      minTime={minTime}
+                      maxTime={maxTime} 
                     />{" "}
                   </Box>
                 ))}{" "}

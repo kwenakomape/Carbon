@@ -256,6 +256,7 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_time_range3,
       ad.name as admin_name,
       ad.role_id,
+      ad.specialist_type,
       ad.admin_id AS specialist_id
     FROM 
       Admin ad
@@ -386,12 +387,12 @@ app.post("/api/send-appointment-details", async (req, res) => {
 });
 
 app.post("/api/confirm-date", async (req, res) => {
-  const { memberId, selectedDate, appointmentId, timeRange, status } = req.body;
+  const { memberId, selectedDate, appointmentId, timeRange, status,specialistName } = req.body;
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
   const confirmedTime = `${dayjs(timeRange.start).format("HH:mm")}-${dayjs(
     timeRange.end
   ).format("HH:mm")}`;
-  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?, confirmed_time = ?, status = ? WHERE member_id = ? AND appointment_id = ?`;
+  const updateAppointmentQuery = `UPDATE Appointments SET confirmed_date = ?, confirmed_time = ?, status = ?, specialist_name = ? WHERE member_id = ? AND appointment_id = ?`;
   const updateSessionQuery = `UPDATE Sessions SET date = ? WHERE appointment_id = ?`;
 
   try {
@@ -399,6 +400,7 @@ app.post("/api/confirm-date", async (req, res) => {
       confirmedDate,
       confirmedTime,
       status,
+      specialistName,
       memberId,
       appointmentId,
     ]);
@@ -425,8 +427,7 @@ app.post("/api/bookings", async (req, res) => {
     specialistName,
     actionType
   } = req.body;
-   console.log(status);
-   console.log(actionType);
+
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(

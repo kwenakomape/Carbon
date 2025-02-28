@@ -13,7 +13,8 @@ export const AppointmentDetails = ({
   preferred_time_range2,
   preferred_date3,
   preferred_time_range3,
-  specialistId
+  specialistId,
+  specialistName
 }) => {
   return (
     <div className="appointment-details">
@@ -41,6 +42,14 @@ export const AppointmentDetails = ({
       <p>
         <strong>Appointment Status:</strong> {appointmentStatus}
       </p>
+
+      {appointmentStatus==="Confirmed"&& (<p>
+        <strong>Assigned To:</strong> {specialistName}
+      </p>)}
+      {(appointmentStatus==="Seen") && (<p>
+        <strong>Completed By:</strong> {specialistName}
+      </p>)}
+      
       {specialistId !== 2 && specialistId !==4 && (
         <>
           <p className="text-lg mt-2 mb-2">

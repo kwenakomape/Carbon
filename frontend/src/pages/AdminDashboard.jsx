@@ -139,7 +139,9 @@ export const AdminDashboard = () => {
                                       phoneNumber={appointment.cell}
                                       credits_used={appointment.credits_used}
                                       appointmentStatus={appointment.status}
+                                      specialistType={appointment.specialist_type}
                                       invoice_status ={appointment.invoice_status}
+                                      admin_name = {appointment.admin_name}
                                       preferred_date1={appointment.preferred_date1 ? dayjs(appointment.preferred_date1).format('D MMMM, YYYY') : ""}
                                       preferred_time_range1={appointment.preferred_time_range1 || ""}
                                       preferred_date2={appointment.preferred_date2 ? dayjs(appointment.preferred_date2).format('D MMMM, YYYY') : ""}
