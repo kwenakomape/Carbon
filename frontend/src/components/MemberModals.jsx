@@ -671,6 +671,8 @@ export const MemberModals = (props) => {
                       <TextField {...params} fullWidth />
                     )}
                     ampm={false}
+                    minTime={minTime}
+                    maxTime={maxTime}
                   />
                 </Box>
               </LocalizationProvider>

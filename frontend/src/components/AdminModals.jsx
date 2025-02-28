@@ -29,12 +29,11 @@ export const AdminModals = (props) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [timeRange, setTimeRange] = useState({ start: null, end: null });
   const [dateSelected, setDateSelected] = useState(false);
-  const [viewAppointmentDetails,SetViewAppointmentDetails] = useState(false);
-  const [showUploadInvoiceModal,setShowUploadInvoiceModal] = useState(null);
+  const [viewAppointmentDetails, SetViewAppointmentDetails] = useState(false);
+  const [showUploadInvoiceModal, setShowUploadInvoiceModal] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
-  const [reschedule ,setReschedule] = useState(false);
-  const [actionType,setActionType]= useState(false);
-
+  const [reschedule, setReschedule] = useState(false);
+  const [actionType, setActionType] = useState(false);
 
   const names = [
     "Me",
@@ -46,7 +45,6 @@ export const AdminModals = (props) => {
     "Caitlin Miles",
     "Jana Burger",
     "Brittany Daniels",
-    
   ];
 
   const handleChange = (value) => {
@@ -56,68 +54,65 @@ export const AdminModals = (props) => {
 
   const items = [
     {
-      key: '1',
-      label: 'Seen',
+      key: "1",
+      label: "Seen",
       onClick: () => {
         setOpen(true);
-        handleSelectedStatus("SEEN")
-        setStep(2)
-      }
+        handleSelectedStatus("SEEN");
+        setStep(2);
+      },
     },
     {
-      key: '2',
-      label: 'Missed',
+      key: "2",
+      label: "Missed",
       onClick: () => {
         setOpen(true);
-        handleSelectedStatus("MISSED")
-        setStep(2)
-      }
+        handleSelectedStatus("MISSED");
+        setStep(2);
+      },
     },
     {
-      key: '3',
-      label: 'View Details',
+      key: "3",
+      label: "View Details",
       onClick: () => {
-        SetViewAppointmentDetails(true)
+        SetViewAppointmentDetails(true);
         setOpen(true);
-      }
+      },
     },
     {
-      key: '4',
-      label: 'Upload Invoice',
+      key: "4",
+      label: "Upload Invoice",
       onClick: () => {
         setOpen(true);
         setShowUploadInvoiceModal(true);
-      }
+      },
     },
     {
-      key: '5',
-      label: 'Make Payment',
+      key: "5",
+      label: "Make Payment",
       onClick: () => {
         setOpen(true);
-        handleSelectedStatus("SEEN")
-        setStep(2)
+        handleSelectedStatus("SEEN");
+        setStep(2);
       },
-      
     },
     {
-      key: '6',
-      label: 'View Invoice',
+      key: "6",
+      label: "View Invoice",
       onClick: () => {
         setOpen(true);
       },
-      
     },
     {
-      key: '7',
-      label: 'Reschedule',
+      key: "7",
+      label: "Reschedule",
       onClick: () => {
-        setReschedule(true)
-        setActionType("Reschedule")
-        setStep(2)
+        setReschedule(true);
+        setActionType("Reschedule");
+        setStep(2);
         setOpen(true);
       },
-      
-    }
+    },
   ];
 
   const filteredItems = items.filter((item) => {
@@ -126,23 +121,24 @@ export const AdminModals = (props) => {
       props.appointmentStatus === "Pending Reschedule"
     ) {
       return ["3", "7"].includes(item.key);
-    } 
-    else if (props.appointmentStatus === "Cancelled" || props.appointmentStatus === "Missed" ) {
+    } else if (
+      props.appointmentStatus === "Cancelled" ||
+      props.appointmentStatus === "Missed"
+    ) {
       return ["3"].includes(item.key);
-    }
-    else if (props.appointmentStatus === "Confirmed") {
+    } else if (props.appointmentStatus === "Confirmed") {
       return ["1", "2", "3", "7"].includes(item.key);
     } else if (props.appointmentStatus === "Seen") {
       if (props.invoice_status === "INVOICE_PENDING") {
         if (props.payment_method !== "DEFERRED") {
-          return !["1", "2", "5", "6","7"].includes(item.key);
+          return !["1", "2", "5", "6", "7"].includes(item.key);
         }
-        return !["1", "2", "6","7"].includes(item.key);
+        return !["1", "2", "6", "7"].includes(item.key);
       } else if (props.invoice_status === "INVOICE_UPLOADED") {
         if (props.payment_method !== "DEFERRED") {
-          return !["1", "2", "5", "4","7"].includes(item.key);
+          return !["1", "2", "5", "4", "7"].includes(item.key);
         }
-        return !["1", "2", "4","7"].includes(item.key);
+        return !["1", "2", "4", "7"].includes(item.key);
       }
     }
   });
@@ -165,6 +161,9 @@ export const AdminModals = (props) => {
     setTimeRange((prevTimeRange) => ({ ...prevTimeRange, [type]: time }));
   };
 
+  const minTime = dayjs().set("hour", 5).set("minute", 29); // 5:30 AM
+  const maxTime = dayjs().set("hour", 21).set("minute", 0); // 9:00 PM
+
   const handleClose = () => {
     setOpen(false);
     setStep(1);
@@ -179,17 +178,21 @@ export const AdminModals = (props) => {
     setShowUploadInvoiceModal(false);
     SetViewAppointmentDetails(false);
     setIsAccept(false);
-    setReschedule(false)
+    setReschedule(false);
   };
 
   const handleStatus = async (status) => {
-    await updateAppointmentStatus(id, props.AppointmentId, status,selectedPaymentMethod);
+    await updateAppointmentStatus(
+      id,
+      props.AppointmentId,
+      status,
+      selectedPaymentMethod
+    );
     handleClose();
-    props.autoRefresh()
+    props.autoRefresh();
   };
 
   const handleDateConfirmation = async () => {
-    // console.lo(selectedDate);
     let data = {
       memberId: id,
       memberName: props.memberName,
@@ -197,9 +200,9 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
-      specialistName:selectedName,
-      status:"Confirmed",
-      role :props.role_id,
+      specialistName: selectedName === "Me" ? props.admin_name : selectedName,
+      status: "Confirmed",
+      role: props.role_id,
     };
 
     try {
@@ -242,11 +245,11 @@ export const AdminModals = (props) => {
   const handleSelectedPaymentMethod = (paymentMethod) => {
     setSelectedPaymentMethod(paymentMethod);
   };
-  const handleAppointmentActions =(status)=>{
+  const handleAppointmentActions = (status) => {
     setOpen(true);
-    handleSelectedStatus(status)
-    setStep(2)
-  }
+    handleSelectedStatus(status);
+    setStep(2);
+  };
   const handleNext = () => {
     if (step === 2 && selectedPaymentMethod === "CASH/CARD") {
       setStep(4); // New step for confirmation modal
@@ -265,7 +268,8 @@ export const AdminModals = (props) => {
 
   useEffect(() => {
     const isDateSelected = selectedDate !== null;
-    const isTimeRangeSelected = timeRange.start !== null && timeRange.end !== null;
+    const isTimeRangeSelected =
+      timeRange.start !== null && timeRange.end !== null;
     setDateSelected(isDateSelected && isTimeRangeSelected);
   }, [selectedDate, timeRange]);
 
@@ -606,6 +610,8 @@ export const AdminModals = (props) => {
                   onChange={(time) => handleTimeChange(time, "start")}
                   renderInput={(params) => <TextField {...params} fullWidth />}
                   ampm={false}
+                  minTime={minTime}
+                  maxTime={maxTime} 
                 />
                 &nbsp;
                 <TimePicker
@@ -614,6 +620,8 @@ export const AdminModals = (props) => {
                   onChange={(time) => handleTimeChange(time, "end")}
                   renderInput={(params) => <TextField {...params} fullWidth />}
                   ampm={false}
+                  minTime={minTime}
+                  maxTime={maxTime} 
                 />
               </Box>
             </LocalizationProvider>
