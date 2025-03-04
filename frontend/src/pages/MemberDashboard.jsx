@@ -165,7 +165,7 @@ export const MemberDashboard = () => {
                           Request on
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
-                          Payment Type
+                          Booking Type
                         </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Specialist
@@ -176,11 +176,13 @@ export const MemberDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Appointment Time
                         </th>
+                        
+                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                          Payment Type
+                        </th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Status
                         </th>
-                        
-                        
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Payment
                         </th>
@@ -215,7 +217,7 @@ export const MemberDashboard = () => {
                                 : ""}
                             </td>
                             <td className="py-3 px-4 border-b">
-                            {appointment.payment_method || "________"}
+                              {appointment.booking_type || ""}
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.specialist_type || ""}
@@ -232,11 +234,13 @@ export const MemberDashboard = () => {
                                 ? appointment.confirmed_time
                                 : "_________________"}
                             </td>
+                           
+                            <td className="py-3 px-4 border-b">
+                            {appointment.payment_method || "________"}
+                            </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}
                             </td>
-                            
-                           
                             <td className="py-3 px-4 border-b">
                               {appointment.payment_status}
                             </td>
@@ -260,6 +264,8 @@ export const MemberDashboard = () => {
                                   credits_used={appointment.credits_used}
                                   appointmentStatus={appointment.status}
                                   specialistType={appointment.specialist_type}
+                                  booking_type={appointment.booking_type}
+                                  notes_status={appointment.notes_status}
                                   preferred_date1={
                                     appointment.preferred_date1
                                       ? dayjs(

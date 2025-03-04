@@ -113,6 +113,26 @@ export const AdminModals = (props) => {
         setOpen(true);
       },
     },
+    {
+      key: "8",
+      label: "Mark Notes as Completed",
+      onClick: () => {
+        setReschedule(true);
+        setActionType("Reschedule");
+        setStep(2);
+        setOpen(true);
+      },
+    },
+    {
+      key: "9",
+      label: "Refer to Specialist",
+      onClick: () => {
+        setReschedule(true);
+        setActionType("Reschedule");
+        setStep(2);
+        setOpen(true);
+      },
+    }
   ];
 
   const filteredItems = items.filter((item) => {

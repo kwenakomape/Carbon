@@ -254,6 +254,8 @@ export const MemberModals = (props) => {
         type: "appointmentConfirmation",
         actionType:actionType,
         role :props.role_id,
+        booking_type:"Standard",
+        notes_status:"Not Started",
         status: "Pending"
       };
     } else {
@@ -267,6 +269,8 @@ export const MemberModals = (props) => {
         appointmentId:props.AppointmentId,
         actionType:actionType,
         role :props.role_id,
+        booking_type:"Standard",
+        notes_status:"Not Started",
         type: "appointmentConfirmation",
         status: reschedule ?"Pending Reschedule":"Pending"
       };

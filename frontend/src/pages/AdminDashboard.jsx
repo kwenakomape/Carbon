@@ -84,12 +84,14 @@ export const AdminDashboard = () => {
                       <tr>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Request On</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Client Name</th>
-                        <th className="py-3 px-4 border-b text-left text-gray-600">Payment Type</th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">Booking Type</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Confirmed On</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Appointment Time</th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">Payment Type</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Status</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Invoice</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Payment</th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">Notes</th>
                         <th className=" text-center py-3 px-4 border-b  text-gray-600">Actions</th>
                       </tr>
                     </thead>
@@ -107,9 +109,10 @@ export const AdminDashboard = () => {
                           <tr key={index} className="hover:bg-gray-100 transition duration-300">
                             <td className="py-3 px-4 border-b">{appointment.request_date ? dayjs(appointment.request_date).format('D MMMM, YYYY') : ""}</td>
                             <td className="py-3 px-4 border-b">{appointment.member_name || ""}</td>
-                            <td className="text-center py-3 px-4 border-b">{appointment.payment_method || "________"}</td>
+                            <td className="py-3 px-4 border-b">{appointment.booking_type || ""}</td>
                             <td className="py-3 px-4 border-b">{appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}</td>
                             <td className="py-3 px-4 border-b">{appointment.confirmed_time ? appointment.confirmed_time: "________"}</td>
+                            <td className="text-center py-3 px-4 border-b">{appointment.payment_method || "________"}</td>
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center">
                                 <span>{appointment.status || ""}</span>
@@ -125,6 +128,7 @@ export const AdminDashboard = () => {
                             </td>
                             <td className="py-3 px-4 border-b">{appointment.invoice_status}</td>
                             <td className="py-3 px-4 border-b">{appointment.payment_status}</td>
+                            <td className="py-3 px-4 border-b">{appointment.notes_status}</td>
                             <td className="py-3 px-4 border-b">
                             <div className="flex items-center justify-center">
                             <AdminModals

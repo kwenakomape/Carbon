@@ -51,6 +51,8 @@ CREATE TABLE Appointments (
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     confirmed_date DATE DEFAULT NULL,
     confirmed_time  VARCHAR(255) DEFAULT NULL,
+    booking_type ENUM('Referral', 'Standard') NOT NULL,
+	notes_status ENUM('Not Started', 'Completed') NOT NULL,
     status ENUM('Missed', 'Pending', 'Confirmed', 'Seen', 'Cancelled','Rescheduled','Scheduled','Pending Reschedule') NOT NULL,
     payment_method VARCHAR(255) DEFAULT NULL,
     invoice_status VARCHAR(20) DEFAULT 'INVOICE_PENDING',
