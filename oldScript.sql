@@ -12,7 +12,8 @@ CREATE TABLE Members (
     cell VARCHAR(20), -- Adjusted length for international formats
     joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     credits INT DEFAULT 2,
-    role_id INT
+    role_id INT,
+    FOREIGN KEY (role_id) REFERENCES Roles(role_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Create Admin table

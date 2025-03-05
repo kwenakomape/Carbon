@@ -106,28 +106,3 @@ html, body, #root {
   
 }
 
-
-
-/* .fullscreen-modal {
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: none;
-  margin: 0;
-  top: 0;
-  left: 0;
-}
-
-.fullscreen-modal .ant-modal-content {
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-}
-
-.fullscreen-modal .ant-modal-header,
-.fullscreen-modal .ant-modal-footer {
-  border-radius: 0;
-}
-
-.fullscreen-modal .ant-modal-body {
-  overflow-y: auto;
-} */

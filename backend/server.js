@@ -357,6 +357,19 @@ app.post("/api/update-appointment-status", async (req, res) => {
     res.status(500).send("Error updating status");
   }
 });
+
+app.post("/api/update-notes-status", async (req, res) => {
+  const { notes_status, memberId, AppointmentId } = req.body;
+  let query = `UPDATE Appointments SET notes_status = ? WHERE member_id = ? AND appointment_id = ?`;
+  let params = [notes_status, memberId, AppointmentId];
+  try {
+    await pool.query(query, params);
+    res.send(`Notes Status Updated Successfully`);
+  } catch (err) {
+    console.error("Error updating Notes status:", err);
+    res.status(500).send("Error updating Notes status");
+  }
+});
 app.get("/api/paywith-credits/:id", async (req, res) => {
   const memberId = req.params.id;
   const updateQuery = `UPDATE Members SET credits = credits - 80 WHERE member_id = ?`;
@@ -392,6 +405,7 @@ app.post("/api/send-appointment-details", async (req, res) => {
 
 app.post("/api/confirm-date", async (req, res) => {
   const { memberId, selectedDate, appointmentId, timeRange, status,specialistName } = req.body;
+  console.log(specialistName);
   const confirmedDate = dayjs(selectedDate).format("YYYY-MM-DD");
   const confirmedTime = `${dayjs(timeRange.start).format("HH:mm")}-${dayjs(
     timeRange.end

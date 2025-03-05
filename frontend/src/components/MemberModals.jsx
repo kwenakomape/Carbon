@@ -345,7 +345,7 @@ export const MemberModals = (props) => {
         <>
           {props.appointmentStatus !== "Cancelled" &&
             props.appointmentStatus !== "Missed" && (
-              <div className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+              <div className="w-6 mr-2 transform hover:text-purple-500 hover:scale-110">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -517,6 +517,8 @@ export const MemberModals = (props) => {
                 preferred_time_range3={props.preferred_time_range3}
                 specialistId={props.specialistId}
                 specialistName={props.specialistName}
+                notes_status={props.notes_status}
+                roleId={props.role_id}
               />
             )
           )}

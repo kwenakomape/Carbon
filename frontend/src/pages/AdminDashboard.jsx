@@ -27,7 +27,6 @@ export const AdminDashboard = () => {
 
   const autoRefresh = () => {
     fetchData(); // Trigger data fetch when booking is confirmed
-    console.log("admin passed")
   };
   return (
     <>
@@ -91,7 +90,7 @@ export const AdminDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">Status</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Invoice</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Payment</th>
-                        <th className="py-3 px-4 border-b text-left text-gray-600">Notes</th>
+                        <th className="py-3 px-4 border-b text-left text-gray-600">Clinical Notes</th>
                         <th className=" text-center py-3 px-4 border-b  text-gray-600">Actions</th>
                       </tr>
                     </thead>
@@ -139,6 +138,7 @@ export const AdminDashboard = () => {
                                       payment_method={appointment.payment_method}
                                       AppointmentId={appointment.appointment_id}
                                       specialistId={appointment.specialist_id}
+                                      notes_status ={appointment.notes_status}
                                       role_id ={data[0].role_id}
                                       phoneNumber={appointment.cell}
                                       credits_used={appointment.credits_used}

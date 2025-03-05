@@ -9,7 +9,7 @@ import { UploadFiles } from "./UploadFiles";
 import { DownOutlined, UserOutlined } from '@ant-design/icons';
 import React, { useState, useEffect } from "react";
 import { Modal, Select,Button,message,Dropdown } from "antd";
-import { updateAppointmentStatus } from '../../../backend/utils/apiUtils';
+import { updateAppointmentStatus, updateNotesStatus } from '../../../backend/utils/apiUtils';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { AppointmentDetails } from "./AppointmentDetails";
@@ -33,6 +33,7 @@ export const AdminModals = (props) => {
   const [showUploadInvoiceModal, setShowUploadInvoiceModal] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
   const [reschedule, setReschedule] = useState(false);
+  const [notesCompleted,SetNotesCompleted] = useState(false);
   const [actionType, setActionType] = useState(false);
 
   const names = [
@@ -117,8 +118,7 @@ export const AdminModals = (props) => {
       key: "8",
       label: "Mark Notes as Completed",
       onClick: () => {
-        setReschedule(true);
-        setActionType("Reschedule");
+        SetNotesCompleted(true);
         setStep(2);
         setOpen(true);
       },
@@ -149,6 +149,12 @@ export const AdminModals = (props) => {
     } else if (props.appointmentStatus === "Confirmed") {
       return ["1", "2", "3", "7"].includes(item.key);
     } else if (props.appointmentStatus === "Seen") {
+      // Add logic for "Mark Notes as Completed"
+      if (item.key === "8") {
+        // Only show "Mark Notes as Completed" if notes_status is "Not Started"
+        return props.notes_status === "Not Started";
+      }
+  
       if (props.invoice_status === "INVOICE_PENDING") {
         if (props.payment_method !== "DEFERRED") {
           return !["1", "2", "5", "6", "7"].includes(item.key);
@@ -161,6 +167,9 @@ export const AdminModals = (props) => {
         return !["1", "2", "4", "7"].includes(item.key);
       }
     }
+  
+    // Default return true for other cases
+    return true;
   });
   const shouldDisableDate = (date) => {
     const today = dayjs().startOf("day");
@@ -199,6 +208,7 @@ export const AdminModals = (props) => {
     SetViewAppointmentDetails(false);
     setIsAccept(false);
     setReschedule(false);
+    SetNotesCompleted(false);
   };
 
   const handleStatus = async (status) => {
@@ -211,7 +221,16 @@ export const AdminModals = (props) => {
     handleClose();
     props.autoRefresh();
   };
-
+  const handleNotesStatus = async (notesStatus) => {
+    await updateNotesStatus(
+      id,
+      props.AppointmentId,
+      notesStatus
+    );
+    handleClose();
+    props.autoRefresh();
+  };
+  
   const handleDateConfirmation = async () => {
     let data = {
       memberId: id,
@@ -220,7 +239,7 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
-      specialistName: selectedName === "Me" ? props.admin_name : selectedName,
+      specialistName: (selectedName === "Me" || props.specialistType === "Physiotherapist") ? props.admin_name : selectedName,
       status: "Confirmed",
       role: props.role_id,
     };
@@ -375,6 +394,7 @@ export const AdminModals = (props) => {
               ? "Confirm Payment Method"
               : ""}
             {step === 1 && showUploadInvoiceModal && <div>Upload Invoice</div>}
+            {step === 2 && notesCompleted && <div>Mark Notes as Completed</div>}
           </div>
         }
         centered
@@ -392,7 +412,7 @@ export const AdminModals = (props) => {
                   Continue
                 </Button>,
               ]
-            : step === 2 && isMissed
+            : step === 2 && isMissed 
             ? [
                 <Button key="back" onClick={handleBack}>
                   No
@@ -402,8 +422,23 @@ export const AdminModals = (props) => {
                   type="primary"
                   onClick={() => {
                     handleStatus("Missed");
-                    props.autoRefresh();
                     message.success("Appointment Missed.");
+                  }}
+                >
+                  Yes
+                </Button>,
+              ]
+            : step === 2 && notesCompleted
+            ? [
+                <Button key="back" onClick={handleBack}>
+                  No
+                </Button>,
+                <Button
+                  key="confirm"
+                  type="primary"
+                  onClick={() => {
+                    handleNotesStatus("Completed");
+                    message.success("Notes Completed.");
                   }}
                 >
                   Yes
@@ -498,6 +533,8 @@ export const AdminModals = (props) => {
             preferred_time_range3={props.preferred_time_range3}
             specialistId={props.specialistId}
             specialistName={props.specialistName}
+            notes_status={props.notes_status}
+            roleId={props.role_id}
           />
         )}
         {showUploadInvoiceModal && (
@@ -511,8 +548,15 @@ export const AdminModals = (props) => {
           />
         )}
 
+        {step === 2 && notesCompleted && (
+          <p className="text-xl">
+            Please confirm that you have typed and saved your notes for this
+            patient appointment on the SharePoint site.
+            {/* <strong>{selectedStatus.toLowerCase()}</strong>? */}
+          </p>
+        )}
         {step === 2 && isMissed && (
-          <p>
+          <p className="text-xl">
             Are you sure you want to mark this appointment as{" "}
             <strong>{selectedStatus.toLowerCase()}</strong>?
           </p>
@@ -631,7 +675,7 @@ export const AdminModals = (props) => {
                   renderInput={(params) => <TextField {...params} fullWidth />}
                   ampm={false}
                   minTime={minTime}
-                  maxTime={maxTime} 
+                  maxTime={maxTime}
                 />
                 &nbsp;
                 <TimePicker
@@ -641,7 +685,7 @@ export const AdminModals = (props) => {
                   renderInput={(params) => <TextField {...params} fullWidth />}
                   ampm={false}
                   minTime={minTime}
-                  maxTime={maxTime} 
+                  maxTime={maxTime}
                 />
               </Box>
             </LocalizationProvider>
@@ -691,8 +735,8 @@ export const AdminModals = (props) => {
         )}
         {step === 4 && selectedPaymentMethod === "CASH/CARD" && (
           <div className="confirmation">
-            <p>The member has chosen to pay by Card/Cash.</p>
-            <p>Confirm this payment method?</p>
+            <p className="text-xl">The member has chosen to pay by Card/Cash.</p>
+            <p className="text-xl">Confirm this payment method?</p>
           </div>
         )}
         {step === 3 && selectedPaymentMethod === "DEFERRED" && (

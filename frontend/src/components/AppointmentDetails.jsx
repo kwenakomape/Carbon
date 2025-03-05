@@ -14,7 +14,9 @@ export const AppointmentDetails = ({
   preferred_date3,
   preferred_time_range3,
   specialistId,
-  specialistName
+  specialistName,
+  notes_status,
+  roleId
 }) => {
   return (
     <div className="appointment-details">
@@ -43,18 +45,31 @@ export const AppointmentDetails = ({
         <strong>Appointment Status:</strong> {appointmentStatus}
       </p>
 
-      {appointmentStatus==="Confirmed"&& (<p>
-        <strong>Assigned To:</strong> {specialistName}
-      </p>)}
-      {(appointmentStatus==="Seen") && (<p>
-        <strong>Completed By:</strong> {specialistName}
-      </p>)}
-      
-      {specialistId !== 2 && specialistId !==4 && (
+      {appointmentStatus === "Confirmed" && (
+        <p>
+          <strong>Appointment Assigned To:</strong> {specialistName}
+        </p>
+      )}
+      {appointmentStatus === "Seen" && (
         <>
-          <p className="text-lg mt-2 mb-2">
-            <strong>Selected Dates/Times:</strong>
+          <p>
+            <strong>Clinical Notes:</strong> {notes_status}
           </p>
+          <p>
+            <strong>Appointment Completed By:</strong> {specialistName}
+          </p>
+        </>
+      )}
+
+      {specialistId !== 2 && specialistId !== 4 && (
+        <>
+        
+          {roleId ===1 && <p className="text-lg mt-2 mb-2">
+            <strong>Proposed Dates/Times By Client:</strong>
+          </p>}
+          {roleId ===3 && <p className="text-lg mt-2 mb-2">
+            <strong>Your Proposed Dates/Times:</strong>
+          </p>}
           <p>
             <strong>Date 1:</strong> {preferred_date1}, From{" "}
             {preferred_time_range1}
