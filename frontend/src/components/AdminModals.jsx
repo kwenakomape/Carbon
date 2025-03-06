@@ -34,6 +34,7 @@ export const AdminModals = (props) => {
   const [selectedName, setSelectedName] = useState(null);
   const [reschedule, setReschedule] = useState(false);
   const [notesCompleted,SetNotesCompleted] = useState(false);
+   const [isreferral ,setIsreferral] = useState(false);
   const [actionType, setActionType] = useState(false);
 
   const names = [
@@ -127,8 +128,7 @@ export const AdminModals = (props) => {
       key: "9",
       label: "Refer to Specialist",
       onClick: () => {
-        setReschedule(true);
-        setActionType("Reschedule");
+        setIsreferral(true)
         setStep(2);
         setOpen(true);
       },
@@ -395,6 +395,8 @@ export const AdminModals = (props) => {
               : ""}
             {step === 1 && showUploadInvoiceModal && <div>Upload Invoice</div>}
             {step === 2 && notesCompleted && <div>Mark Notes as Completed</div>}
+            {step === 2 && isreferral && <div>Make A refferal</div>}
+            
           </div>
         }
         centered

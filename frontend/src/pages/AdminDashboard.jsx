@@ -90,6 +90,7 @@ export const AdminDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">Status</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Invoice</th>
                         <th className="py-3 px-4 border-b text-left text-gray-600">Payment</th>
+                        
                         <th className="py-3 px-4 border-b text-left text-gray-600">Clinical Notes</th>
                         <th className=" text-center py-3 px-4 border-b  text-gray-600">Actions</th>
                       </tr>
@@ -127,6 +128,7 @@ export const AdminDashboard = () => {
                             </td>
                             <td className="py-3 px-4 border-b">{appointment.invoice_status}</td>
                             <td className="py-3 px-4 border-b">{appointment.payment_status}</td>
+                            
                             <td className="py-3 px-4 border-b">{appointment.notes_status}</td>
                             <td className="py-3 px-4 border-b">
                             <div className="flex items-center justify-center">
