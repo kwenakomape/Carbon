@@ -447,7 +447,7 @@ app.post("/api/bookings", async (req, res) => {
     booking_type,
     notes_status
   } = req.body;
-
+  console.log(actionType)
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(

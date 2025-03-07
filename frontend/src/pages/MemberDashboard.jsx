@@ -118,6 +118,7 @@ export const MemberDashboard = () => {
                 </svg>
                 <span className="ml-2">Logout</span>
               </a>
+             
             </nav>
           </div>
 
@@ -354,6 +355,8 @@ export const MemberDashboard = () => {
                   memberName={data[0].member_name}
                   memberCredits={data[0].credits}
                   autoRefresh={autoRefresh}
+                  modalType={"Book"}
+                  
                 />
               </div>
             </div>

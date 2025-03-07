@@ -140,8 +140,14 @@ export const MemberModals = (props) => {
     const isBeforeToday = dayjs(date).isBefore(today);
     return isWeekend || isSelected || isBeforeToday;
   };
-
+  const handleConfrimationCloseModal = () => {
+    setShowConfirmationModal(false);
+    props.autoRefresh();
+  }
   const handleClose = () => {
+    // if(props.showReferToSpecialistModal){
+    //   props.setShowReferToSpecialistModal(false);
+    // }
     setOpen(false);
     setStep(1);
     setSelectedSpecialist(null);
@@ -156,10 +162,11 @@ export const MemberModals = (props) => {
     ]);
     setSelectedDate(null);
     setTimeRange({ start: null, end: null });
-    setDatesSelected(false)
-    setIsModify(false)
-    setReschedule(false)
-    SetViewAppointmentDetails(false)
+    setDatesSelected(false);
+    setIsModify(false);
+    setReschedule(false);
+    SetViewAppointmentDetails(false);
+    console.log("Member closed modal");
   };
   const resetDatesAndTime =()=>{
     setSelectedDates([null, null, null]);
@@ -284,6 +291,7 @@ export const MemberModals = (props) => {
         setOpen(false);
         setConfirmLoading(false);
         handleClose();
+        
         const message = (
           <ConfirmbookingMessage
             isDietitian={isDietitian}
@@ -298,6 +306,7 @@ export const MemberModals = (props) => {
         )
         setConfirmationMessage(message);
         setShowConfirmationModal(true);
+        // console.log("did it pass?")
         
       }, 2000);
       setShowUpdateModal(false)
@@ -326,22 +335,28 @@ export const MemberModals = (props) => {
   useEffect(() => {}, [specialistName]);
 
   const handleButtonClick = (specialistId) => {
-    if (specialistId === 2 || specialistId==4) {
+    if (specialistId === 2 || specialistId == 4) {
       setIsDietitian(true);
     }
 
-  
     setOpen(true);
   };
   useEffect(() => {
     if (step === 1 && (reschedule || modify)) {
       setStep(props.specialistId === 2 || props.specialistId === 4 ? 3 : 2);
     }
-  }, [reschedule, modify, step, props.specialistId])
+  }, [reschedule, modify, step, props.specialistId]);
 
+  useEffect(() => {
+    console.log("use effect")
+    if (props.modalType === "Referral") {
+      setActionType('Referral');
+      setOpen(true)
+    }
+  }, [props.modalType,props.showReferToSpecialistModal]);
   return (
     <>
-      {props.modalType === "More Actions" ? (
+      {props.modalType === "More Actions" && (
         <>
           {props.appointmentStatus !== "Cancelled" &&
             props.appointmentStatus !== "Missed" && (
@@ -372,10 +387,11 @@ export const MemberModals = (props) => {
             </a>
           </Dropdown>
         </>
-      ) : (
-        <AntButton type="primary" onClick={handleBookingButtonClick}>
-          BOOK APPOINTMENT
-        </AntButton>
+      )}
+      {props.modalType === "Book" && (
+      <AntButton type="primary" onClick={handleBookingButtonClick}>
+        BOOK APPOINTMENT
+      </AntButton>
       )}
       {!showCreditModal && (
         <Modal
@@ -595,7 +611,7 @@ export const MemberModals = (props) => {
                       )}
                       ampm={false}
                       minTime={minTime}
-                      maxTime={maxTime} 
+                      maxTime={maxTime}
                     />{" "}
                     &nbsp;{" "}
                     <TimePicker
@@ -607,7 +623,7 @@ export const MemberModals = (props) => {
                       )}
                       ampm={false}
                       minTime={minTime}
-                      maxTime={maxTime} 
+                      maxTime={maxTime}
                     />{" "}
                   </Box>
                 ))}{" "}
@@ -799,18 +815,12 @@ export const MemberModals = (props) => {
         title={<div className="text-2xl">Booking Confirmation</div>}
         centered
         open={showConfirmationModal}
-        onCancel={() => {
-          setShowConfirmationModal(false);
-          props.autoRefresh(); // Call the callback to refresh the dashboard
-        }}
+        onCancel={handleConfrimationCloseModal}
         footer={[
           <AntButton
             key="close"
             type="primary"
-            onClick={() => {
-              setShowConfirmationModal(false);
-              props.autoRefresh(); // Call the callback to refresh the dashboard
-            }}
+            onClick={handleConfrimationCloseModal}
           >
             Close
           </AntButton>,

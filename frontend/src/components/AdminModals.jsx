@@ -1,19 +1,31 @@
 import axios from "axios";
 import dayjs from "dayjs";
-import { Box, TextField, Typography,Select as MuSelect, MenuItem , InputLabel, FormControl} from "@mui/material";
+import {
+  Box,
+  TextField,
+  Typography,
+  Select as MuSelect,
+  MenuItem,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 import { UploadFiles } from "./UploadFiles";
-import { DownOutlined, UserOutlined } from '@ant-design/icons';
+import { DownOutlined, UserOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
-import { Modal, Select,Button,message,Dropdown } from "antd";
-import { updateAppointmentStatus, updateNotesStatus } from '../../../backend/utils/apiUtils';
+import { Modal, Select, Button, message, Dropdown } from "antd";
+import {
+  updateAppointmentStatus,
+  updateNotesStatus,
+} from "../../../backend/utils/apiUtils";
 
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined } from "@ant-design/icons";
 import { AppointmentDetails } from "./AppointmentDetails";
 import { NoteAlert } from "./Alert/NoteAlert";
+import { MemberModals } from "./MemberModals";
 
 export const AdminModals = (props) => {
   const id = props.memberId;
@@ -33,9 +45,10 @@ export const AdminModals = (props) => {
   const [showUploadInvoiceModal, setShowUploadInvoiceModal] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
   const [reschedule, setReschedule] = useState(false);
-  const [notesCompleted,SetNotesCompleted] = useState(false);
-   const [isreferral ,setIsreferral] = useState(false);
+  const [notesCompleted, SetNotesCompleted] = useState(false);
+  const [isreferral, setIsreferral] = useState(false);
   const [actionType, setActionType] = useState(false);
+  const [showReferToSpecialistModal, setShowReferToSpecialistModal] = useState(false);
 
   const names = [
     "Me",
@@ -128,11 +141,9 @@ export const AdminModals = (props) => {
       key: "9",
       label: "Refer to Specialist",
       onClick: () => {
-        setIsreferral(true)
-        setStep(2);
-        setOpen(true);
+        setShowReferToSpecialistModal(true)
       },
-    }
+    },
   ];
 
   const filteredItems = items.filter((item) => {
@@ -154,7 +165,7 @@ export const AdminModals = (props) => {
         // Only show "Mark Notes as Completed" if notes_status is "Not Started"
         return props.notes_status === "Not Started";
       }
-  
+
       if (props.invoice_status === "INVOICE_PENDING") {
         if (props.payment_method !== "DEFERRED") {
           return !["1", "2", "5", "6", "7"].includes(item.key);
@@ -167,7 +178,7 @@ export const AdminModals = (props) => {
         return !["1", "2", "4", "7"].includes(item.key);
       }
     }
-  
+
     // Default return true for other cases
     return true;
   });
@@ -209,6 +220,8 @@ export const AdminModals = (props) => {
     setIsAccept(false);
     setReschedule(false);
     SetNotesCompleted(false);
+    console.log("Admin closed modal")
+    // setShowReferToSpecialistModal(false);
   };
 
   const handleStatus = async (status) => {
@@ -222,15 +235,11 @@ export const AdminModals = (props) => {
     props.autoRefresh();
   };
   const handleNotesStatus = async (notesStatus) => {
-    await updateNotesStatus(
-      id,
-      props.AppointmentId,
-      notesStatus
-    );
+    await updateNotesStatus(id, props.AppointmentId, notesStatus);
     handleClose();
     props.autoRefresh();
   };
-  
+
   const handleDateConfirmation = async () => {
     let data = {
       memberId: id,
@@ -239,7 +248,10 @@ export const AdminModals = (props) => {
       selectedDate: selectedDate,
       timeRange: timeRange,
       phoneNumber: props.phoneNumber,
-      specialistName: (selectedName === "Me" || props.specialistType === "Physiotherapist") ? props.admin_name : selectedName,
+      specialistName:
+        selectedName === "Me" || props.specialistType === "Physiotherapist"
+          ? props.admin_name
+          : selectedName,
       status: "Confirmed",
       role: props.role_id,
     };
@@ -370,7 +382,17 @@ export const AdminModals = (props) => {
           </>
         )}
       </div>
-
+      {showReferToSpecialistModal && (
+        <MemberModals
+          modalType={"Referral"}
+          memberId={props.memberId}
+          memberName={props.memberName}
+          memberCredits={props.memberCredits}
+          autoRefresh={props.autoRefresh}
+          showReferToSpecialistModal={showReferToSpecialistModal}
+          setShowReferToSpecialistModal={setShowReferToSpecialistModal}
+        />
+      )}
       <Modal
         title={
           <div className="text-center w-full text-3xl font-bold text-blue-600">
@@ -396,7 +418,6 @@ export const AdminModals = (props) => {
             {step === 1 && showUploadInvoiceModal && <div>Upload Invoice</div>}
             {step === 2 && notesCompleted && <div>Mark Notes as Completed</div>}
             {step === 2 && isreferral && <div>Make A refferal</div>}
-            
           </div>
         }
         centered
@@ -414,7 +435,7 @@ export const AdminModals = (props) => {
                   Continue
                 </Button>,
               ]
-            : step === 2 && isMissed 
+            : step === 2 && isMissed
             ? [
                 <Button key="back" onClick={handleBack}>
                   No
@@ -737,7 +758,9 @@ export const AdminModals = (props) => {
         )}
         {step === 4 && selectedPaymentMethod === "CASH/CARD" && (
           <div className="confirmation">
-            <p className="text-xl">The member has chosen to pay by Card/Cash.</p>
+            <p className="text-xl">
+              The member has chosen to pay by Card/Cash.
+            </p>
             <p className="text-xl">Confirm this payment method?</p>
           </div>
         )}
