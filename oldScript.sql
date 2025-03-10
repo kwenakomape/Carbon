@@ -67,6 +67,7 @@ CREATE TABLE Appointments (
     preferred_time_range2 VARCHAR(255) DEFAULT NULL,
     preferred_date3 DATE DEFAULT NULL,
     preferred_time_range3 VARCHAR(255) DEFAULT NULL,
+    booked_by VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (member_id) REFERENCES Members(member_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (specialist_id) REFERENCES Admin(admin_id) ON DELETE CASCADE ON UPDATE CASCADE
 );

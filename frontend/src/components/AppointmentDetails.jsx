@@ -16,6 +16,8 @@ export const AppointmentDetails = ({
   specialistId,
   specialistName,
   notes_status,
+  booking_type,
+  booked_by,
   roleId
 }) => {
   return (
@@ -44,7 +46,19 @@ export const AppointmentDetails = ({
       <p>
         <strong>Appointment Status:</strong> {appointmentStatus}
       </p>
-
+       <p>
+        <strong>Booking Type:</strong> {booking_type}
+      </p>
+      {roleId ===3 && (<p>
+        <strong>Booked By:</strong> {booked_by}
+      </p>)}
+      {roleId ===1 && (<p>
+        <strong>Booked By:</strong> Member(Client)
+      </p>)}
+      {booking_type ==="Referral" &&(<p>
+        <strong>Referred By:</strong> {booked_by}
+      </p>)}
+      
       {appointmentStatus === "Confirmed" && (
         <p>
           <strong>Appointment Assigned To:</strong> {specialistName}
@@ -52,9 +66,9 @@ export const AppointmentDetails = ({
       )}
       {appointmentStatus === "Seen" && (
         <>
-          <p>
+          {/* <p>
             <strong>Clinical Notes:</strong> {notes_status}
-          </p>
+          </p> */}
           <p>
             <strong>Appointment Completed By:</strong> {specialistName}
           </p>

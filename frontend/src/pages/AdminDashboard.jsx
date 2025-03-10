@@ -167,9 +167,9 @@ export const AdminDashboard = () => {
                           Payment
                         </th>
 
-                        <th className="py-3 px-4 border-b text-left text-gray-600">
+                        {/* <th className="py-3 px-4 border-b text-left text-gray-600">
                           Clinical Notes
-                        </th>
+                        </th> */}
                         <th className=" text-center py-3 px-4 border-b  text-gray-600">
                           Actions
                         </th>
@@ -239,9 +239,9 @@ export const AdminDashboard = () => {
                               {appointment.payment_status}
                             </td>
 
-                            <td className="py-3 px-4 border-b">
+                            {/* <td className="py-3 px-4 border-b">
                               {appointment.notes_status}
-                            </td>
+                            </td> */}
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center justify-center">
                                 <AdminModals
@@ -249,6 +249,8 @@ export const AdminDashboard = () => {
                                   memberName={appointment.member_name}
                                   memberEmail={appointment.email}
                                   memberCredits={data[0].credits}
+                                  booking_type ={appointment.booking_type}
+                                  booked_by = {appointment.booked_by}
                                   payment_method={appointment.payment_method}
                                   AppointmentId={appointment.appointment_id}
                                   specialistId={appointment.specialist_id}

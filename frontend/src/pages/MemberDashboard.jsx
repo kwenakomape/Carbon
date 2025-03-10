@@ -266,6 +266,7 @@ export const MemberDashboard = () => {
                                   appointmentStatus={appointment.status}
                                   specialistType={appointment.specialist_type}
                                   booking_type={appointment.booking_type}
+                                  booked_by={appointment.booked_by}
                                   notes_status={appointment.notes_status}
                                   preferred_date1={
                                     appointment.preferred_date1

@@ -14,7 +14,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DatePicker } from "@mui/x-date-pickers";
 import { UploadFiles } from "./UploadFiles";
-import { DownOutlined, UserOutlined } from "@ant-design/icons";
+import { DownOutlined, UserOutlined} from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import { Modal, Select, Button, message, Dropdown } from "antd";
 import {
@@ -48,7 +48,7 @@ export const AdminModals = (props) => {
   const [notesCompleted, SetNotesCompleted] = useState(false);
   const [isreferral, setIsreferral] = useState(false);
   const [actionType, setActionType] = useState(false);
-  const [showReferToSpecialistModal, setShowReferToSpecialistModal] = useState(false);
+
 
   const names = [
     "Me",
@@ -128,22 +128,15 @@ export const AdminModals = (props) => {
         setOpen(true);
       },
     },
-    {
-      key: "8",
-      label: "Mark Notes as Completed",
-      onClick: () => {
-        SetNotesCompleted(true);
-        setStep(2);
-        setOpen(true);
-      },
-    },
-    {
-      key: "9",
-      label: "Refer to Specialist",
-      onClick: () => {
-        setShowReferToSpecialistModal(true)
-      },
-    },
+    // {
+    //   key: "8",
+    //   label: "Mark Notes as Completed",
+    //   onClick: () => {
+    //     SetNotesCompleted(true);
+    //     setStep(2);
+    //     setOpen(true);
+    //   },
+    // },
   ];
 
   const filteredItems = items.filter((item) => {
@@ -220,8 +213,6 @@ export const AdminModals = (props) => {
     setIsAccept(false);
     setReschedule(false);
     SetNotesCompleted(false);
-    console.log("Admin closed modal")
-    // setShowReferToSpecialistModal(false);
   };
 
   const handleStatus = async (status) => {
@@ -339,10 +330,21 @@ export const AdminModals = (props) => {
               Accept
             </Button>
           )}
+        {props.appointmentStatus === "Seen" && (
+          <MemberModals
+            admin_name={props.admin_name}
+            modalType={"Referral"}
+            memberId={props.memberId}
+            memberName={props.memberName}
+            memberCredits={props.memberCredits}
+            autoRefresh={props.autoRefresh}
+            setActionType={"Referral"}
+          />
+        )}
         {props.appointmentStatus !== "Cancelled" &&
           props.appointmentStatus !== "Missed" && (
             <div
-              className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110"
+              className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110 cursor-pointer"
               onClick={() => handleAppointmentActions("CANCELED")}
             >
               <svg
@@ -382,17 +384,6 @@ export const AdminModals = (props) => {
           </>
         )}
       </div>
-      {showReferToSpecialistModal && (
-        <MemberModals
-          modalType={"Referral"}
-          memberId={props.memberId}
-          memberName={props.memberName}
-          memberCredits={props.memberCredits}
-          autoRefresh={props.autoRefresh}
-          showReferToSpecialistModal={showReferToSpecialistModal}
-          setShowReferToSpecialistModal={setShowReferToSpecialistModal}
-        />
-      )}
       <Modal
         title={
           <div className="text-center w-full text-3xl font-bold text-blue-600">
@@ -557,6 +548,8 @@ export const AdminModals = (props) => {
             specialistId={props.specialistId}
             specialistName={props.specialistName}
             notes_status={props.notes_status}
+            booking_type ={props.booking_type}
+            booked_by = {props.booked_by}
             roleId={props.role_id}
           />
         )}

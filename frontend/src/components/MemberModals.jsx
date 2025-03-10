@@ -145,10 +145,8 @@ export const MemberModals = (props) => {
     props.autoRefresh();
   }
   const handleClose = () => {
-    // if(props.showReferToSpecialistModal){
-    //   props.setShowReferToSpecialistModal(false);
-    // }
     setOpen(false);
+    // props.onCancel();
     setStep(1);
     setSelectedSpecialist(null);
     setSpecialistName(null);
@@ -261,9 +259,10 @@ export const MemberModals = (props) => {
         type: "appointmentConfirmation",
         actionType:actionType,
         role :props.role_id,
-        booking_type:"Standard",
+        booking_type:props.setActionType ==="Referral" ?"Referral":"Standard",
         notes_status:"Not Started",
-        status: "Pending"
+        status: "Pending",
+        booked_by:props.setActionType ==="Referral" ?props.admin_name:"Self"
       };
     } else {
       bookingData = {
@@ -276,10 +275,11 @@ export const MemberModals = (props) => {
         appointmentId:props.AppointmentId,
         actionType:actionType,
         role :props.role_id,
-        booking_type:"Standard",
+        booking_type:props.setActionType ==="Referral" ?"Referral":"Standard",
         notes_status:"Not Started",
         type: "appointmentConfirmation",
-        status: reschedule ?"Pending Reschedule":"Pending"
+        status: reschedule ?"Pending Reschedule":"Pending",
+        booked_by:props.setActionType ==="Referral" ? props.admin_name:"Self"
       };
     }
 
@@ -347,13 +347,7 @@ export const MemberModals = (props) => {
     }
   }, [reschedule, modify, step, props.specialistId]);
 
-  useEffect(() => {
-    console.log("use effect")
-    if (props.modalType === "Referral") {
-      setActionType('Referral');
-      setOpen(true)
-    }
-  }, [props.modalType,props.showReferToSpecialistModal]);
+
   return (
     <>
       {props.modalType === "More Actions" && (
@@ -389,10 +383,33 @@ export const MemberModals = (props) => {
         </>
       )}
       {props.modalType === "Book" && (
-      <AntButton type="primary" onClick={handleBookingButtonClick}>
-        BOOK APPOINTMENT
-      </AntButton>
+        <AntButton type="primary" onClick={handleBookingButtonClick}>
+          BOOK APPOINTMENT
+        </AntButton>
       )}
+      {props.modalType === "Referral" && (
+        <div
+          className="w-6 mr-2  transform hover:text-purple-500 hover:scale-110 cursor-pointer"
+          onClick={handleBookingButtonClick}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </div>
+      )} 
       {!showCreditModal && (
         <Modal
           title={
@@ -535,6 +552,8 @@ export const MemberModals = (props) => {
                 specialistName={props.specialistName}
                 notes_status={props.notes_status}
                 roleId={props.role_id}
+                booking_type ={props.booking_type}
+                booked_by ={props.booked_by}
               />
             )
           )}

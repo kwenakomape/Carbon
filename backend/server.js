@@ -210,6 +210,7 @@ app.get("/api/member/:id", async (req, res) => {
       Appointments.preferred_time_range3,
       Appointments.booking_type,
       Appointments.notes_status,
+      Appointments.booked_by,
       Admin.specialist_type
     FROM 
       Members
@@ -257,6 +258,7 @@ app.get("/api/appointments-with-specialist/:id", async (req, res) => {
       a.preferred_date3,
       a.preferred_time_range3,
       a.booking_type,
+      a.booked_by,
       a.notes_status,
       ad.name as admin_name,
       ad.role_id,
@@ -445,9 +447,10 @@ app.post("/api/bookings", async (req, res) => {
     specialistName,
     actionType,
     booking_type,
-    notes_status
+    notes_status,
+    booked_by
   } = req.body;
-  console.log(actionType)
+
   const formatDateTime = (date, timeRange) => ({
     date: dayjs(date).format("YYYY-MM-DD"),
     timeRange: `${dayjs(timeRange.start).format("HH:mm")} to ${dayjs(
@@ -465,8 +468,8 @@ app.post("/api/bookings", async (req, res) => {
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
-        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, confirmed_time,specialist_name,booking_type,notes_status)
-        VALUES (?, ?, ?, ?, ?,?,?,?)
+        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, confirmed_time,specialist_name,booking_type,notes_status,booked_by)
+        VALUES (?, ?, ?, ?, ?,?,?,?,?)
       `;
       const appointmentValues =
       actionType === "Reschedule"
@@ -485,6 +488,7 @@ app.post("/api/bookings", async (req, res) => {
               specialistName,
               booking_type,
               notes_status,
+              booked_by,
             ];
 
       await pool.query(appointmentQuery, appointmentValues);
@@ -501,8 +505,8 @@ app.post("/api/bookings", async (req, res) => {
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
-        INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3,booking_type,notes_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+        INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3,booking_type,notes_status,booked_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)
       `;
       const appointmentValues =
         actionType === "Reschedule" || actionType === "Modify"
@@ -529,6 +533,7 @@ app.post("/api/bookings", async (req, res) => {
               preferredTimes[2].timeRange,
               booking_type,
               notes_status,
+              booked_by,
             ];
 
       await pool.query(appointmentQuery, appointmentValues);
