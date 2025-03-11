@@ -87,6 +87,16 @@ CREATE TABLE Sessions (
     FOREIGN KEY (service_id) REFERENCES Services(service_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE Notifications (
+    notification_id INT PRIMARY KEY AUTO_INCREMENT,
+    appointment_id INT,
+    notification_type ENUM('Booking Request', 'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_status BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (appointment_id) REFERENCES Appointments(appointment_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- Insert roles
 INSERT INTO Roles (role_name) VALUES
 ('Specialist'),
@@ -180,12 +190,14 @@ SELECT * FROM Roles;
 SELECT * FROM Members;
 SELECT * FROM Admin;
 SELECT * FROM Appointments;
+SELECT * FROM Notifications;
 SELECT * FROM Services;
 SELECT * FROM SpecialistServices;
 SELECT * FROM Payments;
 SELECT * FROM Sessions;
 
 DROP TABLE IF EXISTS Sessions;
+DROP TABLE IF EXISTS Notifications;
 DROP TABLE IF EXISTS Appointments;
 DROP TABLE IF EXISTS SpecialistServices;
 DROP TABLE IF EXISTS Services;

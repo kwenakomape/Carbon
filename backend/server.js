@@ -372,6 +372,58 @@ app.post("/api/update-notes-status", async (req, res) => {
     res.status(500).send("Error updating Notes status");
   }
 });
+
+app.get("/api/notifications", async (req, res) => {
+  const query = `
+    SELECT n.notification_id, n.notification_type, n.message, n.timestamp, n.read_status,
+           a.appointment_id, a.member_id, a.specialist_id, a.status
+    FROM Notifications n
+    JOIN Appointments a ON n.appointment_id = a.appointment_id
+    ORDER BY n.timestamp DESC
+  `;
+  try {
+    const [notifications] = await pool.query(query);
+    res.json(notifications);
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+    res.status(500).send("Error fetching notifications");
+  }
+});
+
+// PATCH /api/notifications/:id/read - Mark a notification as read
+app.patch("/api/notifications/:id/read", async (req, res) => {
+  const { id } = req.params;
+  const query = `
+    UPDATE Notifications
+    SET read_status = TRUE
+    WHERE notification_id = ?
+  `;
+  try {
+    await pool.query(query, [id]);
+    res.send("Notification marked as read");
+  } catch (err) {
+    console.error("Error marking notification as read:", err);
+    res.status(500).send("Error marking notification as read");
+  }
+});
+
+// POST /api/notifications - Create a new notification
+app.post("/api/notifications", async (req, res) => {
+  const { appointment_id, notification_type, message } = req.body;
+  const query = `
+    INSERT INTO Notifications (appointment_id, notification_type, message)
+    VALUES (?, ?, ?)
+  `;
+  const params = [appointment_id, notification_type, message];
+  try {
+    await pool.query(query, params);
+    res.send("Notification created successfully");
+  } catch (err) {
+    console.error("Error creating notification:", err);
+    res.status(500).send("Error creating notification");
+  }
+});
+
 app.get("/api/paywith-credits/:id", async (req, res) => {
   const memberId = req.params.id;
   const updateQuery = `UPDATE Members SET credits = credits - 80 WHERE member_id = ?`;

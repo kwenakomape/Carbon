@@ -1,4 +1,3 @@
-
 import useLoading from "../utils/hooks/useLoading.js";
 
 import axios from "axios";
@@ -6,15 +5,45 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { AdminModals } from "../components/AdminModals.jsx";
 import dayjs from "dayjs";
-
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime)
 export const AdminDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
   const loading = useLoading();
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get("/api/notifications");
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  // Mark a notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      await axios.patch(`/api/notifications/${notificationId}/read`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`/api/appointments-with-specialist/${id}`);
+      const response = await axios.get(
+        `/api/appointments-with-specialist/${id}`
+      );
       setData(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -115,18 +144,79 @@ export const AdminDashboard = () => {
                 <span className="ml-2">Logout</span>
               </a>
               <a className="block px-4 py-2 mt-2 text-sm font-semibold rounded-lg hover:bg-blue-600 transition duration-300">
-              <span className="ml-2">Notes</span>
+                <span className="ml-2">Notes</span>
               </a>
             </nav>
           </div>
 
           <div className="flex-1 flex flex-col h-full overflow-y-auto">
-            <header className="bg-white shadow p-4 flex justify-between items-center">
+            <header className="bg-white shadow p-4 flex justify-between items-center w-full">
               <h1 className="text-2xl font-bold text-gray-800">
                 Admin Dashboard
               </h1>
-              <div className="text-gray-600">
-                Welcome <strong>{data[0].admin_name}</strong>
+              <div className="relative">
+                {/* Notification Icon */}
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 text-gray-600 hover:text-blue-600 focus:outline-none"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                    ></path>
+                  </svg>
+                  {/* Notification Badge */}
+                  {notifications.some((n) => !n.read) && (
+                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                      {notifications.filter((n) => !n.read).length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
+                    <div className="p-4 font-semibold text-gray-800 border-b">
+                      Notifications
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-gray-600 text-center">
+                          No new notifications.
+                        </div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                              !notification.read ? "bg-gray-100" : ""
+                            }`}
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            <div className="text-sm text-gray-800">
+                              {notification.message}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {dayjs(notification.timestamp).fromNow()}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="p-4 text-center text-sm text-blue-600 hover:underline cursor-pointer">
+                      Mark all as read
+                    </div>
+                  </div>
+                )}
               </div>
             </header>
 
@@ -249,8 +339,8 @@ export const AdminDashboard = () => {
                                   memberName={appointment.member_name}
                                   memberEmail={appointment.email}
                                   memberCredits={data[0].credits}
-                                  booking_type ={appointment.booking_type}
-                                  booked_by = {appointment.booked_by}
+                                  booking_type={appointment.booking_type}
+                                  booked_by={appointment.booked_by}
                                   payment_method={appointment.payment_method}
                                   AppointmentId={appointment.appointment_id}
                                   specialistId={appointment.specialist_id}
@@ -308,7 +398,6 @@ export const AdminDashboard = () => {
                                   }
                                 />
                               </div>
-                              
                             </td>
                           </tr>
                         ))}

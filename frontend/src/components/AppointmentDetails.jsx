@@ -18,7 +18,7 @@ export const AppointmentDetails = ({
   notes_status,
   booking_type,
   booked_by,
-  roleId
+  roleId,
 }) => {
   return (
     <div className="appointment-details">
@@ -46,19 +46,30 @@ export const AppointmentDetails = ({
       <p>
         <strong>Appointment Status:</strong> {appointmentStatus}
       </p>
-       <p>
+      <p>
         <strong>Booking Type:</strong> {booking_type}
       </p>
-      {roleId ===3 && (<p>
-        <strong>Booked By:</strong> {booked_by}
-      </p>)}
-      {roleId ===1 && (<p>
-        <strong>Booked By:</strong> Member(Client)
-      </p>)}
-      {booking_type ==="Referral" &&(<p>
-        <strong>Referred By:</strong> {booked_by}
-      </p>)}
-      
+      {booking_type === "Referral" && (
+        <>
+          <p>
+            <strong>Booked By:</strong> {booked_by}
+          </p>
+          <p>
+            <strong>Referred By:</strong> {booked_by}
+          </p>
+        </>
+      )}
+      {booking_type === "Standard" && roleId === 3 && (
+        <p>
+          <strong>Booked By:</strong> {booked_by}
+        </p>
+      )}
+      {booking_type === "Standard" && roleId === 1 && (
+        <p>
+          <strong>Booked By:</strong> Member(Client)
+        </p>
+      )}
+
       {appointmentStatus === "Confirmed" && (
         <p>
           <strong>Appointment Assigned To:</strong> {specialistName}
@@ -66,9 +77,6 @@ export const AppointmentDetails = ({
       )}
       {appointmentStatus === "Seen" && (
         <>
-          {/* <p>
-            <strong>Clinical Notes:</strong> {notes_status}
-          </p> */}
           <p>
             <strong>Appointment Completed By:</strong> {specialistName}
           </p>
@@ -77,13 +85,16 @@ export const AppointmentDetails = ({
 
       {specialistId !== 2 && specialistId !== 4 && (
         <>
-        
-          {roleId ===1 && <p className="text-lg mt-2 mb-2">
-            <strong>Proposed Dates/Times By Client:</strong>
-          </p>}
-          {roleId ===3 && <p className="text-lg mt-2 mb-2">
-            <strong>Your Proposed Dates/Times:</strong>
-          </p>}
+          {roleId === 1 && (
+            <p className="text-lg mt-2 mb-2">
+              <strong>Proposed Dates/Times By Client:</strong>
+            </p>
+          )}
+          {roleId === 3 && (
+            <p className="text-lg mt-2 mb-2">
+              <strong>Your Proposed Dates/Times:</strong>
+            </p>
+          )}
           <p>
             <strong>Date 1:</strong> {preferred_date1}, From{" "}
             {preferred_time_range1}
