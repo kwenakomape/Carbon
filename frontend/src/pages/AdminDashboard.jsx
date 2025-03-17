@@ -1,12 +1,12 @@
 import useLoading from "../utils/hooks/useLoading.js";
 
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AdminModals } from "../components/AdminModals.jsx";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime)
+dayjs.extend(relativeTime);
 export const AdminDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
@@ -14,12 +14,44 @@ export const AdminDashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  // Ref for the dropdown and notification icon
+  const dropdownRef = useRef(null);
+  const notificationIconRef = useRef(null);
+
+  // Fetch notifications from the backend
   const fetchNotifications = async () => {
     try {
       const response = await axios.get("/api/notifications");
+      console.log("Fetched notifications:", response.data); // Debugging
       setNotifications(response.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
+    }
+  };
+
+  // Mark all notifications as seen when the notification icon is clicked
+  const markAllAsSeen = async () => {
+    try {
+      await axios.patch("/api/notifications/mark-all-seen");
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, seen_status: true }))
+      );
+      console.log("Marked all as seen. Updated notifications:", notifications); // Debugging
+    } catch (error) {
+      console.error("Error marking notifications as seen:", error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = async () => {
+    try {
+      await axios.patch("/api/notifications/mark-all-read");
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read_status: true }))
+      );
+      console.log("Marked all as read. Updated notifications:", notifications); // Debugging
+    } catch (error) {
+      console.error("Error marking notifications as read:", error);
     }
   };
 
@@ -28,16 +60,49 @@ export const AdminDashboard = () => {
     try {
       await axios.patch(`/api/notifications/${notificationId}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        prev.map((n) =>
+          n.notification_id === notificationId ? { ...n, read_status: true } : n
+        )
       );
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        notificationIconRef.current &&
+        !notificationIconRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Fetch notifications on component mount
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Handle notification icon click
+  const handleNotificationIconClick = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      markAllAsSeen(); // Mark all notifications as seen when the dropdown is opened
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -150,75 +215,99 @@ export const AdminDashboard = () => {
           </div>
 
           <div className="flex-1 flex flex-col h-full overflow-y-auto">
-            <header className="bg-white shadow p-4 flex justify-between items-center w-full">
-              <h1 className="text-2xl font-bold text-gray-800">
-                Admin Dashboard
-              </h1>
-              <div className="relative">
-                {/* Notification Icon */}
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2 text-gray-600 hover:text-blue-600 focus:outline-none"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    ></path>
-                  </svg>
-                  {/* Notification Badge */}
-                  {notifications.some((n) => !n.read) && (
-                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                      {notifications.filter((n) => !n.read).length}
-                    </span>
-                  )}
-                </button>
+          <header className="bg-white shadow p-4 flex justify-between items-center w-full">
+        <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div className="relative">
+          {/* Notification Icon */}
+          <button
+            ref={notificationIconRef}
+            onClick={handleNotificationIconClick}
+            className="relative p-2 text-gray-600 hover:text-blue-600 focus:outline-none"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              ></path>
+            </svg>
+            {/* Notification Badge */}
+            {notifications.some((n) => !n.seen_status) && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                {notifications.filter((n) => !n.seen_status).length}
+              </span>
+            )}
+          </button>
 
-                {/* Notification Dropdown */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
-                    <div className="p-4 font-semibold text-gray-800 border-b">
-                      Notifications
-                    </div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {notifications.length === 0 ? (
-                        <div className="p-4 text-gray-600 text-center">
-                          No new notifications.
+          {/* Notification Dropdown */}
+          <div
+            ref={dropdownRef}
+            className={`absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 transition-all duration-200 ease-in-out transform ${
+              showNotifications
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-2 pointer-events-none"
+            }`}
+          >
+            <div className="p-4 font-semibold text-gray-800 border-b bg-gray-50 rounded-t-lg">
+              Notifications
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-4 text-gray-600 text-center">
+                  No new notifications.
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.notification_id}
+                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 ${
+                      !notification.read_status ? "bg-blue-50" : "bg-white"
+                    }`}
+                    onClick={() => markAsRead(notification.notification_id)}
+                  >
+                    <div className="flex items-start">
+                      {/* Profile Icon */}
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                          {/* {notification.member_name.charAt(0).toUpperCase()} */}
+                          L
                         </div>
-                      ) : (
-                        notifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className={`p-4 hover:bg-gray-50 cursor-pointer ${
-                              !notification.read ? "bg-gray-100" : ""
-                            }`}
-                            onClick={() => markAsRead(notification.id)}
-                          >
-                            <div className="text-sm text-gray-800">
-                              {notification.message}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {dayjs(notification.timestamp).fromNow()}
-                            </div>
-                          </div>
-                        ))
+                      </div>
+                      {/* Notification Content */}
+                      <div className="ml-3 flex-1">
+                        <div className="text-sm text-gray-800 font-medium">
+                          {notification.message}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {dayjs(notification.timestamp).fromNow()}
+                        </div>
+                      </div>
+                      {/* Unread Indicator */}
+                      {!notification.read_status && (
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                       )}
                     </div>
-                    <div className="p-4 text-center text-sm text-blue-600 hover:underline cursor-pointer">
-                      Mark all as read
-                    </div>
                   </div>
-                )}
-              </div>
-            </header>
+                ))
+              )}
+            </div>
+            {/* Mark All as Read Button */}
+            <div
+              className="p-4 text-center text-sm text-blue-600 hover:underline cursor-pointer bg-gray-50 rounded-b-lg"
+              onClick={markAllAsRead}
+            >
+              Mark all as read
+            </div>
+          </div>
+        </div>
+      </header>
 
             <main className="flex-1 p-4">
               <div className="bg-white p-6 rounded-lg shadow">

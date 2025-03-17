@@ -94,6 +94,7 @@ CREATE TABLE Notifications (
     message VARCHAR(255) NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
+    seen_status BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (appointment_id) REFERENCES Appointments(appointment_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -183,6 +184,59 @@ CREATE INDEX idx_appointments_status ON Appointments(status);
 CREATE INDEX idx_sessions_appointment_id ON Sessions(appointment_id);
 CREATE INDEX idx_sessions_specialist_id ON Sessions(specialist_id);
 CREATE INDEX idx_sessions_service_id ON Sessions(service_id);
+DELIMITER $$
+
+CREATE TRIGGER after_appointment_insert
+AFTER INSERT ON Appointments
+FOR EACH ROW
+BEGIN
+  IF NEW.status = 'Pending' THEN
+    INSERT INTO Notifications (appointment_id, notification_type, message)
+    VALUES (NEW.appointment_id, 'Booking Request', CONCAT('New booking request from member ID ', NEW.member_id));
+  END IF;
+END$$
+
+DELIMITER ;
+DELIMITER $$
+
+CREATE TRIGGER after_appointment_update
+AFTER UPDATE ON Appointments
+FOR EACH ROW
+BEGIN
+  IF NEW.status = 'Cancelled' THEN
+    INSERT INTO Notifications (appointment_id, notification_type, message)
+    VALUES (NEW.appointment_id, 'Cancellation', CONCAT('Booking cancelled by member ID ', NEW.member_id));
+  END IF;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER after_appointment_reschedule
+AFTER UPDATE ON Appointments
+FOR EACH ROW
+BEGIN
+  IF NEW.status = 'Pending Reschedule' THEN
+    INSERT INTO Notifications (appointment_id, notification_type, message)
+    VALUES (NEW.appointment_id, 'Rescheduling', CONCAT('Booking rescheduled by member ID ', NEW.member_id));
+  END IF;
+END$$
+
+DELIMITER ;
+DELIMITER $$
+
+CREATE TRIGGER after_appointment_confirmation
+AFTER UPDATE ON Appointments
+FOR EACH ROW
+BEGIN
+  IF NEW.status = 'Confirmed' THEN
+    INSERT INTO Notifications (appointment_id, notification_type, message)
+    VALUES (NEW.appointment_id, 'Confirmation', CONCAT('Booking confirmed for member ID ', NEW.member_id));
+  END IF;
+END$$
+
+DELIMITER ;
 
 UPDATE Appointments SET confirmed_date = 12-11-2024, status = 'Confirmed' WHERE member_id = 920811 AND appointment_id = 1;
 UPDATE Sessions SET date = '2024-05-15' WHERE appointment_id = 1;
@@ -195,6 +249,7 @@ SELECT * FROM Services;
 SELECT * FROM SpecialistServices;
 SELECT * FROM Payments;
 SELECT * FROM Sessions;
+SELECT * FROM Notifications;
 
 DROP TABLE IF EXISTS Sessions;
 DROP TABLE IF EXISTS Notifications;

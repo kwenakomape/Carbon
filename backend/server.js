@@ -375,7 +375,7 @@ app.post("/api/update-notes-status", async (req, res) => {
 
 app.get("/api/notifications", async (req, res) => {
   const query = `
-    SELECT n.notification_id, n.notification_type, n.message, n.timestamp, n.read_status,
+    SELECT n.notification_id, n.notification_type, n.message, n.timestamp, n.read_status,n.seen_status,
            a.appointment_id, a.member_id, a.specialist_id, a.status
     FROM Notifications n
     JOIN Appointments a ON n.appointment_id = a.appointment_id
@@ -389,10 +389,24 @@ app.get("/api/notifications", async (req, res) => {
     res.status(500).send("Error fetching notifications");
   }
 });
-
+app.patch("/api/notifications/mark-all-seen", async (req, res) => {
+  const query = `
+    UPDATE Notifications
+    SET seen_status = TRUE
+    WHERE seen_status = FALSE
+  `;
+  try {
+    await pool.query(query);
+    res.send("All notifications marked as seen");
+  } catch (err) {
+    console.error("Error marking notifications as seen:", err);
+    res.status(500).send("Error marking notifications as seen");
+  }
+});
 // PATCH /api/notifications/:id/read - Mark a notification as read
 app.patch("/api/notifications/:id/read", async (req, res) => {
   const { id } = req.params;
+  console.log(id);
   const query = `
     UPDATE Notifications
     SET read_status = TRUE
@@ -407,6 +421,20 @@ app.patch("/api/notifications/:id/read", async (req, res) => {
   }
 });
 
+app.patch("/api/notifications/mark-all-read", async (req, res) => {
+  const query = `
+    UPDATE Notifications
+    SET read_status = TRUE
+    WHERE read_status = FALSE
+  `;
+  try {
+    await pool.query(query);
+    res.send("All notifications marked as read");
+  } catch (err) {
+    console.error("Error marking notifications as read:", err);
+    res.status(500).send("Error marking notifications as read");
+  }
+});
 // POST /api/notifications - Create a new notification
 app.post("/api/notifications", async (req, res) => {
   const { appointment_id, notification_type, message } = req.body;
