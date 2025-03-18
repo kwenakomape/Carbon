@@ -128,15 +128,6 @@ export const AdminModals = (props) => {
         setOpen(true);
       },
     },
-    // {
-    //   key: "8",
-    //   label: "Mark Notes as Completed",
-    //   onClick: () => {
-    //     SetNotesCompleted(true);
-    //     setStep(2);
-    //     setOpen(true);
-    //   },
-    // },
   ];
 
   const filteredItems = items.filter((item) => {

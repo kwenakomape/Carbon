@@ -146,7 +146,6 @@ export const MemberModals = (props) => {
   }
   const handleClose = () => {
     setOpen(false);
-    // props.onCancel();
     setStep(1);
     setSelectedSpecialist(null);
     setSpecialistName(null);
@@ -164,7 +163,6 @@ export const MemberModals = (props) => {
     setIsModify(false);
     setReschedule(false);
     SetViewAppointmentDetails(false);
-    console.log("Member closed modal");
   };
   const resetDatesAndTime =()=>{
     setSelectedDates([null, null, null]);

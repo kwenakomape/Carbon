@@ -1,3 +1,4 @@
+SET time_zone = '+02:00';
 -- Create Roles table
 CREATE TABLE Roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -90,12 +91,14 @@ CREATE TABLE Sessions (
 CREATE TABLE Notifications (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
     appointment_id INT,
-    notification_type ENUM('Booking Request', 'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
+    specialist_id INT,
+    notification_type ENUM('Bookings', 'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
     message VARCHAR(255) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
     seen_status BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (appointment_id) REFERENCES Appointments(appointment_id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (appointment_id) REFERENCES Appointments(appointment_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (specialist_id) REFERENCES Appointments(specialist_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Insert roles
@@ -185,18 +188,31 @@ CREATE INDEX idx_sessions_appointment_id ON Sessions(appointment_id);
 CREATE INDEX idx_sessions_specialist_id ON Sessions(specialist_id);
 CREATE INDEX idx_sessions_service_id ON Sessions(service_id);
 DELIMITER $$
-
 CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
+  DECLARE notification_message VARCHAR(255);
+
+  -- Customize the message based on the status
   IF NEW.status = 'Pending' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message)
-    VALUES (NEW.appointment_id, 'Booking Request', CONCAT('New booking request from member ID ', NEW.member_id));
+    SET notification_message = CONCAT('New booking request from member ID ', NEW.member_id);
+  ELSEIF NEW.status = 'Confirmed' THEN
+    SET notification_message = CONCAT('New Booking Confirmed from member ID ', NEW.member_id);
+  END IF;
+
+  -- Insert the notification if the status is 'Pending' or 'Pending Reschedule'
+  IF NEW.status = 'Pending' OR NEW.status = 'Confirmed' THEN
+    INSERT INTO Notifications (appointment_id, notification_type, message, timestamp, specialist_id)
+    VALUES (
+      NEW.appointment_id,
+      'Bookings',
+      notification_message,
+      NOW(),
+      NEW.specialist_id
+    );
   END IF;
 END$$
-
-DELIMITER ;
 DELIMITER $$
 
 CREATE TRIGGER after_appointment_update
@@ -204,8 +220,8 @@ AFTER UPDATE ON Appointments
 FOR EACH ROW
 BEGIN
   IF NEW.status = 'Cancelled' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message)
-    VALUES (NEW.appointment_id, 'Cancellation', CONCAT('Booking cancelled by member ID ', NEW.member_id));
+    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
+    VALUES (NEW.appointment_id, 'Cancellation', CONCAT('Booking cancelled by member ID ', NEW.member_id),NOW(),NEW.specialist_id);
   END IF;
 END$$
 
@@ -218,8 +234,8 @@ AFTER UPDATE ON Appointments
 FOR EACH ROW
 BEGIN
   IF NEW.status = 'Pending Reschedule' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message)
-    VALUES (NEW.appointment_id, 'Rescheduling', CONCAT('Booking rescheduled by member ID ', NEW.member_id));
+    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
+    VALUES (NEW.appointment_id, 'Rescheduling', CONCAT('Booking rescheduled by member ID ', NEW.member_id),NOW(),NEW.specialist_id);
   END IF;
 END$$
 
@@ -231,8 +247,8 @@ AFTER UPDATE ON Appointments
 FOR EACH ROW
 BEGIN
   IF NEW.status = 'Confirmed' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message)
-    VALUES (NEW.appointment_id, 'Confirmation', CONCAT('Booking confirmed for member ID ', NEW.member_id));
+    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
+    VALUES (NEW.appointment_id, 'Confirmation', CONCAT('Booking confirmed for member ID ', NEW.member_id),NOW(),NEW.specialist_id);
   END IF;
 END$$
 
@@ -250,7 +266,8 @@ SELECT * FROM SpecialistServices;
 SELECT * FROM Payments;
 SELECT * FROM Sessions;
 SELECT * FROM Notifications;
-
+SELECT @@global.time_zone, @@session.time_zone;
+SET time_zone = '+02:00';
 DROP TABLE IF EXISTS Sessions;
 DROP TABLE IF EXISTS Notifications;
 DROP TABLE IF EXISTS Appointments;
