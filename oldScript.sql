@@ -242,18 +242,6 @@ END$$
 DELIMITER ;
 DELIMITER $$
 
-CREATE TRIGGER after_appointment_confirmation
-AFTER UPDATE ON Appointments
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'Confirmed' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
-    VALUES (NEW.appointment_id, 'Confirmation', CONCAT('Booking confirmed for member ID ', NEW.member_id),NOW(),NEW.specialist_id);
-  END IF;
-END$$
-
-DELIMITER ;
-
 UPDATE Appointments SET confirmed_date = 12-11-2024, status = 'Confirmed' WHERE member_id = 920811 AND appointment_id = 1;
 UPDATE Sessions SET date = '2024-05-15' WHERE appointment_id = 1;
 SELECT * FROM Roles;
