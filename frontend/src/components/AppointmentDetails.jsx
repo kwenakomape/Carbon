@@ -61,12 +61,12 @@ export const AppointmentDetails = ({
       )}
       {booking_type === "Standard" && roleId === 3 && (
         <p>
-          <strong>Booked By:</strong> {booked_by}
+          <strong>Booked By:</strong> Self
         </p>
       )}
       {booking_type === "Standard" && roleId === 1 && (
         <p>
-          <strong>Booked By:</strong> Member(Client)
+          <strong>Booked By:</strong> {booked_by} (Client)
         </p>
       )}
 

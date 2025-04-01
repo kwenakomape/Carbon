@@ -277,7 +277,7 @@ export const MemberModals = (props) => {
         notes_status:"Not Started",
         type: "appointmentConfirmation",
         status: reschedule ?"Pending Reschedule":"Pending",
-        booked_by:props.setActionType ==="Referral" ? props.admin_name:"Self"
+        booked_by:props.setActionType ==="Referral" ? props.admin_name:props.memberName
       };
     }
 

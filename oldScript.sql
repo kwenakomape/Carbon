@@ -94,6 +94,7 @@ CREATE TABLE Notifications (
     specialist_id INT,
     notification_type ENUM('Bookings', 'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
     message VARCHAR(255) NOT NULL,
+    initiated_by VARCHAR(255) NOT NULL,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
     seen_status BOOLEAN DEFAULT FALSE,
@@ -203,13 +204,14 @@ BEGIN
 
   -- Insert the notification if the status is 'Pending' or 'Pending Reschedule'
   IF NEW.status = 'Pending' OR NEW.status = 'Confirmed' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message, timestamp, specialist_id)
+    INSERT INTO Notifications (appointment_id, notification_type, message, timestamp, specialist_id,initiated_by)
     VALUES (
       NEW.appointment_id,
       'Bookings',
       notification_message,
       NOW(),
-      NEW.specialist_id
+      NEW.specialist_id,
+      NEW.booked_by
     );
   END IF;
 END$$
