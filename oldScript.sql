@@ -92,8 +92,7 @@ CREATE TABLE Notifications (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
     appointment_id INT,
     specialist_id INT,
-    notification_type ENUM('Bookings', 'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
-    message VARCHAR(255) NOT NULL,
+    notification_type ENUM('StandardBooking','ReferralBooking' ,'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
     initiated_by VARCHAR(255) NOT NULL,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
@@ -188,64 +187,27 @@ CREATE INDEX idx_appointments_status ON Appointments(status);
 CREATE INDEX idx_sessions_appointment_id ON Sessions(appointment_id);
 CREATE INDEX idx_sessions_specialist_id ON Sessions(specialist_id);
 CREATE INDEX idx_sessions_service_id ON Sessions(service_id);
+
 DELIMITER $$
 CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
-  DECLARE notification_message VARCHAR(255);
-
-  -- Customize the message based on the status
-  IF NEW.status = 'Pending' THEN
-    SET notification_message = CONCAT('New booking request from member ID ', NEW.member_id);
-  ELSEIF NEW.status = 'Confirmed' THEN
-    SET notification_message = CONCAT('New Booking Confirmed from member ID ', NEW.member_id);
-  END IF;
-
-  -- Insert the notification if the status is 'Pending' or 'Pending Reschedule'
-  IF NEW.status = 'Pending' OR NEW.status = 'Confirmed' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message, timestamp, specialist_id,initiated_by)
-    VALUES (
-      NEW.appointment_id,
-      'Bookings',
-      notification_message,
-      NOW(),
-      NEW.specialist_id,
-      NEW.booked_by
-    );
-  END IF;
+  -- Insert notification for all new appointments, with type based on booking_type
+  INSERT INTO Notifications (appointment_id, notification_type, timestamp, specialist_id, initiated_by)
+  VALUES (
+    NEW.appointment_id,
+    CASE 
+      WHEN NEW.booking_type = 'Standard' THEN 'StandardBooking'
+      WHEN NEW.booking_type = 'Referral' THEN 'ReferralBooking'
+    END,
+    NOW(),
+    NEW.specialist_id,
+    NEW.booked_by
+  );
 END$$
-DELIMITER $$
-
-CREATE TRIGGER after_appointment_update
-AFTER UPDATE ON Appointments
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'Cancelled' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
-    VALUES (NEW.appointment_id, 'Cancellation', CONCAT('Booking cancelled by member ID ', NEW.member_id),NOW(),NEW.specialist_id);
-  END IF;
-END$$
-
 DELIMITER ;
 
-DELIMITER $$
-
-CREATE TRIGGER after_appointment_reschedule
-AFTER UPDATE ON Appointments
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'Pending Reschedule' THEN
-    INSERT INTO Notifications (appointment_id, notification_type, message,timestamp,specialist_id)
-    VALUES (NEW.appointment_id, 'Rescheduling', CONCAT('Booking rescheduled by member ID ', NEW.member_id),NOW(),NEW.specialist_id);
-  END IF;
-END$$
-
-DELIMITER ;
-DELIMITER $$
-
-UPDATE Appointments SET confirmed_date = 12-11-2024, status = 'Confirmed' WHERE member_id = 920811 AND appointment_id = 1;
-UPDATE Sessions SET date = '2024-05-15' WHERE appointment_id = 1;
 SELECT * FROM Roles;
 SELECT * FROM Members;
 SELECT * FROM Admin;

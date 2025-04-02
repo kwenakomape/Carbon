@@ -379,7 +379,6 @@ app.get("/api/notifications/:id", async (req, res) => {
     SELECT 
       n.notification_id, 
       n.notification_type, 
-      n.message, 
       n.timestamp, 
       n.read_status,
       n.seen_status,

@@ -373,13 +373,13 @@ export const AdminDashboard = () => {
                                           {member?.member_name || "Member"}
                                         </span>
                                         <span className="text-gray-500 ml-1.5 text-xs">
-                                          (ID:{" "}
+                                          {/* (ID:{" "}
                                           {
                                             notification.message.split(
                                               "member ID "
                                             )[1]
                                           }
-                                          )
+                                          ) */}
                                         </span>
                                       </p>
                                     </div>
@@ -418,7 +418,7 @@ export const AdminDashboard = () => {
                                       View details
                                     </button>
                                     {notification.notification_type ===
-                                      "Bookings" && (
+                                      "StandardBooking" && (
                                       <button
                                         className="text-xs font-medium bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
                                         onClick={(e) => {

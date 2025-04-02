@@ -260,7 +260,7 @@ export const MemberModals = (props) => {
         booking_type:props.setActionType ==="Referral" ?"Referral":"Standard",
         notes_status:"Not Started",
         status: "Pending",
-        booked_by:props.setActionType ==="Referral" ?props.admin_name:"Self"
+        booked_by:props.setActionType ==="Referral" ?props.admin_name:props.memberName
       };
     } else {
       bookingData = {
