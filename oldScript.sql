@@ -92,7 +92,7 @@ CREATE TABLE Notifications (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
     appointment_id INT,
     specialist_id INT,
-    notification_type ENUM('StandardBooking','ReferralBooking' ,'Cancellation', 'Rescheduling', 'Confirmation') NOT NULL,
+    notification_type VARCHAR(255) NOT NULL,
     initiated_by VARCHAR(255) NOT NULL,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
@@ -193,13 +193,14 @@ CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
-  -- Insert notification for all new appointments, with type based on booking_type
   INSERT INTO Notifications (appointment_id, notification_type, timestamp, specialist_id, initiated_by)
   VALUES (
     NEW.appointment_id,
     CASE 
-      WHEN NEW.booking_type = 'Standard' THEN 'StandardBooking'
-      WHEN NEW.booking_type = 'Referral' THEN 'ReferralBooking'
+      WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Pending' THEN 'New Booking Request'
+      WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Confirmed' THEN 'New Booking Scheduled'
+      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Pending' THEN 'New Referral Booking Request'
+      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'New Referral Booking Confirmed'
     END,
     NOW(),
     NEW.specialist_id,

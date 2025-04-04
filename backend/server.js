@@ -378,25 +378,29 @@ app.get("/api/notifications/:id", async (req, res) => {
   const query = `
     SELECT 
       n.notification_id, 
-      n.notification_type, 
+      n.notification_type,
+      n.initiated_by,
       n.timestamp, 
       n.read_status,
       n.seen_status,
       a.appointment_id, 
       a.member_id, 
       a.specialist_id, 
-      a.status
+      a.status,
+      m.name AS member_name  -- Adding member's name from Members table
     FROM Notifications n
     JOIN Appointments a ON n.appointment_id = a.appointment_id
+    JOIN Members m ON a.member_id = m.member_id  -- Join with Members table
     WHERE n.specialist_id = ? -- Filter by specialist_id
     ORDER BY n.timestamp DESC
   `;
+
   try {
     const [notifications] = await pool.query(query, [id]);
     res.json(notifications);
-  } catch (err) {
-    console.error("Error fetching notifications:", err);
-    res.status(500).send("Error fetching notifications");
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 app.patch("/api/notifications/mark-all-seen/:id", async (req, res) => {

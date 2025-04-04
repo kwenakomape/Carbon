@@ -2,16 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* .notification-dropdown {
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+@keyframes pulseOnce {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.notification-dropdown.show {
-  opacity: 1;
-  transform: translateY(0);
-} */
+.animate-pulseOnce {
+  animation: pulseOnce 0.3s ease-out;
+}
 
 .animate-fade-in {
   opacity: 0;
