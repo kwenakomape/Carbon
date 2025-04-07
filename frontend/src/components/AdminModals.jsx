@@ -324,6 +324,7 @@ export const AdminModals = (props) => {
         {props.appointmentStatus === "Seen" && (
           <MemberModals
             admin_name={props.admin_name}
+            admin_id={props.admin_id}
             modalType={"Referral"}
             memberId={props.memberId}
             memberName={props.memberName}

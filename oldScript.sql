@@ -69,6 +69,7 @@ CREATE TABLE Appointments (
     preferred_date3 DATE DEFAULT NULL,
     preferred_time_range3 VARCHAR(255) DEFAULT NULL,
     booked_by VARCHAR(255) DEFAULT NULL,
+    initiator_id INT,
     FOREIGN KEY (member_id) REFERENCES Members(member_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (specialist_id) REFERENCES Admin(admin_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -94,6 +95,7 @@ CREATE TABLE Notifications (
     specialist_id INT,
     notification_type VARCHAR(255) NOT NULL,
     initiated_by VARCHAR(255) NOT NULL,
+    initiator_id INT,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
     seen_status BOOLEAN DEFAULT FALSE,
@@ -193,7 +195,7 @@ CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
-  INSERT INTO Notifications (appointment_id, notification_type, timestamp, specialist_id, initiated_by)
+  INSERT INTO Notifications (appointment_id, notification_type, timestamp, specialist_id, initiated_by,initiator_id)
   VALUES (
     NEW.appointment_id,
     CASE 
@@ -204,7 +206,8 @@ BEGIN
     END,
     NOW(),
     NEW.specialist_id,
-    NEW.booked_by
+    NEW.booked_by,
+    NEW.initiator_id
   );
 END$$
 DELIMITER ;

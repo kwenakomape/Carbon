@@ -552,7 +552,8 @@ app.post("/api/bookings", async (req, res) => {
     actionType,
     booking_type,
     notes_status,
-    booked_by
+    booked_by,
+    initiator_id
   } = req.body;
 
   const formatDateTime = (date, timeRange) => ({
@@ -572,8 +573,8 @@ app.post("/api/bookings", async (req, res) => {
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
-        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, confirmed_time,specialist_name,booking_type,notes_status,booked_by)
-        VALUES (?, ?, ?, ?, ?,?,?,?,?)
+        INSERT INTO Appointments (member_id, specialist_id, status, confirmed_date, confirmed_time,specialist_name,booking_type,notes_status,booked_by,initiator_id)
+        VALUES (?, ?, ?, ?, ?,?,?,?,?,?)
       `;
       const appointmentValues =
       actionType === "Reschedule"
@@ -593,6 +594,7 @@ app.post("/api/bookings", async (req, res) => {
               booking_type,
               notes_status,
               booked_by,
+              initiator_id,
             ];
 
       await pool.query(appointmentQuery, appointmentValues);
@@ -609,8 +611,8 @@ app.post("/api/bookings", async (req, res) => {
         WHERE appointment_id = ? AND member_id = ?
       `
           : `
-        INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3,booking_type,notes_status,booked_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)
+        INSERT INTO Appointments (member_id, specialist_id, status, preferred_date1, preferred_time_range1, preferred_date2, preferred_time_range2, preferred_date3, preferred_time_range3,booking_type,notes_status,booked_by,initiator_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)
       `;
       const appointmentValues =
         actionType === "Reschedule" || actionType === "Modify"
@@ -638,6 +640,7 @@ app.post("/api/bookings", async (req, res) => {
               booking_type,
               notes_status,
               booked_by,
+              initiator_id,
             ];
 
       await pool.query(appointmentQuery, appointmentValues);

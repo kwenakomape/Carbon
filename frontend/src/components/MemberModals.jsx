@@ -260,7 +260,8 @@ export const MemberModals = (props) => {
         booking_type:props.setActionType ==="Referral" ?"Referral":"Standard",
         notes_status:"Not Started",
         status: "Pending",
-        booked_by:props.setActionType ==="Referral" ?props.admin_name:props.memberName
+        booked_by:props.setActionType ==="Referral" ?props.admin_name:props.memberName,
+        initiator_id:props.setActionType ==="Referral" ?props.admin_id:props.memberId
       };
     } else {
       bookingData = {
@@ -277,7 +278,8 @@ export const MemberModals = (props) => {
         notes_status:"Not Started",
         type: "appointmentConfirmation",
         status: reschedule ?"Pending Reschedule":"Pending",
-        booked_by:props.setActionType ==="Referral" ? props.admin_name:props.memberName
+        booked_by:props.setActionType ==="Referral" ? props.admin_name:props.memberName,
+        initiator_id:props.setActionType ==="Referral" ?props.admin_id:props.memberId
       };
     }
 

@@ -262,6 +262,7 @@ export const AdminDashboard = () => {
                                   memberName={appointment.member_name}
                                   memberEmail={appointment.email}
                                   memberCredits={data[0].credits}
+                                  admin_id={id}
                                   booking_type={appointment.booking_type}
                                   booked_by={appointment.booked_by}
                                   payment_method={appointment.payment_method}
