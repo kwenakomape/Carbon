@@ -15,7 +15,7 @@ import { getNotificationMeta } from '../utils/notificationUtils.jsx';
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
 
-export const NotificationDropdown = ({ userId, userData }) => {
+export const NotificationDropdown = ({ userId, userType }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
@@ -25,7 +25,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
   // Fetch notifications silently
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`/api/notifications/${userId}`);
+      const response = await axios.get(`/api/notifications/${userType}/${userId}`);
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -35,7 +35,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
   // Mark all as seen
   const markAllAsSeen = async () => {
     try {
-      await axios.patch(`/api/notifications/mark-all-seen/${userId}`);
+      await axios.patch(`/api/notifications/mark-all-seen/${userType}/${userId}`);
       setNotifications(prev => prev.map(n => ({ ...n, seen_status: true })));
     } catch (error) {
       console.error('Error marking notifications as seen:', error);
@@ -45,7 +45,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch(`/api/notifications/mark-all-read/${userId}`);
+      await axios.patch(`/api/notifications/mark-all-read/${userType}/${userId}`);
       setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
     } catch (error) {
       console.error('Error marking notifications as read:', error);
@@ -55,7 +55,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
   // Mark single as read
   const markAsRead = async (notificationId) => {
     try {
-      await axios.patch(`/api/notifications/${notificationId}/read/${userId}`);
+      await axios.patch(`/api/notifications/${notificationId}/read/${userType}/${userId}`);
       setNotifications(prev => 
         prev.map(n => n.notification_id === notificationId ? { ...n, read_status: true } : n)
       );
@@ -92,11 +92,9 @@ export const NotificationDropdown = ({ userId, userData }) => {
     // Optimize polling when window loses focus
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Slow down polling when tab is inactive
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = setInterval(fetchNotifications, 120000);
       } else {
-        // Resume normal polling when tab is active
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = setInterval(fetchNotifications, 30000);
       }
@@ -109,7 +107,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
       clearInterval(pollingIntervalRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userId]);
+  }, [userId, userType]);
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
@@ -195,16 +193,20 @@ export const NotificationDropdown = ({ userId, userData }) => {
             </div>
           ) : (
             notifications.map((notification) => {
-              const member = userData?.find(
-                (item) => item.member_id === notification.member_id
-              );
               const notificationMeta = getNotificationMeta(notification);
+              const counterpartName = userType === 'specialist' 
+                ? notification.member_name 
+                : notification.counterpart_name;
 
               return (
                 <div
                   key={notification.notification_id}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0 ${
-                    !notification.read_status ? 'bg-blue-50/30' : 'bg-white'
+                  // className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0 ${notificationMeta.bgColor}`}
+                  // className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0 ${
+                  //   !notification.read_status ? `${notificationMeta.bgColor}` : 'bg-white'
+                  // }`}
+                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-120 last:border-b-0 ${
+                    !notification.read_status ? `${notificationMeta.bgColor}` : 'bg-white'
                   }`}
                   onClick={() => markAsRead(notification.notification_id)}
                 >
@@ -252,18 +254,16 @@ export const NotificationDropdown = ({ userId, userData }) => {
                       </div>
 
                       {/* Contextual Details */}
-                      {notification.notification_type === 'Rescheduling' &&
-                        notification.confirmed_date && (
-                          <div className="mt-2 flex items-center text-xs text-gray-500">
-                            <ClockIcon className="h-3.5 w-3.5 mr-1.5" />
-                            <span>
-                              Previously:{' '}
-                              {dayjs(notification.confirmed_date).format(
-                                'MMM D [at] h:mm A'
-                              )}
-                            </span>
-                          </div>
-                        )}
+                      {notification.confirmed_date && (
+                        <div className="mt-2 flex items-center text-xs text-gray-500">
+                          <ClockIcon className="h-3.5 w-3.5 mr-1.5" />
+                          <span>
+                            {dayjs(notification.confirmed_date).format(
+                              'MMM D [at] h:mm A'
+                            )}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className="mt-3 flex gap-2">
@@ -276,8 +276,7 @@ export const NotificationDropdown = ({ userId, userData }) => {
                         >
                           View details
                         </button>
-                        {notification.notification_type ===
-                          'New Booking Request' && (
+                        {notification.notification_type === 'New Booking Request' && (
                           <button
                             className="text-xs font-medium bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
                             onClick={(e) => {

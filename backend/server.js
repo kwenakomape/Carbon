@@ -373,8 +373,11 @@ app.post("/api/update-notes-status", async (req, res) => {
   }
 });
 
-app.get("/api/notifications/:id", async (req, res) => {
-  const { id } = req.params; // This is the specialist_id
+// GET Notifications for user (member or specialist)
+app.get("/api/notifications/:user_type/:id", async (req, res) => {
+  const { id, user_type } = req.params; // 'member' or 'specialist'
+  const idField = user_type === 'specialist' ? 'n.specialist_id' : 'n.member_id';
+
   const query = `
     SELECT 
       n.notification_id, 
@@ -383,57 +386,91 @@ app.get("/api/notifications/:id", async (req, res) => {
       n.timestamp, 
       n.read_status,
       n.seen_status,
+      n.initiator_id,
       a.appointment_id, 
       a.member_id, 
       a.specialist_id, 
       a.status,
-      m.name AS member_name  -- Adding member's name from Members table
+      m.name AS member_name,
+      ad.name AS specialist_name,
+      a.confirmed_date,
+      a.confirmed_time,
+      a.booking_type
     FROM Notifications n
     JOIN Appointments a ON n.appointment_id = a.appointment_id
-    JOIN Members m ON a.member_id = m.member_id  -- Join with Members table
-    WHERE n.specialist_id = ? -- Filter by specialist_id
+    LEFT JOIN Members m ON a.member_id = m.member_id
+    LEFT JOIN Admin ad ON a.specialist_id = ad.admin_id
+    WHERE ${idField} = ?
+      AND (n.initiator_id IS NULL OR n.initiator_id != ?)
     ORDER BY n.timestamp DESC
   `;
 
   try {
-    const [notifications] = await pool.query(query, [id]);
+    const [notifications] = await pool.query(query, [id, id]);
     res.json(notifications);
   } catch (error) {
     console.error("Error fetching notifications:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-app.patch("/api/notifications/mark-all-seen/:id", async (req, res) => {
-  const { id } = req.params; // This is the specialist_id
+
+// PATCH Mark All Notifications as Seen
+app.patch("/api/notifications/mark-all-seen/:user_type/:id", async (req, res) => {
+  const { id, user_type } = req.params;
+  const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
+  
   const query = `
     UPDATE Notifications
     SET seen_status = TRUE
     WHERE seen_status = FALSE
-      AND specialist_id = ? -- Filter by specialist_id
+      AND ${idField} = ?
   `;
+  
   try {
     await pool.query(query, [id]);
-    res.send(`All notifications for specialist ${id} marked as seen`);
+    res.send(`All notifications marked as seen`);
   } catch (err) {
     console.error("Error marking notifications as seen:", err);
     res.status(500).send("Error marking notifications as seen");
   }
 });
-// PATCH /api/notifications/:id/read - Mark a notification as read
-app.patch("/api/notifications/:id/read/:specialist_id", async (req, res) => {
-  const { id, specialist_id } = req.params; // notification_id and specialist_id
+// PATCH /api/notifications/mark-all-read/:user_type/:id - Mark all notifications as read
+app.patch("/api/notifications/mark-all-read/:user_type/:id", async (req, res) => {
+  const { id, user_type } = req.params; // user_type = 'specialist' or 'member'
+  const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
+  
+  const query = `
+    UPDATE Notifications
+    SET read_status = TRUE
+    WHERE read_status = FALSE
+      AND ${idField} = ?
+  `;
+
+  try {
+    const [result] = await pool.query(query, [id]);
+    res.send(`All notifications marked as read`);
+  } catch (err) {
+    console.error("Error marking notifications as read:", err);
+    res.status(500).send("Error marking notifications as read");
+  }
+});
+// PATCH Mark Single Notification as Read
+app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async (req, res) => {
+  const { notification_id, user_type, user_id } = req.params;
+  const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
+  
   const query = `
     UPDATE Notifications
     SET read_status = TRUE
     WHERE notification_id = ?
-      AND specialist_id = ? -- Filter by specialist_id
+      AND ${idField} = ?
   `;
+
   try {
-    const [result] = await pool.query(query, [id, specialist_id]);
+    const [result] = await pool.query(query, [notification_id, user_id]);
 
     if (result.affectedRows === 0) {
-      // No rows were updated (notification not found or doesn't belong to the specialist)
-      return res.status(404).send("Notification not found or does not belong to the specialist");
+      return res.status(404).send("Notification not found or doesn't belong to this user");
     }
 
     res.send("Notification marked as read");
@@ -443,30 +480,23 @@ app.patch("/api/notifications/:id/read/:specialist_id", async (req, res) => {
   }
 });
 
-app.patch("/api/notifications/mark-all-read/:id", async (req, res) => {
-  const { id } = req.params; // This is the specialist_id
-  const query = `
-    UPDATE Notifications
-    SET read_status = TRUE
-    WHERE read_status = FALSE
-      AND specialist_id = ? -- Filter by specialist_id
-  `;
-  try {
-    const [result] = await pool.query(query, [id]);
-    res.send(`All notifications for specialist ${id} marked as read`);
-  } catch (err) {
-    console.error("Error marking notifications as read:", err);
-    res.status(500).send("Error marking notifications as read");
-  }
-});
-// POST /api/notifications - Create a new notification
+// POST Create Notification
 app.post("/api/notifications", async (req, res) => {
-  const { appointment_id, notification_type, message } = req.body;
+  const { appointment_id, notification_type, recipient_type, recipient_id, initiated_by, initiator_id } = req.body;
+  const idField = recipient_type === 'specialist' ? 'specialist_id' : 'member_id';
+  
   const query = `
-    INSERT INTO Notifications (appointment_id, notification_type, message)
-    VALUES (?, ?, ?)
+    INSERT INTO Notifications (
+      appointment_id,
+      ${idField},
+      notification_type, 
+      initiated_by,
+      initiator_id
+    ) VALUES (?, ?, ?, ?, ?)
   `;
-  const params = [appointment_id, notification_type, message];
+  
+  const params = [appointment_id, recipient_id, notification_type, initiated_by, initiator_id];
+
   try {
     await pool.query(query, params);
     res.send("Notification created successfully");

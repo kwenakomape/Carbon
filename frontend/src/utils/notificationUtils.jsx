@@ -21,9 +21,9 @@ export const getNotificationMeta = (notification) => {
       bgColor: 'bg-blue-50',
       icon: <CalendarPlusIcon className="h-5 w-5 text-blue-500" />
     },
-    // 'New Booking Scheduled': {
-    //   title: 'New Booking Scheduled',
-    //   description: `${notification.initiated_by} has confirmed a booking`,
+    // 'Appointment Confirmed': {
+    //   title: 'Appointment Confirmed',
+    //   description: `Your appointment has been confirmed`,
     //   statusIcon: <CheckCircleIcon className="h-2.5 w-2.5 text-white" />,
     //   statusColor: 'bg-green-500',
     //   textColor: 'text-green-600',
@@ -48,40 +48,40 @@ export const getNotificationMeta = (notification) => {
       bgColor: 'bg-indigo-50',
       icon: <CalendarPlusIcon className="h-5 w-5 text-indigo-500" />
     },
-    'New Referral Booking Confirmed': {
-      title: `Referral Confirmed: ${notification.initiated_by} → [${notification.member_name}]`,
-      description: `${notification.initiated_by} has referred ${notification.member_name} to your care and secured the following appointment`,
+    'Referral Appointment Confirmed': {
+      title: `Referral Confirmed`,
+      description: `Your referral appointment has been confirmed`,
       statusIcon: <CheckCircleIcon className="h-2.5 w-2.5 text-white" />,
       statusColor: 'bg-green-500',
       textColor: 'text-green-600',
       bgColor: 'bg-green-50',
       icon: <CheckCircleIcon className="h-5 w-5 text-green-500" />
     },
-    'Cancellation': {
+    'Appointment Cancelled': {
       title: 'Appointment Cancelled',
-      description: `${notification.initiated_by} has cancelled an appointment`,
+      description: `Your appointment has been cancelled`,
       statusIcon: <XCircleIcon className="h-2.5 w-2.5 text-white" />,
       statusColor: 'bg-red-500',
       textColor: 'text-red-600',
       bgColor: 'bg-red-50',
       icon: <XCircleIcon className="h-5 w-5 text-red-500" />
     },
-    'Rescheduling': {
+    'Appointment Rescheduled': {
       title: 'Reschedule Request',
-      description: `${notification.initiated_by} has requested to reschedule`,
+      description: `Your appointment has been rescheduled`,
       statusColor: 'bg-amber-500',
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-50',
       icon: <RefreshIcon className="h-5 w-5 text-amber-500" />
     },
-    'Missed': {
-      title: 'Missed Appointment',
-      description: `Appointment with ${notification.initiated_by} was missed`,
-      statusIcon: <ExclamationIcon className="h-2.5 w-2.5 text-white" />,
-      statusColor: 'bg-purple-500',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      icon: <ExclamationIcon className="h-5 w-5 text-purple-500" />
+    'Appointment Requested': {
+      title: 'Appointment Requested',
+      description: `Your appointment request has been submitted`,
+      statusIcon: <CalendarPlusIcon className="h-2.5 w-2.5 text-white" />,
+      statusColor: 'bg-blue-500',
+      textColor: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      icon: <CalendarPlusIcon className="h-5 w-5 text-blue-500" />
     }
   };
 

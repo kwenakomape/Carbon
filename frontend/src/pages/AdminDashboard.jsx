@@ -128,7 +128,7 @@ export const AdminDashboard = () => {
                 Admin Dashboard
               </h1>
               <div className="flex items-center space-x-4">
-              <NotificationDropdown userId={id} userData={data} />
+              <NotificationDropdown userId={id} userType="specialist" />
                 {/* Profile Section */}
                 <div className="flex items-center space-x-2">
                   {/* Admin Name */}

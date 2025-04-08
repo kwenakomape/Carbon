@@ -133,7 +133,8 @@ export const MemberDashboard = () => {
                   Hi {data[0].member_name}, You have {pendingCount} pending
                   appointments
                 </div>
-                <NotificationDropdown userId={id} userData={data} />
+                
+                <NotificationDropdown userId={id} userType="member" />
               </div>
             </header>
 

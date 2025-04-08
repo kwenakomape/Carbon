@@ -94,13 +94,15 @@ CREATE TABLE Notifications (
     appointment_id INT,
     specialist_id INT,
     notification_type VARCHAR(255) NOT NULL,
+    member_id INT NULL,
     initiated_by VARCHAR(255) NOT NULL,
     initiator_id INT,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     read_status BOOLEAN DEFAULT FALSE,
     seen_status BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (appointment_id) REFERENCES Appointments(appointment_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (specialist_id) REFERENCES Appointments(specialist_id) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (specialist_id) REFERENCES Appointments(specialist_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES Members(member_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Insert roles
@@ -190,22 +192,34 @@ CREATE INDEX idx_sessions_appointment_id ON Sessions(appointment_id);
 CREATE INDEX idx_sessions_specialist_id ON Sessions(specialist_id);
 CREATE INDEX idx_sessions_service_id ON Sessions(service_id);
 
+-- Add member_id column to Notifications table
+-- Update trigger to handle both member and specialist notifications
 DELIMITER $$
 CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
-  INSERT INTO Notifications (appointment_id, notification_type, timestamp, specialist_id, initiated_by,initiator_id)
+  -- Notification for specialist
+  INSERT INTO Notifications (
+    appointment_id, 
+    notification_type, 
+    timestamp, 
+    specialist_id,
+    member_id,
+    initiated_by,
+    initiator_id
+  )
   VALUES (
     NEW.appointment_id,
     CASE 
       WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Pending' THEN 'New Booking Request'
       WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Confirmed' THEN 'New Booking Scheduled'
       WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Pending' THEN 'New Referral Booking Request'
-      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'New Referral Booking Confirmed'
+      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'Referral Appointment Confirmed'
     END,
     NOW(),
     NEW.specialist_id,
+    NEW.member_id,
     NEW.booked_by,
     NEW.initiator_id
   );
