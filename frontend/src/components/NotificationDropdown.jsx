@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   BellIcon,
   SettingsIcon,
   ArrowRightIcon,
   UserIcon,
   ClockIcon,
-} from '../components/icons/Icons.jsx';
-import { getNotificationMeta } from '../utils/notificationUtils.jsx';
+} from "../components/icons/Icons.jsx";
+import { getNotificationMeta } from "../utils/notificationUtils.jsx";
 
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
@@ -25,42 +25,56 @@ export const NotificationDropdown = ({ userId, userType }) => {
   // Fetch notifications silently
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get(`/api/notifications/${userType}/${userId}`);
+      const response = await axios.get(
+        `/api/notifications/${userType}/${userId}`
+      );
       setNotifications(response.data);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error("Error fetching notifications:", error);
     }
   };
 
   // Mark all as seen
   const markAllAsSeen = async () => {
     try {
-      await axios.patch(`/api/notifications/mark-all-seen/${userType}/${userId}`);
-      setNotifications(prev => prev.map(n => ({ ...n, seen_status: true })));
+      await axios.patch(
+        `/api/notifications/mark-all-seen/${userType}/${userId}`
+      );
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, seen_status: true }))
+      );
     } catch (error) {
-      console.error('Error marking notifications as seen:', error);
+      console.error("Error marking notifications as seen:", error);
     }
   };
 
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch(`/api/notifications/mark-all-read/${userType}/${userId}`);
-      setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
+      await axios.patch(
+        `/api/notifications/mark-all-read/${userType}/${userId}`
+      );
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read_status: true }))
+      );
     } catch (error) {
-      console.error('Error marking notifications as read:', error);
+      console.error("Error marking notifications as read:", error);
     }
   };
 
   // Mark single as read
   const markAsRead = async (notificationId) => {
     try {
-      await axios.patch(`/api/notifications/${notificationId}/read/${userType}/${userId}`);
-      setNotifications(prev => 
-        prev.map(n => n.notification_id === notificationId ? { ...n, read_status: true } : n)
+      await axios.patch(
+        `/api/notifications/${notificationId}/read/${userType}/${userId}`
+      );
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.notification_id === notificationId ? { ...n, read_status: true } : n
+        )
       );
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -77,15 +91,15 @@ export const NotificationDropdown = ({ userId, userType }) => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Setup polling
   useEffect(() => {
     // Initial fetch
     fetchNotifications();
-    
+
     // Start polling every 30 seconds
     pollingIntervalRef.current = setInterval(fetchNotifications, 30000);
 
@@ -100,24 +114,24 @@ export const NotificationDropdown = ({ userId, userType }) => {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Cleanup
     return () => {
       clearInterval(pollingIntervalRef.current);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [userId, userType]);
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
-    if (!showNotifications && notifications.some(n => !n.seen_status)) {
+    if (!showNotifications && notifications.some((n) => !n.seen_status)) {
       markAllAsSeen();
     }
   };
 
-  const unseenCount = notifications.filter(n => !n.seen_status).length;
-  const unreadCount = notifications.filter(n => !n.read_status).length;
+  const unseenCount = notifications.filter((n) => !n.seen_status).length;
+  const unreadCount = notifications.filter((n) => !n.read_status).length;
 
   return (
     <div className="relative">
@@ -139,12 +153,12 @@ export const NotificationDropdown = ({ userId, userType }) => {
         ref={dropdownRef}
         className={`absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl z-50 transition-all duration-200 ease-in-out transform ${
           showNotifications
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 -translate-y-2 pointer-events-none'
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2 pointer-events-none"
         }`}
         style={{
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.12)',
-          border: '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.12)",
+          border: "1px solid rgba(0, 0, 0, 0.05)",
         }}
       >
         {/* Header */}
@@ -194,19 +208,14 @@ export const NotificationDropdown = ({ userId, userType }) => {
           ) : (
             notifications.map((notification) => {
               const notificationMeta = getNotificationMeta(notification);
-              const counterpartName = userType === 'specialist' 
-                ? notification.member_name 
-                : notification.counterpart_name;
 
               return (
                 <div
                   key={notification.notification_id}
-                  // className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0 ${notificationMeta.bgColor}`}
-                  // className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0 ${
-                  //   !notification.read_status ? `${notificationMeta.bgColor}` : 'bg-white'
-                  // }`}
                   className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors duration-150 border-b border-gray-120 last:border-b-0 ${
-                    !notification.read_status ? `${notificationMeta.bgColor}` : 'bg-white'
+                    !notification.read_status
+                      ? `${notificationMeta.bgColor}`
+                      : "bg-white"
                   }`}
                   onClick={() => markAsRead(notification.notification_id)}
                 >
@@ -217,9 +226,9 @@ export const NotificationDropdown = ({ userId, userType }) => {
                         {notification?.initiated_by ? (
                           <span className="font-medium text-blue-600">
                             {notification.initiated_by
-                              .split(' ')
+                              .split(" ")
                               .map((n) => n[0])
-                              .join('')}
+                              .join("")}
                           </span>
                         ) : (
                           <UserIcon className="h-5 w-5 text-blue-500" />
@@ -259,7 +268,7 @@ export const NotificationDropdown = ({ userId, userType }) => {
                           <ClockIcon className="h-3.5 w-3.5 mr-1.5" />
                           <span>
                             {dayjs(notification.confirmed_date).format(
-                              'MMM D [at] h:mm A'
+                              "MMM D [at] h:mm A"
                             )}
                           </span>
                         </div>
@@ -276,7 +285,8 @@ export const NotificationDropdown = ({ userId, userType }) => {
                         >
                           View details
                         </button>
-                        {notification.notification_type === 'New Booking Request' && (
+                        {notification.notification_type ===
+                          "New Booking Request" && (
                           <button
                             className="text-xs font-medium bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
                             onClick={(e) => {

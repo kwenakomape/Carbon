@@ -375,7 +375,7 @@ app.post("/api/update-notes-status", async (req, res) => {
 
 // GET Notifications for user (member or specialist)
 app.get("/api/notifications/:user_type/:id", async (req, res) => {
-  const { id, user_type } = req.params; // 'member' or 'specialist'
+  const { id, user_type } = req.params;
   const idField = user_type === 'specialist' ? 'n.specialist_id' : 'n.member_id';
 
   const query = `
@@ -401,7 +401,16 @@ app.get("/api/notifications/:user_type/:id", async (req, res) => {
     LEFT JOIN Members m ON a.member_id = m.member_id
     LEFT JOIN Admin ad ON a.specialist_id = ad.admin_id
     WHERE ${idField} = ?
-      AND (n.initiator_id IS NULL OR n.initiator_id != ?)
+      AND (
+        -- Always show referral notifications to members
+        (${idField} = n.member_id AND n.notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
+        OR
+        -- Always show referral notifications to specialists
+        (${idField} = n.specialist_id AND n.notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
+        OR
+        -- For all other notifications, filter out where initiator_id matches user_id
+        (n.initiator_id IS NULL OR n.initiator_id != ?)
+      )
     ORDER BY n.timestamp DESC
   `;
 

@@ -215,7 +215,7 @@ BEGIN
       WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Pending' THEN 'New Booking Request'
       WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Confirmed' THEN 'New Booking Scheduled'
       WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Pending' THEN 'New Referral Booking Request'
-      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'Referral Appointment Confirmed'
+      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'New Referral Booking Confirmed'
     END,
     NOW(),
     NEW.specialist_id,
@@ -223,6 +223,31 @@ BEGIN
     NEW.booked_by,
     NEW.initiator_id
   );
+  
+  -- Additional notification for member when it's a referral
+  IF NEW.booking_type = 'Referral' THEN
+    INSERT INTO Notifications (
+      appointment_id, 
+      notification_type, 
+      timestamp, 
+      member_id,
+      specialist_id,
+      initiated_by,
+      initiator_id
+    )
+    VALUES (
+      NEW.appointment_id,
+      CASE 
+        WHEN NEW.status = 'Pending' THEN 'Referral Request Submitted'
+        WHEN NEW.status = 'Confirmed' THEN 'Referral Appointment Confirmed'
+      END,
+      NOW(),
+      NEW.member_id,
+      NEW.specialist_id,
+      NEW.booked_by,
+      NEW.initiator_id
+    );
+  END IF;
 END$$
 DELIMITER ;
 
