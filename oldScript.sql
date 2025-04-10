@@ -199,33 +199,57 @@ CREATE TRIGGER after_appointment_insert
 AFTER INSERT ON Appointments
 FOR EACH ROW
 BEGIN
-  -- Notification for specialist
-  INSERT INTO Notifications (
-    appointment_id, 
-    notification_type, 
-    timestamp, 
-    specialist_id,
-    member_id,
-    initiated_by,
-    initiator_id
-  )
-  VALUES (
-    NEW.appointment_id,
-    CASE 
-      WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Pending' THEN 'New Booking Request'
-      WHEN NEW.booking_type = 'Standard' AND NEW.status = 'Confirmed' THEN 'New Booking Scheduled'
-      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Pending' THEN 'New Referral Booking Request'
-      WHEN NEW.booking_type = 'Referral' AND NEW.status = 'Confirmed' THEN 'New Referral Booking Confirmed'
-    END,
-    NOW(),
-    NEW.specialist_id,
-    NEW.member_id,
-    NEW.booked_by,
-    NEW.initiator_id
-  );
+  -- Standard booking notifications (non-referral)
+  IF NEW.booking_type = 'Standard' THEN
+    -- Only create notification for specialist
+    INSERT INTO Notifications (
+      appointment_id, 
+      notification_type, 
+      timestamp, 
+      specialist_id,
+      member_id,
+      initiated_by,
+      initiator_id
+    )
+    VALUES (
+      NEW.appointment_id,
+      CASE 
+        WHEN NEW.status = 'Pending' THEN 'New Booking Request'
+        WHEN NEW.status = 'Confirmed' THEN 'New Booking Scheduled'
+      END,
+      NOW(),
+      NEW.specialist_id,
+      NEW.member_id,
+      NEW.booked_by,
+      NEW.initiator_id
+    );
   
-  -- Additional notification for member when it's a referral
-  IF NEW.booking_type = 'Referral' THEN
+  -- Referral booking notifications
+  ELSEIF NEW.booking_type = 'Referral' THEN
+    -- Notification for specialist (only these two types)
+    INSERT INTO Notifications (
+      appointment_id, 
+      notification_type, 
+      timestamp, 
+      specialist_id,
+      member_id,
+      initiated_by,
+      initiator_id
+    )
+    VALUES (
+      NEW.appointment_id,
+      CASE 
+        WHEN NEW.status = 'Pending' THEN 'New Referral Booking Request'
+        WHEN NEW.status = 'Confirmed' THEN 'New Referral Booking Confirmed'
+      END,
+      NOW(),
+      NEW.specialist_id,
+      NEW.member_id,
+      NEW.booked_by,
+      NEW.initiator_id
+    );
+    
+    -- Notification for member (only these two types)
     INSERT INTO Notifications (
       appointment_id, 
       notification_type, 

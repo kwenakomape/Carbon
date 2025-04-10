@@ -402,20 +402,21 @@ app.get("/api/notifications/:user_type/:id", async (req, res) => {
     LEFT JOIN Admin ad ON a.specialist_id = ad.admin_id
     WHERE ${idField} = ?
       AND (
-        -- Always show referral notifications to members
-        (${idField} = n.member_id AND n.notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
+        -- For members, only show their referral notifications regardless of initiator
+        (? = 'member' AND n.notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
         OR
-        -- Always show referral notifications to specialists
-        (${idField} = n.specialist_id AND n.notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
+        -- For specialists, only show their referral notifications regardless of initiator
+        (? = 'specialist' AND n.notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
         OR
-        -- For all other notifications, filter out where initiator_id matches user_id
-        (n.initiator_id IS NULL OR n.initiator_id != ?)
+        -- For all other notifications, apply the standard filter
+        (n.notification_type NOT IN ('Referral Request Submitted', 'Referral Appointment Confirmed', 'New Referral Booking Request', 'New Referral Booking Confirmed')
+         AND (n.initiator_id IS NULL OR n.initiator_id != ?))
       )
     ORDER BY n.timestamp DESC
   `;
 
   try {
-    const [notifications] = await pool.query(query, [id, id]);
+    const [notifications] = await pool.query(query, [id, user_type, user_type, id]);
     res.json(notifications);
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -423,6 +424,7 @@ app.get("/api/notifications/:user_type/:id", async (req, res) => {
   }
 });
 
+// PATCH Mark All Notifications as Seen
 // PATCH Mark All Notifications as Seen
 app.patch("/api/notifications/mark-all-seen/:user_type/:id", async (req, res) => {
   const { id, user_type } = req.params;
@@ -433,19 +435,28 @@ app.patch("/api/notifications/mark-all-seen/:user_type/:id", async (req, res) =>
     SET seen_status = TRUE
     WHERE seen_status = FALSE
       AND ${idField} = ?
+      /* Ensure we only update notifications meant for this user type */
+      AND (
+        (? = 'member' AND notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
+        OR
+        (? = 'specialist' AND notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
+        OR
+        notification_type NOT LIKE '%Referral%'
+      )
   `;
   
   try {
-    await pool.query(query, [id]);
+    await pool.query(query, [id, user_type, user_type]);
     res.send(`All notifications marked as seen`);
   } catch (err) {
     console.error("Error marking notifications as seen:", err);
     res.status(500).send("Error marking notifications as seen");
   }
 });
-// PATCH /api/notifications/mark-all-read/:user_type/:id - Mark all notifications as read
+
+// PATCH Mark All Notifications as Read
 app.patch("/api/notifications/mark-all-read/:user_type/:id", async (req, res) => {
-  const { id, user_type } = req.params; // user_type = 'specialist' or 'member'
+  const { id, user_type } = req.params;
   const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
   
   const query = `
@@ -453,16 +464,26 @@ app.patch("/api/notifications/mark-all-read/:user_type/:id", async (req, res) =>
     SET read_status = TRUE
     WHERE read_status = FALSE
       AND ${idField} = ?
+      /* Ensure we only update notifications meant for this user type */
+      AND (
+        (? = 'member' AND notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
+        OR
+        (? = 'specialist' AND notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
+        OR
+        notification_type NOT LIKE '%Referral%'
+      )
   `;
 
   try {
-    const [result] = await pool.query(query, [id]);
+    await pool.query(query, [id, user_type, user_type]);
     res.send(`All notifications marked as read`);
   } catch (err) {
     console.error("Error marking notifications as read:", err);
     res.status(500).send("Error marking notifications as read");
   }
 });
+
+// PATCH Mark Single Notification as Read
 // PATCH Mark Single Notification as Read
 app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async (req, res) => {
   const { notification_id, user_type, user_id } = req.params;
@@ -473,13 +494,21 @@ app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async 
     SET read_status = TRUE
     WHERE notification_id = ?
       AND ${idField} = ?
+      /* Additional check to ensure we're updating the correct notification type */
+      AND (
+        (? = 'member' AND notification_type IN ('Referral Request Submitted', 'Referral Appointment Confirmed'))
+        OR
+        (? = 'specialist' AND notification_type IN ('New Referral Booking Request', 'New Referral Booking Confirmed'))
+        OR
+        notification_type NOT LIKE '%Referral%'
+      )
   `;
 
   try {
-    const [result] = await pool.query(query, [notification_id, user_id]);
+    const [result] = await pool.query(query, [notification_id, user_id, user_type, user_type]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).send("Notification not found or doesn't belong to this user");
+      return res.status(404).send("Notification not found or doesn't belong to this user type");
     }
 
     res.send("Notification marked as read");

@@ -10,6 +10,9 @@ export const MemberDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [notificationHighlight, setNotificationHighlight] = useState(null);
+
   const fetchData = async () => {
     try {
       const response = await axios.get(`/api/member/${id}`);
@@ -20,7 +23,17 @@ export const MemberDashboard = () => {
       setLoading(false); // Set loading to false after data is fetched
     }
   };
-
+  const handleNotificationClick = (appointmentId) => {
+    setNotificationHighlight(appointmentId);
+    setSelectedAppointment(null);
+    
+    setTimeout(() => {
+      const element = document.getElementById(`appointment-${appointmentId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
+  };
   useEffect(() => {
     fetchData();
   }, [id]);
@@ -119,7 +132,6 @@ export const MemberDashboard = () => {
                 </svg>
                 <span className="ml-2">Logout</span>
               </a>
-             
             </nav>
           </div>
 
@@ -133,8 +145,12 @@ export const MemberDashboard = () => {
                   Hi {data[0].member_name}, You have {pendingCount} pending
                   appointments
                 </div>
-                
-                <NotificationDropdown userId={id} userType="member" />
+
+                <NotificationDropdown
+                  userId={id}
+                  userType="member"
+                  onNotificationClick={handleNotificationClick}
+                />
               </div>
             </header>
 
@@ -163,7 +179,7 @@ export const MemberDashboard = () => {
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Appointment Time
                         </th>
-                        
+
                         <th className="py-3 px-4 border-b text-left text-gray-600">
                           Payment Type
                         </th>
@@ -193,9 +209,23 @@ export const MemberDashboard = () => {
                       <tbody>
                         {data.map((appointment, index) => (
                           <tr
-                            key={index}
-                            className="hover:bg-gray-100 transition duration-300"
-                          >
+                          key={index}
+                          id={`appointment-${appointment.appointment_id}`}
+                          className={`
+                            cursor-pointer transition duration-200
+                            ${
+                              selectedAppointment === appointment.appointment_id
+                                ? 'bg-blue-100 border-l-4 border-blue-500'
+                                : notificationHighlight === appointment.appointment_id
+                                ? 'bg-blue-100 border-l-4 border-blue-500'
+                                : 'hover:bg-gray-100'
+                            }
+                          `}
+                          onClick={() => {
+                            setSelectedAppointment(appointment.appointment_id);
+                            setNotificationHighlight(null);
+                          }}
+                        >
                             <td className="py-3 px-4 border-b">
                               {appointment.request_date
                                 ? dayjs(appointment.request_date).format(
@@ -221,9 +251,9 @@ export const MemberDashboard = () => {
                                 ? appointment.confirmed_time
                                 : "_________________"}
                             </td>
-                           
+
                             <td className="py-3 px-4 border-b">
-                            {appointment.payment_method || "________"}
+                              {appointment.payment_method || "________"}
                             </td>
                             <td className="py-3 px-4 border-b">
                               {appointment.status || ""}
@@ -239,15 +269,25 @@ export const MemberDashboard = () => {
                                   phoneNumber={data[0].cell}
                                   memberEmail={data[0].email}
                                   autoRefresh={autoRefresh}
-                                  role_id ={data[0].role_id}
+                                  role_id={data[0].role_id}
                                   modalType={"More Actions"}
                                   payment_method={appointment.payment_method}
                                   specialistName={appointment.specialist_name}
                                   invoice_status={appointment.invoice_status}
                                   specialistId={appointment.specialist_id}
                                   AppointmentId={appointment.appointment_id}
-                                  confirmed_date={appointment.confirmed_date ? dayjs(appointment.confirmed_date).format('D MMMM, YYYY') : "________"}
-                                  confirmed_time={appointment.confirmed_time ? appointment.confirmed_time: "________"}
+                                  confirmed_date={
+                                    appointment.confirmed_date
+                                      ? dayjs(
+                                          appointment.confirmed_date
+                                        ).format("D MMMM, YYYY")
+                                      : "________"
+                                  }
+                                  confirmed_time={
+                                    appointment.confirmed_time
+                                      ? appointment.confirmed_time
+                                      : "________"
+                                  }
                                   credits_used={appointment.credits_used}
                                   appointmentStatus={appointment.status}
                                   specialistType={appointment.specialist_type}
@@ -343,7 +383,6 @@ export const MemberDashboard = () => {
                   memberCredits={data[0].credits}
                   autoRefresh={autoRefresh}
                   modalType={"Book"}
-                  
                 />
               </div>
             </div>

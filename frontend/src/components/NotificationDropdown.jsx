@@ -15,7 +15,7 @@ import { getNotificationMeta } from "../utils/notificationUtils.jsx";
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
 
-export const NotificationDropdown = ({ userId, userType }) => {
+export const NotificationDropdown = ({ userId, userType, onNotificationClick }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
@@ -63,7 +63,7 @@ export const NotificationDropdown = ({ userId, userType }) => {
   };
 
   // Mark single as read
-  const markAsRead = async (notificationId) => {
+  const markAsRead = async (notificationId, appointmentId) => {
     try {
       await axios.patch(
         `/api/notifications/${notificationId}/read/${userType}/${userId}`
@@ -73,6 +73,10 @@ export const NotificationDropdown = ({ userId, userType }) => {
           n.notification_id === notificationId ? { ...n, read_status: true } : n
         )
       );
+      
+      // Close dropdown and pass the appointmentId to parent
+      setShowNotifications(false);
+      onNotificationClick(appointmentId);
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
@@ -217,7 +221,7 @@ export const NotificationDropdown = ({ userId, userType }) => {
                       ? `${notificationMeta.bgColor}`
                       : "bg-white"
                   }`}
-                  onClick={() => markAsRead(notification.notification_id)}
+                  onClick={() => markAsRead(notification.notification_id, notification.appointment_id)}
                 >
                   <div className="flex items-start gap-3">
                     {/* Profile Avatar */}
@@ -273,31 +277,6 @@ export const NotificationDropdown = ({ userId, userType }) => {
                           </span>
                         </div>
                       )}
-
-                      {/* Action Buttons */}
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          className="text-xs font-medium bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-50 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Handle view action
-                          }}
-                        >
-                          View details
-                        </button>
-                        {notification.notification_type ===
-                          "New Booking Request" && (
-                          <button
-                            className="text-xs font-medium bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle confirm action
-                            }}
-                          >
-                            Confirm
-                          </button>
-                        )}
-                      </div>
                     </div>
 
                     {/* Unread Indicator */}

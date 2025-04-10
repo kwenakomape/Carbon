@@ -11,6 +11,8 @@ export const AdminDashboard = () => {
   let { id } = useParams();
   const [data, setData] = useState(null);
   const loading = useLoading();
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [notificationHighlight, setNotificationHighlight] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -21,6 +23,21 @@ export const AdminDashboard = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
+  };
+  const handleNotificationClick = (appointmentId) => {
+    setNotificationHighlight(appointmentId);
+    setSelectedAppointment(null); // Clear any row selection
+    
+    // Scroll to the appointment
+    setTimeout(() => {
+      const element = document.getElementById(`appointment-${appointmentId}`);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' // Changed to 'nearest' for better UX
+        });
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -128,7 +145,11 @@ export const AdminDashboard = () => {
                 Admin Dashboard
               </h1>
               <div className="flex items-center space-x-4">
-              <NotificationDropdown userId={id} userType="specialist" />
+                <NotificationDropdown
+                  userId={id}
+                  userType="specialist"
+                  onNotificationClick={handleNotificationClick}
+                />
                 {/* Profile Section */}
                 <div className="flex items-center space-x-2">
                   {/* Admin Name */}
@@ -203,9 +224,23 @@ export const AdminDashboard = () => {
                       <tbody>
                         {data.map((appointment, index) => (
                           <tr
-                            key={index}
-                            className="hover:bg-gray-100 transition duration-300"
-                          >
+                          key={index}
+                          id={`appointment-${appointment.appointment_id}`}
+                          className={`
+                            cursor-pointer transition duration-200
+                            ${
+                              selectedAppointment === appointment.appointment_id
+                                ? 'bg-blue-100 border-l-4 border-blue-500' // Click highlight (darker)
+                                : notificationHighlight === appointment.appointment_id
+                                ? 'bg-blue-100 border-l-4 border-blue-500' // Notification highlight (lighter)
+                                : 'hover:bg-gray-100' // Default hover
+                            }
+                          `}
+                          onClick={() => {
+                            setSelectedAppointment(appointment.appointment_id);
+                            setNotificationHighlight(null); // Clear notification highlight
+                          }}
+                        >
                             <td className="py-3 px-4 border-b">
                               {appointment.request_date
                                 ? dayjs(appointment.request_date).format(
@@ -251,10 +286,6 @@ export const AdminDashboard = () => {
                             <td className="py-3 px-4 border-b">
                               {appointment.payment_status}
                             </td>
-
-                            {/* <td className="py-3 px-4 border-b">
-                              {appointment.notes_status}
-                            </td> */}
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center justify-center">
                                 <AdminModals
