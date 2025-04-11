@@ -26,18 +26,43 @@ export const MemberDashboard = () => {
   const handleNotificationClick = (appointmentId) => {
     setNotificationHighlight(appointmentId);
     setSelectedAppointment(null);
-    
+
     setTimeout(() => {
       const element = document.getElementById(`appointment-${appointmentId}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }, 100);
   };
   useEffect(() => {
     fetchData();
   }, [id]);
+  // Update the useEffect for click outside handling
+ // Update the useEffect for click outside handling in File 1
+ useEffect(() => {
+  const handleClickOutside = (event) => {
+    // Check if click is inside any modal, dropdown, or date/time picker
+    const isModalClick = event.target.closest(".ant-modal") !== null;
+    const isDropdownClick = event.target.closest(".ant-dropdown") !== null;
+    const isPickerClick = 
+      event.target.closest(".MuiPickerPopper-root") !== null || // MUI date/time pickers
+      event.target.closest(".ant-picker") !== null; // Ant Design pickers
+    
+    // Check if click is inside the table
+    const tableElement = document.querySelector("table");
+    const isClickInsideTable = tableElement?.contains(event.target);
 
+    if (!isClickInsideTable && !isModalClick && !isDropdownClick && !isPickerClick) {
+      setSelectedAppointment(null);
+      setNotificationHighlight(null);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
   const autoRefresh = () => {
     fetchData(); // Trigger data fetch when booking is confirmed
     // console.log("should refresh")
@@ -161,6 +186,7 @@ export const MemberDashboard = () => {
                   Appointments
                 </h2>
                 <div className="overflow-x-auto">
+                <div onClick={() => setSelectedAppointment(null)}>
                   <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <thead className="bg-gray-100">
                       <tr>
@@ -217,11 +243,12 @@ export const MemberDashboard = () => {
                               selectedAppointment === appointment.appointment_id
                                 ? 'bg-blue-100 border-l-4 border-blue-500'
                                 : notificationHighlight === appointment.appointment_id
-                                ? 'bg-blue-100 border-l-4 border-blue-500'
+                                ? 'bg-blue-50 border-l-4 border-blue-500'
                                 : 'hover:bg-gray-100'
                             }
                           `}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent event from bubbling to document
                             setSelectedAppointment(appointment.appointment_id);
                             setNotificationHighlight(null);
                           }}
@@ -332,6 +359,7 @@ export const MemberDashboard = () => {
                       </tbody>
                     )}
                   </table>
+                  </div>
                 </div>
               </div>
             </main>

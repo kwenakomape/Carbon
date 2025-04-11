@@ -2,61 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes pulseOnce {
-  0% { transform: scale(0.8); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes highlight {
-  0% {
-    background-color: rgba(59, 130, 246, 0.5);
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-.highlight-appointment {
-  animation: highlight 2s ease-out;
-}
-.highlight-row {
-  transition: all 0.3s ease;
-}
-/* Notification highlight (temporary) */
-.notification-highlight {
-  animation: notification-pulse 2s ease-out;
-  background-color: #dbeafe; /* lighter blue */
-  border-left: 4px solid #3b82f6; /* blue-500 */
-}
-
-@keyframes notification-pulse {
-  0% { background-color: rgba(59, 130, 246, 0.3); }
-  50% { background-color: #dbeafe; }
-  100% { background-color: transparent; }
-}
-
-/* Click highlight (persistent) */
-tr.bg-blue-50 {
-  background-color: #eff6ff; /* blue-50 */
-  border-left: 4px solid #3b82f6; /* blue-500 */
-}
-.highlight-row.selected {
-  background-color: #eff6ff; /* bg-blue-50 */
-  border-left: 4px solid #3b82f6; /* border-blue-500 */
-  animation: highlight-fade 1.5s ease-out;
-}
-
-@keyframes highlight-fade {
-  0% {
-    background-color: rgba(59, 130, 246, 0.3);
-  }
-  100% {
-    background-color: #eff6ff; /* bg-blue-50 */
-  }
-}
-.animate-pulseOnce {
-  animation: pulseOnce 0.3s ease-out;
-}
 
 .animate-fade-in {
   opacity: 0;

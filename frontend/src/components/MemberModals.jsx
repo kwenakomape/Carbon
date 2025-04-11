@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef,useEffect } from "react";
 import axios from "axios";
 import { Box, TextField } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -16,6 +16,7 @@ import { NoteAlert } from "./Alert/NoteAlert.jsx";
 import { AppointmentDetails } from "./AppointmentDetails.jsx";
 
 export const MemberModals = (props) => {
+  const modalRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [isCancel, setIsCancel] = useState(false);
@@ -65,7 +66,7 @@ export const MemberModals = (props) => {
     {
       key: '3',
       label: 'View Details',
-      onClick: () => {
+      onClick: (e) => {
         SetViewAppointmentDetails(true)
         handleButtonClick(props.specialistId);
       }
