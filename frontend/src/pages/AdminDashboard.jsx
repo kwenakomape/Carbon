@@ -24,42 +24,21 @@ export const AdminDashboard = () => {
       console.error("Error fetching data:", error);
     }
   };
-  const handleNotificationClick = (appointmentId) => {
-    setNotificationHighlight(appointmentId);
-    setSelectedAppointment(null); // Clear any row selection
-    
-    // Scroll to the appointment
-    setTimeout(() => {
-      const element = document.getElementById(`appointment-${appointmentId}`);
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'nearest' // Changed to 'nearest' for better UX
-        });
-      }
-    }, 100);
-  };
 
   useEffect(() => {
     fetchData();
   }, [id]);
-  // Add this useEffect hook to both files (right after your states)
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const tableElement = document.querySelector('table');
-      const isClickInsideTable = tableElement?.contains(event.target);
-      
-      if (!isClickInsideTable) {
-        setSelectedAppointment(null);
-        setNotificationHighlight(null);
+  const handleNotificationClick = (appointmentId) => {
+    setNotificationHighlight(appointmentId);
+    setSelectedAppointment(null);
+
+    setTimeout(() => {
+      const element = document.getElementById(`appointment-${appointmentId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
-    };
-  
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    }, 100);
+  };
   const autoRefresh = () => {
     fetchData(); // Trigger data fetch when booking is confirmed
   };
@@ -186,7 +165,6 @@ export const AdminDashboard = () => {
                   Appointments
                 </h2>
                 <div className="overflow-x-auto">
-                <div onClick={() => setSelectedAppointment(null)}>
                   <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <thead className="bg-gray-100">
                       <tr>
@@ -240,25 +218,21 @@ export const AdminDashboard = () => {
                     ) : (
                       <tbody>
                         {data.map((appointment, index) => (
-                           <tr
-                           key={index}
-                           id={`appointment-${appointment.appointment_id}`}
-                           className={`
-                             cursor-pointer transition duration-200
-                             ${
-                               selectedAppointment === appointment.appointment_id
-                                 ? 'bg-blue-100 border-l-4 border-blue-500'
-                                 : notificationHighlight === appointment.appointment_id
-                                 ? 'bg-blue-50 border-l-4 border-blue-500'
-                                 : 'hover:bg-gray-100'
-                             }
-                           `}
-                           onClick={(e) => {
-                             e.stopPropagation(); // Prevent event from bubbling to document
-                             setSelectedAppointment(appointment.appointment_id);
-                             setNotificationHighlight(null);
-                           }}
-                         >
+                          <tr
+                            key={index}
+                            id={`appointment-${appointment.appointment_id}`}
+                            className={`
+                            transition duration-200
+                            ${
+                              selectedAppointment === appointment.appointment_id
+                                ? "bg-blue-100 border-l-4 border-blue-500"
+                                : notificationHighlight ===
+                                  appointment.appointment_id
+                                ? "bg-blue-50 border-l-4 border-blue-500"
+                                : "hover:bg-gray-100"
+                            }
+                          `}
+                          >
                             <td className="py-3 px-4 border-b">
                               {appointment.request_date
                                 ? dayjs(appointment.request_date).format(
@@ -304,6 +278,10 @@ export const AdminDashboard = () => {
                             <td className="py-3 px-4 border-b">
                               {appointment.payment_status}
                             </td>
+
+                            {/* <td className="py-3 px-4 border-b">
+                              {appointment.notes_status}
+                            </td> */}
                             <td className="py-3 px-4 border-b">
                               <div className="flex items-center justify-center">
                                 <AdminModals
@@ -377,7 +355,6 @@ export const AdminDashboard = () => {
                       </tbody>
                     )}
                   </table>
-                  </div>
                 </div>
               </div>
             </main>
