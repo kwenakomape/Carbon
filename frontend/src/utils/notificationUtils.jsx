@@ -7,7 +7,7 @@ import {
   XCircleIcon,
 } from "../components/icons/Icons";
 
-export const getNotificationMeta = (notification) => {
+export const getNotificationMeta = (notification,userType) => {
   const notificationTypes = {
     "New Booking Request": {
       title: "New Booking Request",
@@ -54,18 +54,21 @@ export const getNotificationMeta = (notification) => {
       bgColor: "bg-green-50",
       icon: <CheckCircleIcon className="h-5 w-5 text-green-500" />,
     },
-    'New Referral Booking Confirmed': {
+    "New Referral Booking Confirmed": {
       title: `Referral Confirmed: ${notification.initiated_by} → [${notification.member_name}]`,
       description: `${notification.initiated_by} has referred ${notification.member_name} to your care and secured the following appointment`,
       statusIcon: <CheckCircleIcon className="h-2.5 w-2.5 text-white" />,
-      statusColor: 'bg-green-500',
-      textColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      icon: <CheckCircleIcon className="h-5 w-5 text-green-500" />
+      statusColor: "bg-green-500",
+      textColor: "text-green-600",
+      bgColor: "bg-green-50",
+      icon: <CheckCircleIcon className="h-5 w-5 text-green-500" />,
     },
     "Appointment Cancelled": {
       title: "Appointment Cancelled",
-      description: `Your appointment has been cancelled`,
+      description:
+        userType === "specialist"
+          ? `${notification.initiated_by} (member) has cancelled the appointment`
+          : `${notification.initiated_by} (specialist) has cancelled the appointment`,
       statusIcon: <XCircleIcon className="h-2.5 w-2.5 text-white" />,
       statusColor: "bg-red-500",
       textColor: "text-red-600",

@@ -213,6 +213,18 @@ export const AdminModals = (props) => {
       status,
       selectedPaymentMethod
     );
+    // if(status==='Cancelled'){
+      await createNotification(
+        props.AppointmentId,
+        "Appointment Cancelled",
+        "member",
+        props.specialistId,
+        props.admin_name,
+        props.admin_id,
+        props.memberId
+      );
+    // }
+    
     handleClose();
     props.autoRefresh();
   };

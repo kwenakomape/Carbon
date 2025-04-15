@@ -26,3 +26,29 @@ export const updateAppointmentStatus = async (id, appointmentId, status,payment_
     }
   };
 
+
+  export const createNotification = async (
+    appointmentId,
+    notification_type,
+    recipient_type,
+    recipient_id,
+    initiated_by,
+    initiator_id,
+    member_id,
+  ) => {
+      let data = {
+        appointment_id: appointmentId,
+        notification_type: notification_type,
+        recipient_type: recipient_type,
+        recipient_id: recipient_id,
+        initiated_by: initiated_by,
+        initiator_id: initiator_id,
+        member_id: member_id,
+      };
+
+      try {
+        await axios.post(`/api/notifications`, data);
+      } catch (error) {
+        console.error("Error creating a notifcations", error);
+      }
+  };

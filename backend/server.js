@@ -333,8 +333,6 @@ app.post("/api/update-appointment-status", async (req, res) => {
   const { newStatus, memberId, AppointmentId,paymentMethod } = req.body;
   let query;
   let params;
-  console.log(req.body)
-
   // Check if the new status is "SEEN"
   if (newStatus === "SEEN") {
     // Update both status and payment_method
@@ -520,20 +518,21 @@ app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async 
 
 // POST Create Notification
 app.post("/api/notifications", async (req, res) => {
-  const { appointment_id, notification_type, recipient_type, recipient_id, initiated_by, initiator_id } = req.body;
+  const { appointment_id, notification_type, recipient_type, recipient_id, initiated_by,member_id, initiator_id } = req.body;
   const idField = recipient_type === 'specialist' ? 'specialist_id' : 'member_id';
   
   const query = `
     INSERT INTO Notifications (
       appointment_id,
       ${idField},
-      notification_type, 
+      notification_type,
+      member_id, 
       initiated_by,
       initiator_id
-    ) VALUES (?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?,?)
   `;
   
-  const params = [appointment_id, recipient_id, notification_type, initiated_by, initiator_id];
+  const params = [appointment_id, recipient_id, notification_type, member_id,initiated_by, initiator_id];
 
   try {
     await pool.query(query, params);

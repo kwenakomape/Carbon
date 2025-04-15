@@ -9,7 +9,7 @@ import { Button as AntButton, Modal,Dropdown ,message,Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
-import { updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
+import { createNotification, updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
 import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
 import { AlertMessage } from "./AlertMessage.jsx";
 import { NoteAlert } from "./Alert/NoteAlert.jsx";
@@ -230,15 +230,24 @@ export const MemberModals = (props) => {
   const handleBack = () => {
     setStep(step - 1);
   };
-  const handleAppointmentActions =()=>{
-    setIsCancel(true)
+  const handleAppointmentActions = () => {
+    setIsCancel(true);
     setOpen(true);
-  }
-   const handleStatus = async (status) => {
-      await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
-      handleClose();
-      props.autoRefresh()
-    };
+  };
+  const handleStatus = async (status) => {
+    await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
+    await createNotification(
+      props.AppointmentId,
+      "Appointment Cancelled",
+      "specialist",
+      props.specialistId,
+      props.memberName,
+      props.memberId,
+      props.memberId
+    );
+    handleClose();
+    props.autoRefresh();
+  };
 
   const handleBooking = async () => {
     setModalText("The booking is being processed...");

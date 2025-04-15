@@ -211,7 +211,7 @@ export const NotificationDropdown = ({ userId, userType, onNotificationClick }) 
             </div>
           ) : (
             notifications.map((notification) => {
-              const notificationMeta = getNotificationMeta(notification);
+              const notificationMeta = getNotificationMeta(notification,userType);
 
               return (
                 <div
