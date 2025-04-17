@@ -423,7 +423,6 @@ app.get("/api/notifications/:user_type/:id", async (req, res) => {
 });
 
 // PATCH Mark All Notifications as Seen
-// PATCH Mark All Notifications as Seen
 app.patch("/api/notifications/mark-all-seen/:user_type/:id", async (req, res) => {
   const { id, user_type } = req.params;
   const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
@@ -482,7 +481,6 @@ app.patch("/api/notifications/mark-all-read/:user_type/:id", async (req, res) =>
 });
 
 // PATCH Mark Single Notification as Read
-// PATCH Mark Single Notification as Read
 app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async (req, res) => {
   const { notification_id, user_type, user_id } = req.params;
   const idField = user_type === 'specialist' ? 'specialist_id' : 'member_id';
@@ -518,13 +516,13 @@ app.patch("/api/notifications/:notification_id/read/:user_type/:user_id", async 
 
 // POST Create Notification
 app.post("/api/notifications", async (req, res) => {
+  console.log(req.body);
   const { appointment_id, notification_type, recipient_type, recipient_id, initiated_by,member_id, initiator_id } = req.body;
-  const idField = recipient_type === 'specialist' ? 'specialist_id' : 'member_id';
-  
+
   const query = `
     INSERT INTO Notifications (
       appointment_id,
-      ${idField},
+      specialist_id,
       notification_type,
       member_id, 
       initiated_by,

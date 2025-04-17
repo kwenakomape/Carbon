@@ -4,7 +4,9 @@ import {
   ExclamationIcon,
   InformationCircleIcon,
   RefreshIcon,
+  PencilIcon,
   XCircleIcon,
+  ExclamationCircleIcon,
 } from "../components/icons/Icons";
 
 export const getNotificationMeta = (notification,userType) => {
@@ -21,6 +23,15 @@ export const getNotificationMeta = (notification,userType) => {
     "New Booking Scheduled": {
       title: "New Booking Scheduled",
       description: `A new appointment has been confirmed for ${notification.initiated_by} `,
+      statusIcon: <CheckCircleIcon className="h-2.5 w-2.5 text-white" />,
+      statusColor: "bg-green-500",
+      textColor: "text-green-600",
+      bgColor: "bg-green-50",
+      icon: <CheckCircleIcon className="h-5 w-5 text-green-500" />,
+    },
+    "Standard Appointment Confirmed": {
+      title: "Appointment Confirmed",
+      description: `Your appointment with ${notification.specialist_name} has been confirmed`,
       statusIcon: <CheckCircleIcon className="h-2.5 w-2.5 text-white" />,
       statusColor: "bg-green-500",
       textColor: "text-green-600",
@@ -75,13 +86,24 @@ export const getNotificationMeta = (notification,userType) => {
       bgColor: "bg-red-50",
       icon: <XCircleIcon className="h-5 w-5 text-red-500" />,
     },
-    "Appointment Rescheduled": {
+    "Appointment Reschedule Requested": {
       title: "Reschedule Request",
-      description: `Your appointment has been rescheduled`,
+      description: `${notification.initiated_by} has requested to reschedule the appointment`,
       statusColor: "bg-amber-500",
       textColor: "text-amber-600",
       bgColor: "bg-amber-50",
       icon: <RefreshIcon className="h-5 w-5 text-amber-500" />,
+    },
+    "Appointment Rescheduled": {
+      title: "Appointment Rescheduled",
+      description:
+        userType === "specialist"
+          ? `${notification.initiated_by} (member) has rescheduled the appointment with you`
+          : `Your appointment with ${notification.initiated_by} has been rescheduled`,
+      statusColor: "bg-blue-500",
+      textColor: "text-blue-600",
+      bgColor: "bg-blue-50",
+      icon: <RefreshIcon className="h-5 w-5 text-blue-500" />,
     },
     "Appointment Requested": {
       title: "Appointment Requested",
@@ -91,6 +113,24 @@ export const getNotificationMeta = (notification,userType) => {
       textColor: "text-blue-600",
       bgColor: "bg-blue-50",
       icon: <CalendarPlusIcon className="h-5 w-5 text-blue-500" />,
+    },
+    "Appointment Details Updated": {
+      title: "Appointment Details Updated",
+      description: `${notification.initiated_by} (member) has updated their appointment details`,
+      statusIcon: <PencilIcon className="h-2.5 w-2.5 text-white" />,
+      statusColor: "bg-purple-500",
+      textColor: "text-purple-600",
+      bgColor: "bg-purple-50",
+      icon: <PencilIcon className="h-5 w-5 text-purple-500" />,
+    },
+    "Appointment Missed": {
+      title: "Appointment Marked Missed",
+      description:`Your appointment with ${notification.specialist_name} was marked as missed`,
+      statusIcon: <ExclamationCircleIcon className="h-2.5 w-2.5 text-white" />,
+      statusColor: "bg-red-500",
+      textColor: "text-red-600",
+      bgColor: "bg-red-50",
+      icon: <ExclamationCircleIcon className="h-5 w-5 text-red-500" />,
     },
   };
 

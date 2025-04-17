@@ -295,31 +295,63 @@ export const MemberModals = (props) => {
 
     try {
       await axios.post("/api/bookings", bookingData);
-      
+      if (reschedule) {
+        if (isDietitian) {
+          await createNotification(
+            props.AppointmentId,
+            "Appointment Rescheduled",
+            "specialist",
+            props.specialistId,
+            props.memberName,
+            props.memberId,
+            props.memberId
+          );
+        } else {
+          await createNotification(
+            props.AppointmentId,
+            "Appointment Reschedule Requested",
+            "specialist",
+            props.specialistId,
+            props.memberName,
+            props.memberId,
+            props.memberId
+          );
+        }
+      }
+      if (modify) {
+        await createNotification(
+          props.AppointmentId,
+          "Appointment Details Updated",
+          "specialist",
+          props.specialistId,
+          props.memberName,
+          props.memberId,
+          props.memberId
+        );
+      }
       setTimeout(() => {
-        
         setOpen(false);
         setConfirmLoading(false);
         handleClose();
-        
+
         const message = (
           <ConfirmbookingMessage
             isDietitian={isDietitian}
             specialistName={specialistName}
             selectedDate={selectedDate}
             timeRange={timeRange}
-            selectedSpecialist={ reschedule || modify ? props.specialistType :selectedSpecialist}
+            selectedSpecialist={
+              reschedule || modify ? props.specialistType : selectedSpecialist
+            }
             actionType={actionType}
             selectedDates={selectedDates}
             timeRanges={timeRanges}
           />
-        )
+        );
         setConfirmationMessage(message);
         setShowConfirmationModal(true);
-        // console.log("did it pass?")
-        
       }, 2000);
-      setShowUpdateModal(false)
+      setShowUpdateModal(false);
       if (!isDietitian) {
         await axios.post("/api/send-email", bookingData);
       }

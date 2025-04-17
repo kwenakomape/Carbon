@@ -20,6 +20,7 @@ import { Modal, Select, Button, message, Dropdown } from "antd";
 import {
   updateAppointmentStatus,
   updateNotesStatus,
+  createNotification,
 } from "../../../backend/utils/apiUtils";
 
 import { ExclamationCircleOutlined } from "@ant-design/icons";
@@ -213,7 +214,7 @@ export const AdminModals = (props) => {
       status,
       selectedPaymentMethod
     );
-    // if(status==='Cancelled'){
+    if (status === "Cancelled") {
       await createNotification(
         props.AppointmentId,
         "Appointment Cancelled",
@@ -223,8 +224,18 @@ export const AdminModals = (props) => {
         props.admin_id,
         props.memberId
       );
-    // }
-    
+    }
+    else if(status === "Missed"){
+      await createNotification(
+        props.AppointmentId,
+        "Appointment Missed",
+        "member",
+        props.specialistId,
+        props.admin_name,
+        props.admin_id,
+        props.memberId
+      );
+    }
     handleClose();
     props.autoRefresh();
   };
@@ -252,9 +263,37 @@ export const AdminModals = (props) => {
 
     try {
       await axios.post("/api/confirm-date", data);
+
+      if (reschedule) {
+        await createNotification(
+          props.AppointmentId,
+          "Appointment Rescheduled",
+          "member",
+          props.specialistId,
+          props.admin_name,
+          props.admin_id,
+          props.memberId
+        );
+        message.success("Appointment Rescheduled.");
+      } else {
+        await createNotification(
+          props.AppointmentId,
+          props.booking_type === "Referral"
+            ? "Referral Appointment Confirmed"
+            : "Standard Appointment Confirmed",
+          "member",
+          props.specialistId,
+          props.admin_name,
+          props.admin_id,
+          props.memberId
+        );
+        message.success("Appointment Confirmed.");
+      }
+
       handleClose();
       props.autoRefresh();
-      message.success("Appointment Confirmed.");
+      
+     
 
       await axios.post("/api/send-appointment-details", data);
     } catch (error) {
@@ -376,7 +415,6 @@ export const AdminModals = (props) => {
           props.appointmentStatus === "Seen") && (
           <>
             <Dropdown
-              // placement="bottomRight"
               menu={{
                 items: filteredItems,
               }}
