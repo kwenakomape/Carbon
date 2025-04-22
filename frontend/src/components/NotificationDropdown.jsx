@@ -267,16 +267,17 @@ export const NotificationDropdown = ({ userId, userType, onNotificationClick }) 
                       </div>
 
                       {/* Contextual Details */}
-                      {notification.confirmed_date && (
+                      {/* {notification.confirmed_date && (
                         <div className="mt-2 flex items-center text-xs text-gray-500">
                           <ClockIcon className="h-3.5 w-3.5 mr-1.5" />
                           <span>
+                           
                             {dayjs(notification.confirmed_date).format(
                               "MMM D [at] h:mm A"
                             )}
                           </span>
                         </div>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Unread Indicator */}
