@@ -1,0 +1,252 @@
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { OtpInput } from './OtpInput';
+import { sendSmsOtp, verifyOtp, loginWithPassword } from '../../services/authService';
+
+export const LoginForm = ({ navigate }) => {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [showOtpField, setShowOtpField] = useState(false);
+  const [isMemberLogin, setIsMemberLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // Check if identifier is email or member ID
+  const isEmail = (input) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+  };
+
+  const handleIdentifierSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      if (isEmail(identifier)) {
+        // Specialist/Admin login - show password field
+        setShowPasswordField(true);
+        setIsMemberLogin(false);
+      } else {
+        // Member login - send OTP
+        await sendSmsOtp(identifier);
+        setOtpSent(true);
+        setIsMemberLogin(true);
+        setShowOtpField(true);
+        setCountdown(60); // 1 minute countdown
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to initiate login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await loginWithPassword(identifier, password);
+      // For specialists/admins, send OTP after password verification
+      await sendSmsOtp(identifier);
+      setOtpSent(true);
+      setShowOtpField(true);
+      setCountdown(60);
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpVerification = async (otp) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      await verifyOtp(identifier, otp, isMemberLogin);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Invalid OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (countdown > 0) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      await sendSmsOtp(identifier);
+      setCountdown(60);
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="space-y-4 sm:space-y-6"
+    >
+      <div className="flex flex-col items-center mb-6 sm:mb-8">
+        <svg className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <h1 className="mt-2 sm:mt-4 text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Carbon Access</h1>
+      </div>
+
+      <div className="space-y-2 sm:space-y-3">
+        <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-700 dark:text-gray-200">
+          {showOtpField ? 'Verify Your Identity' : 'Manage Your Clinical Credits'}
+        </h2>
+        <p className="text-sm sm:text-base text-center text-gray-500 dark:text-gray-400">
+          {showOtpField 
+            ? `Enter the OTP sent to your registered phone number` 
+            : 'Sign in to book services or check your credit balance'}
+        </p>
+      </div>
+
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
+        >
+          {error}
+        </motion.div>
+      )}
+
+      {!showOtpField ? (
+        <form onSubmit={showPasswordField ? handlePasswordSubmit : handleIdentifierSubmit}>
+          <div className="space-y-3 sm:space-y-4">
+            <div>
+              <label htmlFor="identifier" className="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Member ID or Email
+              </label>
+              <motion.input
+                whileFocus={{ scale: 1.01, boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }}
+                id="identifier"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm sm:text-base"
+                placeholder="your@email.com or member ID"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            {showPasswordField && (
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="password" className="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
+                    Password
+                  </label>
+                  <button 
+                    type="button" 
+                    className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <motion.input
+                  whileFocus={{ scale: 1.01, boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }}
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm sm:text-base"
+                  placeholder="••••••••"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-lg shadow-md transition-all duration-300 text-sm sm:text-base flex items-center justify-center"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                showPasswordField ? 'Continue' : 'Sign In'
+              )}
+            </motion.button>
+          </div>
+        </form>
+      ) : (
+        <div className="space-y-4">
+          <OtpInput 
+            length={6} 
+            onComplete={handleOtpVerification} 
+            disabled={isLoading}
+          />
+          
+          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+            {otpSent ? (
+              <p>We've sent a verification code to your registered phone</p>
+            ) : (
+              <p>Waiting to send verification code...</p>
+            )}
+            
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={countdown > 0 || isLoading}
+              className={`mt-2 text-emerald-600 dark:text-emerald-400 hover:underline ${countdown > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!showOtpField && (
+        <motion.div
+          className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center"
+        >
+          <span>Not a Carbon member yet?</span>
+          <motion.button
+            whileHover={{ scale: 1.05, color: '#10B981' }}
+            className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+          >
+            Learn about membership
+          </motion.button>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+};
