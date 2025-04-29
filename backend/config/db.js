@@ -27,7 +27,6 @@ async function testConnection() {
     console.error('Failed to connect to the database:', err);
   }
 }
-
 // Call the function to test the connection
 testConnection();
 

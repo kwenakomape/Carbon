@@ -12,7 +12,6 @@ import { generateAppointmentConfirmationHTML } from "./emailTemplates/appointmen
 import { generateInvoiceEmailHTML } from "./emailTemplates/invoiceEmail.js";
 import { fileURLToPath } from "url";
 import path from "path";
-import fs, { stat } from 'fs';
 import pool from "./config/db.js"; // Ensure this exports a promise-based pool
 
 const upload = multer({ storage: multer.memoryStorage() });

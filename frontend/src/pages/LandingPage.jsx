@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { LoginForm } from '../components/Auth/LoginForm';
 
 export const LandingPage = () => {
   const navigate = useNavigate();

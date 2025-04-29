@@ -1,10 +1,10 @@
 // Example using Twilio (adapt to your SMS provider)
-import twilio from 'twilio';
+// import twilio from 'twilio';
 
-const client = twilio(
-  process.env.REACT_APP_TWILIO_SID, 
-  process.env.REACT_APP_TWILIO_AUTH_TOKEN
-);
+// const client = twilio(
+//   process.env.REACT_APP_TWILIO_SID, 
+//   process.env.REACT_APP_TWILIO_AUTH_TOKEN
+// );
 
 export const sendSms = async ({ to, body }) => {
   try {

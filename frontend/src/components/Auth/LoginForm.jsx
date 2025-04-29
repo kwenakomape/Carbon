@@ -1,7 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { OtpInput } from './OtpInput';
-import { sendSmsOtp, verifyOtp, loginWithPassword } from '../../services/authService';
+import { sendSmsOtp, verifyOtp, loginWithPassword } from '../../../../backend/services/authService';
+
+// Define variants outside the component for better organization
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2, delayChildren: 0.3 }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 10,
+      duration: 0.6
+    }
+  }
+};
+
+const hoverEffect = {
+  scale: 1.02,
+  transition: { type: 'spring', stiffness: 400, damping: 10 }
+};
+
+const tapEffect = { scale: 0.98 };
 
 export const LoginForm = ({ navigate }) => {
   const [identifier, setIdentifier] = useState('');
@@ -14,7 +44,6 @@ export const LoginForm = ({ navigate }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  // Check if identifier is email or member ID
   const isEmail = (input) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
   };
@@ -104,33 +133,53 @@ export const LoginForm = ({ navigate }) => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.4 }}
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
       className="space-y-4 sm:space-y-6"
     >
-      <div className="flex flex-col items-center mb-6 sm:mb-8">
-        <svg className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500" viewBox="0 0 24 24" fill="none">
+      <motion.div 
+        variants={itemVariants}
+        className="flex flex-col items-center mb-6 sm:mb-8"
+      >
+        <motion.svg 
+          className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-500" 
+          viewBox="0 0 24 24" 
+          fill="none"
+          whileHover={{ rotate: 10, transition: { type: 'spring', stiffness: 300 } }}
+        >
           <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <h1 className="mt-2 sm:mt-4 text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">Carbon Access</h1>
-      </div>
+        </motion.svg>
+        <motion.h1 
+          className="mt-2 sm:mt-4 text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white"
+          whileHover={{ scale: 1.02 }}
+        >
+          Carbon Access
+        </motion.h1>
+      </motion.div>
 
-      <div className="space-y-2 sm:space-y-3">
-        <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-700 dark:text-gray-200">
+      <motion.div variants={itemVariants} className="space-y-2 sm:space-y-3">
+        <motion.h2 
+          className="text-xl sm:text-2xl font-semibold text-center text-gray-700 dark:text-gray-200"
+          whileHover={{ scale: 1.01 }}
+        >
           {showOtpField ? 'Verify Your Identity' : 'Manage Your Clinical Credits'}
-        </h2>
-        <p className="text-sm sm:text-base text-center text-gray-500 dark:text-gray-400">
+        </motion.h2>
+        <motion.p 
+          className="text-sm sm:text-base text-center text-gray-500 dark:text-gray-400"
+          whileHover={{ scale: 1.01 }}
+        >
           {showOtpField 
             ? `Enter the OTP sent to your registered phone number` 
             : 'Sign in to book services or check your credit balance'}
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {error && (
         <motion.div 
+          variants={itemVariants}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
@@ -140,14 +189,19 @@ export const LoginForm = ({ navigate }) => {
       )}
 
       {!showOtpField ? (
-        <form onSubmit={showPasswordField ? handlePasswordSubmit : handleIdentifierSubmit}>
+        <motion.form 
+          onSubmit={showPasswordField ? handlePasswordSubmit : handleIdentifierSubmit}
+          variants={itemVariants}
+        >
           <div className="space-y-3 sm:space-y-4">
-            <div>
+            <motion.div variants={itemVariants}>
               <label htmlFor="identifier" className="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Member ID or Email
               </label>
               <motion.input
                 whileFocus={{ scale: 1.01, boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }}
+                whileHover={hoverEffect}
+                whileTap={tapEffect}
                 id="identifier"
                 type="text"
                 value={identifier}
@@ -157,23 +211,27 @@ export const LoginForm = ({ navigate }) => {
                 required
                 disabled={isLoading}
               />
-            </div>
+            </motion.div>
 
             {showPasswordField && (
-              <div>
+              <motion.div variants={itemVariants}>
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="password" className="block text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
                     Password
                   </label>
-                  <button 
+                  <motion.button 
                     type="button" 
                     className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={tapEffect}
                   >
                     Forgot password?
-                  </button>
+                  </motion.button>
                 </div>
                 <motion.input
                   whileFocus={{ scale: 1.01, boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }}
+                  whileHover={hoverEffect}
+                  whileTap={tapEffect}
                   id="password"
                   type="password"
                   value={password}
@@ -183,12 +241,13 @@ export const LoginForm = ({ navigate }) => {
                   required
                   disabled={isLoading}
                 />
-              </div>
+              </motion.div>
             )}
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              variants={itemVariants}
+              whileHover={hoverEffect}
+              whileTap={tapEffect}
               type="submit"
               disabled={isLoading}
               className="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-lg shadow-md transition-all duration-300 text-sm sm:text-base flex items-center justify-center"
@@ -206,41 +265,51 @@ export const LoginForm = ({ navigate }) => {
               )}
             </motion.button>
           </div>
-        </form>
+        </motion.form>
       ) : (
-        <div className="space-y-4">
+        <motion.div 
+          variants={itemVariants}
+          className="space-y-4"
+        >
           <OtpInput 
             length={6} 
             onComplete={handleOtpVerification} 
             disabled={isLoading}
           />
           
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+          <motion.div 
+            variants={itemVariants}
+            className="text-center text-sm text-gray-500 dark:text-gray-400"
+          >
             {otpSent ? (
               <p>We've sent a verification code to your registered phone</p>
             ) : (
               <p>Waiting to send verification code...</p>
             )}
             
-            <button
+            <motion.button
               type="button"
               onClick={handleResendOtp}
               disabled={countdown > 0 || isLoading}
               className={`mt-2 text-emerald-600 dark:text-emerald-400 hover:underline ${countdown > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              whileHover={countdown > 0 ? {} : { scale: 1.05 }}
+              whileTap={tapEffect}
             >
               {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
       )}
 
       {!showOtpField && (
         <motion.div
+          variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center"
         >
           <span>Not a Carbon member yet?</span>
           <motion.button
             whileHover={{ scale: 1.05, color: '#10B981' }}
+            whileTap={tapEffect}
             className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
           >
             Learn about membership

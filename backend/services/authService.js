@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { sendSms } from './smsService';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = 'carbon';
 
 // Send OTP to member or specialist
 export const sendSmsOtp = async (identifier) => {
