@@ -15,28 +15,6 @@ export const LandingPage = () => {
     }
   };
   
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 10,
-        duration: 0.6
-      }
-    }
-  };
-
-  const hoverEffect = {
-    scale: 1.02,
-    transition: { type: 'spring', stiffness: 400, damping: 10 }
-  };
-
-  const tapEffect = { scale: 0.98 };
-
   const leftVariants = {
     hidden: { x: -50, opacity: 0 },
     visible: {

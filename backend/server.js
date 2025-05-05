@@ -25,157 +25,198 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 app.use(express.json());
 
-const infobipClient = new Infobip({
-  baseUrl: "xk94el.api.infobip.com",
-  apiKey:
-    "abc09110b918bb66712f677c79f107c4-a44701bc-b6f9-40f8-8dc2-db651143b080",
-  authType: AuthType.ApiKey,
-});
+const otpStorage = new Map();
 
-const otpStore = new Map(); // Store OTPs temporarily
+// Generate random 6-digit OTP
+const generateOTP = () => crypto.randomInt(100000, 999999).toString();
 
-// Generate a random OTP
-function generateOtp() {
-  return crypto.randomInt(1000, 9999).toString();
-}
-
-async function sendAppointmentMessage(phoneNumber, message) {
-  return await sendSms(phoneNumber, message);
-}
-
-async function sendOtp(phoneNumber) {
-  const otp = generateOtp();
-  otpStore.set(phoneNumber, otp);
-  const message = `Your OTP code is ${otp}`;
-  return await sendSms(phoneNumber, message);
-}
-
-async function sendSms(phoneNumber, message) {
-  try {
-    const response = await infobipClient.channels.sms.send({
-      type: "text",
-      messages: [
-        {
-          destinations: [{ to: phoneNumber }],
-          from: "YourSenderID",
-          text: message,
-        },
-      ],
-    });
-    console.log("SMS sent:", response.data);
-    return true;
-  } catch (error) {
-    console.error("Error sending SMS:", error);
-    return false;
-  }
-}
-
-// Verify OTP
-function verifyOtp(phoneNumber, otp) {
-  const storedOtp = otpStore.get(phoneNumber);
-  if (storedOtp === otp) {
-    otpStore.delete(phoneNumber); // Remove OTP after verification
-    return true;
-  }
-  return false;
-}
-
-app.post("/api/check-username", async (req, res) => {
-  const { username } = req.body;
-
-  const checkEmailQuery = "SELECT * FROM Admin WHERE email = ?";
-  const checkIDQuery = "SELECT * FROM Members WHERE member_id = ?";
+app.post('/api/auth/send-otp', async (req, res) => {
+  const { identifier } = req.body;
 
   try {
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
-      const [results] = await pool.query(checkEmailQuery, [username]);
-      res.send({
-        exists: results.length > 0,
-        type: "email",
-        erroMessage: "Username does not exist",
-      });
-    } else if (/^\d+$/.test(username)) {
-      const [results] = await pool.query(checkIDQuery, [username]);
-      if (results.length > 0) {
-        const { cell } = results[0];
-        res.send({
-          exists: true,
-          type: "id",
-          Cell: cell,
-          erroMessage: "Username does not exist",
-        });
-      } else {
-        res.send({
-          exists: false,
-          type: "id",
-          erroMessage: "Username does not exist",
-        });
-      }
-    } else if (username === "") {
-      res.send({
-        exists: false,
-        type: "invalid",
-        erroMessage: "Field Empty,Please Enter Username",
-      });
+    // Check if identifier is numeric (member ID) or email (admin/specialist)
+    const isNumericId = /^\d+$/.test(identifier);
+
+    let user;
+    if (isNumericId) {
+      // Member login - search by member_id
+      const [member] = await pool.query(
+        'SELECT member_id as id, email, cell as phoneNumber, role_id FROM Members WHERE member_id = ?',
+        [identifier]
+      );
+      user = member[0];
     } else {
-      res.send({
-        exists: false,
-        type: "invalid",
-        erroMessage: "Username does not exist",
+      // Admin/specialist login - search by email
+      const [admin] = await pool.query(
+        'SELECT admin_id as id, email, NULL as phoneNumber, role_id FROM Admin WHERE email = ?',
+        [identifier]
+      );
+      user = admin[0];
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+    const expiresAt = dayjs().add(10, 'minute').toDate();
+
+    // Store OTP
+    otpStorage.set(identifier, { 
+      otp, 
+      expiresAt, 
+      userId: user.id, 
+      roleId: user.role_id,
+      isMember: isNumericId // Flag to indicate member login
+    });
+
+    console.log(`OTP for.... ${identifier}: ${otp}`); // Dev only
+
+    res.json({ 
+      success: true, 
+      message: 'OTP sent successfully',
+      // Only return phoneNumber if it's a member login
+      phoneNumber: isNumericId ? user.phoneNumber : null
+    });
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+});
+
+app.post('/api/auth/verify-otp', async (req, res) => {
+  const { identifier, otp } = req.body;
+
+  try {
+    const storedData = otpStorage.get(identifier);
+    if (!storedData) {
+      return res.status(400).json({ success: false, message: 'OTP expired or not requested' });
+    }
+
+    if (storedData.otp !== otp || dayjs(storedData.expiresAt).isBefore(dayjs())) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+    let user;
+    if (storedData.isMember) {
+      [user] = await pool.query(
+        'SELECT member_id as id, email, name, role_id FROM Members WHERE member_id = ?',
+        [storedData.userId]
+      );
+    } else {
+      [user] = await pool.query(
+        'SELECT admin_id as id, email, name, role_id, specialist_type FROM Admin WHERE admin_id = ?',
+        [storedData.userId]
+      );
+    }
+
+    if (!user || user.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const userData = user[0];
+
+    otpStorage.delete(identifier);
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully',
+      token,
+      user: {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        roleId: userData.role_id,
+        specialistType: userData.specialist_type || null,
+        isMember: storedData.isMember
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check admin credentials
+    const [admin] = await pool.query(
+      'SELECT admin_id as id, email, name, role_id, specialist_type FROM Admin WHERE email = ? AND password = ?',
+      [email, password]
+    );
+
+    if (!admin || admin.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Check if OTP was already sent and is still valid
+    const existingOtp = otpStorage.get(email);
+    if (existingOtp && dayjs(existingOtp.expiresAt).isAfter(dayjs())) {
+      return res.json({
+        success: true,
+        message: 'OTP already sent',
+        tempToken: crypto.randomBytes(32).toString('hex'),
+        requiresOtp: true
       });
     }
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).send("Database error");
+
+    // Generate new OTP if none exists or expired
+    const tempToken = crypto.randomBytes(32).toString('hex');
+    const otp = generateOTP();
+    const expiresAt = dayjs().add(10, 'minute').toDate();
+
+    otpStorage.set(email, { 
+      otp, 
+      expiresAt, 
+      userId: admin[0].id, 
+      roleId: admin[0].role_id,
+      isPasswordLogin: true 
+    });
+
+    console.log(`OTP for.... ${email}: ${otp}`);
+
+    res.json({
+      success: true,
+      message: 'OTP sent for verification',
+      tempToken,
+      requiresOtp: true
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ success: false, message: 'Login failed' });
   }
 });
 
-app.post("/api/send-otp", async (req, res) => {
-  const { Cell } = req.body;
-  const phoneNumber = Cell; // Assuming username is the phone number
-  const success = await sendOtp(phoneNumber);
-  if (success) {
-    res.status(200).send("OTP sent successfully");
-  } else {
-    res.status(500).send("Failed to send OTP");
-  }
-});
+app.get('/api/auth/check-session', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1]; // Bearer token
 
-app.post("/api/verify-otp", (req, res) => {
-  const { Cell, otp } = req.body;
-  const phoneNumber = Cell; // Assuming username is the phone number
-  const isValid = verifyOtp(phoneNumber, otp);
-  if (isValid) {
-    res.status(200).send({ valid: true });
-  } else {
-    res.status(400).send({ valid: false });
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided' });
   }
-});
 
-app.post("/api/verify-password", async (req, res) => {
-  const { username, password } = req.body;
-  const query = "SELECT * FROM Admin WHERE email = ?";
   try {
-    const [results] = await pool.query(query, [username]);
-    if (results.length > 0) {
-      const storedPassword = results[0].password;
-      let AdminID = results[0].admin_id;
-      if (storedPassword === password) {
-        res.send({ valid: true, AdminID: AdminID });
-      } else {
-        if (password === "") {
-          res.send({
-            valid: false,
-            errorMessage: "Field Empty,Please Enter Password",
-          });
-        } else {
-          res.send({ valid: false, errorMessage: "Invalid Password" });
-        }
+    // In production, verify JWT token and get user ID from it
+    // This is a simplified version - in real apps, use proper JWT verification
+    
+    // For demo purposes, we'll just return a valid session
+    // You should implement proper token verification logic here
+    
+    res.json({
+      success: true,
+      user: {
+        id: 1, // Replace with actual user ID from token
+        name: "Demo User",
+        email: "demo@example.com",
+        roleId: 1
       }
-    }
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).send("Database error");
+    });
+  } catch (error) {
+    console.error('Error checking session:', error);
+    res.status(401).json({ success: false, message: 'Invalid session' });
   }
 });
 

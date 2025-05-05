@@ -1,19 +1,13 @@
 import axios from 'axios';
-import { sendSms } from './smsService';
-
 const API_BASE_URL = '/api';
 
 // Send OTP to member or specialist
-export const sendSmsOtp = async (identifier) => {
+export const sendOtp = async (identifier) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/send-otp`, { identifier });
     
-    // In production, you would actually send the SMS via your provider
-    await sendSms({
-      to: response.data.phoneNumber, // Retrieved from your backend
-      body: `Your Carbon verification code is ${response.data.otp}. Valid for 10 minutes.`
-    });
-    
+    // Note: The backend now returns success status but not the OTP (for security)
+    // In production, implement actual SMS sending in the backend
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Failed to send OTP');
@@ -21,17 +15,16 @@ export const sendSmsOtp = async (identifier) => {
 };
 
 // Verify OTP
-export const verifyOtp = async (identifier, otp, isMemberLogin) => {
+export const verifyOtp = async (identifier, otp) => {  // Removed isMemberLogin parameter
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
       identifier,
-      otp,
-      isMemberLogin
+      otp
     });
     
-    // Store the auth token
+    // Store the auth token and user data
     localStorage.setItem('authToken', response.data.token);
-    localStorage.setItem('userType', isMemberLogin ? 'member' : 'specialist');
+    localStorage.setItem('userData', JSON.stringify(response.data.user));
     
     return response.data;
   } catch (error) {
@@ -47,10 +40,13 @@ export const loginWithPassword = async (email, password) => {
       password
     });
     
-    // Store the auth token temporarily (will need OTP verification)
+    // Store the temp token (for OTP verification step)
     sessionStorage.setItem('tempToken', response.data.tempToken);
     
-    return response.data;
+    return {
+      requiresOtp: true,
+      ...response.data
+    };
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Login failed');
   }
@@ -65,9 +61,23 @@ export const checkAuthStatus = async () => {
     const response = await axios.get(`${API_BASE_URL}/auth/check-session`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    
+    // Update stored user data if needed
+    if (response.data.user) {
+      localStorage.setItem('userData', JSON.stringify(response.data.user));
+    }
+    
     return response.data;
   } catch (error) {
+    // Clear invalid token
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
     return null;
   }
+};
+
+// Logout
+export const logout = () => {
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('userData');
 };
