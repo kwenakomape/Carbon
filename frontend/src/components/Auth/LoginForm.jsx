@@ -34,127 +34,154 @@ const hoverEffect = {
 const tapEffect = { scale: 0.98 };
 
 export const LoginForm = ({ navigate }) => {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPasswordField, setShowPasswordField] = useState(false);
-  const [showOtpField, setShowOtpField] = useState(false);
-  const [isMemberLogin, setIsMemberLogin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [loginStep, setLoginStep] = useState('initial'); // 'initial', 'password', 'otp'
+  const [formData, setFormData] = useState({
+    identifier: '',
+    password: ''
+  });
+  const [uiState, setUiState] = useState({
+    showPasswordField: false,
+    showOtpField: false,
+    isLoading: false,
+    error: '',
+    otpSent: false,
+    countdown: 0,
+    loginStep: 'initial' // 'initial', 'password', 'otp'
+  });
 
   const isEmail = (input) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleIdentifierSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    setUiState(prev => ({ ...prev, error: '', isLoading: true }));
   
     try {
-      const isNumericId = /^\d+$/.test(identifier);
+      const isNumericId = /^\d+$/.test(formData.identifier);
       
       if (isNumericId) {
-        // Member login - send OTP directly
-        await sendOtp(identifier);
-        setOtpSent(true);
-        setIsMemberLogin(true);
-        setShowOtpField(true);
-        setLoginStep('otp');
-        setCountdown(60);
-      } else if (isEmail(identifier)) {
-        // Specialist/Admin login - show password field
-        setShowPasswordField(true);
-        setIsMemberLogin(false);
-        setLoginStep('password');
+        await sendOtp(formData.identifier);
+        setUiState(prev => ({
+          ...prev,
+          otpSent: true,
+          showOtpField: true,
+          loginStep: 'otp',
+          countdown: 60,
+          isLoading: false
+        }));
+      } else if (isEmail(formData.identifier)) {
+        setUiState(prev => ({
+          ...prev,
+          showPasswordField: true,
+          loginStep: 'password',
+          isLoading: false
+        }));
       } else {
         throw new Error('Please enter a valid member ID or email');
       }
     } catch (err) {
-      setError(err.message || 'Failed to initiate login');
-    } finally {
-      setIsLoading(false);
+      setUiState(prev => ({ 
+        ...prev, 
+        error: err.message || 'Failed to initiate login', 
+        isLoading: false 
+      }));
     }
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    setUiState(prev => ({ ...prev, error: '', isLoading: true }));
 
     try {
-      const result = await loginWithPassword(identifier, password);
+      const result = await loginWithPassword(formData.identifier, formData.password);
       if (result.requiresOtp) {
-        await sendOtp(identifier);
-        setOtpSent(true);
-        setShowOtpField(true);
-        setLoginStep('otp');
-        setCountdown(60);
-      } else {
-        navigate('/dashboard');
+        await sendOtp(formData.identifier);
+        setUiState(prev => ({
+          ...prev,
+          otpSent: true,
+          showOtpField: true,
+          loginStep: 'otp',
+          countdown: 60,
+          isLoading: false
+        }));
       }
     } catch (err) {
-      setError(err.message || 'Login failed');
-    } finally {
-      setIsLoading(false);
+      setUiState(prev => ({ 
+        ...prev, 
+        error: err.message || 'Login failed', 
+        isLoading: false 
+      }));
     }
   };
 
   const handleOtpVerification = async (otp) => {
-    setIsLoading(true);
-    setError('');
+    setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
     
     try {
-      const result = await verifyOtp(identifier, otp, isMemberLogin);
-      // Navigate to appropriate dashboard based on user type
-      if (result.user.isMember) {
-        navigate(`/dashboard/user/${result.user.id}`);
-      } else {
-        navigate(`/dashboard/admin/${result.user.id}`);
-      }
+      const result = await verifyOtp(formData.identifier, otp);
+      navigate(result.user.isMember 
+        ? `/dashboard/user/${result.user.id}`
+        : `/dashboard/admin/${result.user.id}`
+      );
     } catch (err) {
-      setError(err.message || 'Invalid OTP. Please try again.');
-    } finally {
-      setIsLoading(false);
+      setUiState(prev => ({ 
+        ...prev, 
+        error: err.message || 'Invalid OTP. Please try again.', 
+        isLoading: false 
+      }));
     }
   };
 
   const handleResendOtp = async () => {
-    if (countdown > 0 || isLoading) return;
+    if (uiState.countdown > 0 || uiState.isLoading) return;
     
-    setIsLoading(true);
-    setError('');
+    setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
     
     try {
-      await sendOtp(identifier);
-      setCountdown(60);
-      setOtpSent(true);
+      await sendOtp(formData.identifier);
+      setUiState(prev => ({ 
+        ...prev, 
+        countdown: 60, 
+        otpSent: true, 
+        isLoading: false 
+      }));
     } catch (err) {
-      setError(err.message || 'Failed to resend OTP');
-    } finally {
-      setIsLoading(false);
+      setUiState(prev => ({ 
+        ...prev, 
+        error: err.message || 'Failed to resend OTP', 
+        isLoading: false 
+      }));
     }
   };
 
   const handleBackToEmail = () => {
-    setShowPasswordField(false);
-    setShowOtpField(false);
-    setLoginStep('initial');
-    setError('');
+    setUiState({
+      showPasswordField: false,
+      showOtpField: false,
+      loginStep: 'initial',
+      error: '',
+      otpSent: false,
+      countdown: 0,
+      isLoading: false
+    });
   };
 
   // Countdown timer for OTP resend
   useEffect(() => {
     let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    if (uiState.countdown > 0) {
+      timer = setTimeout(() => {
+        setUiState(prev => ({ ...prev, countdown: prev.countdown - 1 }));
+      }, 1000);
     }
     return () => clearTimeout(timer);
-  }, [countdown]);
+  }, [uiState.countdown]);
 
   return (
-    <motion.div
+    <motion.div 
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -199,22 +226,22 @@ export const LoginForm = ({ navigate }) => {
           className="mt-4 text-2xl font-bold text-gray-800 dark:text-white"
           whileHover={{ scale: 1.02 }}
         >
-          {loginStep === "otp" ? "Verify Identity" : "Welcome Back"}
+          {uiState.loginStep === "otp" ? "Verify Identity" : "Welcome Back"}
         </motion.h1>
       </motion.div>
 
-      {error && (
+      {uiState.error && (
         <motion.div
           variants={itemVariants}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-3 mb-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
         >
-          {error}
+          {uiState.error}
         </motion.div>
       )}
 
-      {loginStep === "otp" ? (
+      {uiState.loginStep === "otp" ? (
         <motion.div variants={itemVariants} className="space-y-6">
           <div className="text-center">
             <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
@@ -222,30 +249,30 @@ export const LoginForm = ({ navigate }) => {
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Sent to your registered{" "}
-              {isEmail(identifier) ? "email" : "phone number"}
+              {isEmail(formData.identifier) ? "email" : "phone number"}
             </p>
           </div>
 
           <OtpInput
             length={6}
             onComplete={handleOtpVerification}
-            disabled={isLoading}
+            disabled={uiState.isLoading}
           />
 
           <div className="text-center text-sm">
             <motion.button
               type="button"
               onClick={handleResendOtp}
-              disabled={countdown > 0 || isLoading}
+              disabled={uiState.countdown > 0 || uiState.isLoading}
               className={`text-emerald-600 dark:text-emerald-400 ${
-                countdown > 0
+                uiState.countdown > 0
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:underline"
               }`}
-              whileHover={countdown > 0 ? {} : { scale: 1.05 }}
+              whileHover={uiState.countdown > 0 ? {} : { scale: 1.05 }}
               whileTap={tapEffect}
             >
-              {countdown > 0 ? `Resend code in ${countdown}s` : "Resend code"}
+              {uiState.countdown > 0 ? `Resend code in ${uiState.countdown}s` : "Resend code"}
             </motion.button>
 
             <motion.button
@@ -262,7 +289,7 @@ export const LoginForm = ({ navigate }) => {
       ) : (
         <motion.form
           onSubmit={
-            loginStep === "password"
+            uiState.loginStep === "password"
               ? handlePasswordSubmit
               : handleIdentifierSubmit
           }
@@ -274,24 +301,25 @@ export const LoginForm = ({ navigate }) => {
               htmlFor="identifier"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              {loginStep === "password" ? "Email" : "Member ID or Email"}
+              {uiState.loginStep === "password" ? "Email" : "Member ID or Email"}
             </label>
             <motion.input
               whileFocus={{ scale: 1.01 }}
               whileHover={hoverEffect}
               whileTap={tapEffect}
               id="identifier"
-              type={loginStep === "password" ? "email" : "text"}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              name="identifier"
+              type={uiState.loginStep === "password" ? "email" : "text"}
+              value={formData.identifier}
+              onChange={handleInputChange}
               className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              placeholder={loginStep === 'password' ? 'your@email.com' : '12345 or your@email.com'}
+              placeholder={uiState.loginStep === 'password' ? 'your@email.com' : '12345 or your@email.com'}
               required
-              disabled={isLoading}
+              disabled={uiState.isLoading}
             />
           </motion.div>
 
-          {loginStep === "password" && (
+          {uiState.loginStep === "password" && (
             <motion.div variants={itemVariants}>
               <div className="flex justify-between items-center mb-1">
                 <label
@@ -314,13 +342,14 @@ export const LoginForm = ({ navigate }) => {
                 whileHover={hoverEffect}
                 whileTap={tapEffect}
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleInputChange}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                 placeholder="••••••••"
                 required
-                disabled={isLoading}
+                disabled={uiState.isLoading}
               />
             </motion.div>
           )}
@@ -330,10 +359,10 @@ export const LoginForm = ({ navigate }) => {
             whileHover={hoverEffect}
             whileTap={tapEffect}
             type="submit"
-            disabled={isLoading}
+            disabled={uiState.isLoading}
             className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow transition-all duration-300 flex items-center justify-center"
           >
-            {isLoading ? (
+            {uiState.isLoading ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -357,14 +386,14 @@ export const LoginForm = ({ navigate }) => {
                 </svg>
                 Processing...
               </>
-            ) : loginStep === "password" ? (
+            ) : uiState.loginStep === "password" ? (
               "Continue"
             ) : (
               "Sign In"
             )}
           </motion.button>
 
-          {loginStep === "initial" && (
+          {uiState.loginStep === "initial" && (
             <motion.div
               variants={itemVariants}
               className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 text-center"

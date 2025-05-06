@@ -71,7 +71,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
       isMember: isNumericId // Flag to indicate member login
     });
 
-    console.log(`OTP for.... ${identifier}: ${otp}`); // Dev only
+    console.log(`OTP for ${identifier}: ${otp}`); // Dev only
 
     res.json({ 
       success: true, 
@@ -177,7 +177,7 @@ app.post('/api/auth/login', async (req, res) => {
       isPasswordLogin: true 
     });
 
-    console.log(`OTP for.... ${email}: ${otp}`);
+    console.log(`OTP for ${email}: ${otp}`);
 
     res.json({
       success: true,
