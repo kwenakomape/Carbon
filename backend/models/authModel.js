@@ -1,42 +1,61 @@
 import pool from '../config/db.js';
-import dayjs from 'dayjs';
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import logger from '../utils/logger.js';
+
+
+const SALT_ROUNDS = 12;
 
 class AuthModel {
-  // Generate random 6-digit OTP
   static generateOTP() {
     return crypto.randomInt(100000, 999999).toString();
   }
 
   static async findMemberById(memberId) {
-    const [member] = await pool.query(
-      'SELECT member_id as id, email, name, cell as phoneNumber, role_id FROM Members WHERE member_id = ?',
-      [memberId]
-    );
-    return member[0];
+    try {
+      const [member] = await pool.query(
+        `SELECT member_id as id, email, name, cell as phoneNumber, role_id 
+         FROM Members WHERE member_id = ?`,
+        [memberId]
+      );
+      return member[0];
+    } catch (error) {
+      logger.error(`Error finding member: ${error.message}`);
+      throw error;
+    }
   }
 
   static async findAdminByEmail(email) {
-    const [admin] = await pool.query(
-      'SELECT admin_id as id, email, name, role_id, specialist_type FROM Admin WHERE email = ?',
-      [email]
-    );
-    return admin[0];
-  }
-
-  static async verifyAdminCredentials(email, password) {
-    const [admin] = await pool.query(
-      'SELECT admin_id as id, email, name, role_id, specialist_type FROM Admin WHERE email = ? AND password = ?',
-      [email, password]
-    );
-    return admin[0];
+    try {
+      const [admin] = await pool.query(
+        `SELECT admin_id as id, email, name, password, role_id, specialist_type 
+         FROM Admin WHERE email = ?`,
+        [email]
+      );
+      return admin[0];
+    } catch (error) {
+      logger.error(`Error finding admin: ${error.message}`);
+      throw error;
+    }
   }
 
   static async getUserById(id, isMember) {
-    if (isMember) {
-      return this.findMemberById(id);
+    try {
+      if (isMember) {
+        return this.findMemberById(id);
+      }
+      return this.findAdminByEmail(id);
+    } catch (error) {
+      logger.error(`Error getting user: ${error.message}`);
+      throw error;
     }
-    return this.findAdminByEmail(id);
+  }
+
+  static async hashPassword(password) {
+    return bcrypt.hash(password, SALT_ROUNDS);
+  }
+
+  static async comparePassword(password, hash) {
+    return bcrypt.compare(password, hash);
   }
 }
 

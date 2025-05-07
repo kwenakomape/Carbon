@@ -1,169 +1,79 @@
-import AuthModel from '../models/authModel.js';
-import dayjs from 'dayjs';
-import crypto from 'crypto';
-
-// In-memory storage for OTPs (use Redis in production)
-const otpStorage = new Map();
+import AuthService from '../services/authService.js';
+import { generateToken } from '../utils/jwtUtils.js';
+import logger from '../utils/logger.js';
 
 class AuthController {
-  static async sendOTP(req, res) {
+  static async sendOTP(req, res, next) {
     try {
       const { identifier } = req.body;
-      const isNumericId = /^\d+$/.test(identifier);
-
-      let user;
-      if (isNumericId) {
-        user = await AuthModel.findMemberById(identifier);
-      } else {
-        user = await AuthModel.findAdminByEmail(identifier);
-      }
-
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-
-      // Check for existing valid OTP
-      const existingOtp = otpStorage.get(identifier);
-      if (existingOtp && dayjs(existingOtp.expiresAt).isAfter(dayjs())) {
-        return res.json({
-          success: true,
-          message: 'OTP already sent',
-          phoneNumber: isNumericId ? user.phoneNumber : null
-        });
-      }
-
-      const otp = AuthModel.generateOTP();
-      const expiresAt = dayjs().add(10, 'minute').toDate();
-
-      otpStorage.set(identifier, {
-        otp,
-        expiresAt,
-        userId: user.id,
-        roleId: user.role_id,
-        isMember: isNumericId
-      });
-
-      console.log(`OTP for ${identifier}: ${otp}`); // In production, send via SMS/email
-
-      res.json({
-        success: true,
-        message: 'OTP sent successfully',
-        phoneNumber: isNumericId ? user.phoneNumber : null
-      });
+      const result = await AuthService.sendOTP(identifier);
+      
+      logger.info(`OTP sent to ${identifier}`);
+      res.json(result);
     } catch (error) {
-      console.error('Error sending OTP:', error);
-      res.status(500).json({ success: false, message: 'Failed to send OTP' });
+      logger.error(`OTP send error: ${error.message}`);
+      next(error);
     }
   }
 
-  static async verifyOTP(req, res) {
+  static async verifyOTP(req, res, next) {
     try {
       const { identifier, otp } = req.body;
-      const storedData = otpStorage.get(identifier);
+      const user = await AuthService.verifyOTP(identifier, otp);
+      
+      const token = generateToken({
+        id: user.id,
+        email: user.email,
+        role: user.role_id,
+        isMember: user.isMember
+      });
 
-      if (!storedData) {
-        return res.status(400).json({ success: false, message: 'OTP expired or not requested' });
-      }
-
-      if (storedData.otp !== otp || dayjs(storedData.expiresAt).isBefore(dayjs())) {
-        return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
-      }
-
-      const user = await AuthModel.getUserById(storedData.userId, storedData.isMember);
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-
-      const token = crypto.randomBytes(32).toString('hex');
-      otpStorage.delete(identifier);
-
+      logger.info(`User ${user.id} verified successfully`);
       res.json({
         success: true,
-        message: 'OTP verified successfully',
         token,
         user: {
           id: user.id,
           email: user.email,
           name: user.name,
           roleId: user.role_id,
-          specialistType: user.specialist_type || null,
-          isMember: storedData.isMember
+          specialistType: user.specialist_type,
+          isMember: user.isMember
         }
       });
     } catch (error) {
-      console.error('Error verifying OTP:', error);
-      res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+      logger.error(`OTP verification error: ${error.message}`);
+      next(error);
     }
   }
 
-  static async loginWithPassword(req, res) {
+  static async loginWithPassword(req, res, next) {
     try {
       const { email, password } = req.body;
-      const user = await AuthModel.verifyAdminCredentials(email, password);
-
-      if (!user) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
-
-      const tempToken = crypto.randomBytes(32).toString('hex');
+      const result = await AuthService.loginWithPassword(email, password);
       
-      // Check for existing OTP
-      const existingOtp = otpStorage.get(email);
-      if (existingOtp && dayjs(existingOtp.expiresAt).isAfter(dayjs())) {
-        return res.json({
-          success: true,
-          message: 'OTP already sent',
-          tempToken,
-          requiresOtp: true
-        });
-      }
-
-      const otp = AuthModel.generateOTP();
-      const expiresAt = dayjs().add(10, 'minute').toDate();
-
-      otpStorage.set(email, {
-        otp,
-        expiresAt,
-        userId: user.id,
-        roleId: user.role_id,
-        isPasswordLogin: true
-      });
-
-      console.log(`OTP for ${email}: ${otp}`); // In production, send via email
-
-      res.json({
-        success: true,
-        message: 'OTP sent for verification',
-        tempToken,
-        requiresOtp: true
-      });
+      logger.info(`Password login initiated for ${email}`);
+      res.json(result);
     } catch (error) {
-      console.error('Error during login:', error);
-      res.status(500).json({ success: false, message: 'Login failed' });
+      logger.error(`Login error: ${error.message}`);
+      next(error);
     }
   }
 
-  static async checkSession(req, res) {
+  static async checkSession(req, res, next) {
     try {
       const token = req.headers.authorization?.split(' ')[1];
-      if (!token) {
-        return res.status(401).json({ success: false, message: 'No token provided' });
+      const user = await AuthService.checkSession(token);
+      
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Invalid session' });
       }
 
-      // In production: Verify JWT token and fetch user from DB
-      // This is a simplified version for demo purposes
-      res.json({
-        success: true,
-        user: {
-          id: 1,
-          name: "Demo User",
-          email: "demo@example.com",
-          roleId: 1
-        }
-      });
+      logger.info(`Session checked for user ${user.id}`);
+      res.json({ success: true, user });
     } catch (error) {
-      console.error('Error checking session:', error);
-      res.status(401).json({ success: false, message: 'Invalid session' });
+      logger.error(`Session check error: ${error.message}`);
+      next(error);
     }
   }
 }
