@@ -1,5 +1,6 @@
 import AuthModel from '../models/authModel.js';
 import otpStorage  from '../utils/otpStorage.js';
+import crypto from 'crypto';
 import { 
   verifyAdminPassword,
   getDefaultAdminPasswordHash
@@ -50,6 +51,7 @@ class AuthService {
     });
 
     logger.info(`OTP generated for ${identifier}`);
+    logger.info(otp);
     // In production: Implement actual SMS/email sending here
 
     return {

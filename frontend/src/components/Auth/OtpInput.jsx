@@ -4,21 +4,27 @@ export const OtpInput = ({ length = 6, onComplete, disabled = false }) => {
   const [otp, setOtp] = useState(Array(length).fill(''));
   const inputRefs = useRef([]);
 
+  const focusInput = (index) => {
+    const input = inputRefs.current[index];
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  };
+
   const handleChange = (e, index) => {
     const value = e.target.value;
     
     if (isNaN(value)) return;
     
     const newOtp = [...otp];
-    newOtp[index] = value.substring(value.length - 1); // Only take last character
+    newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
 
-    // Move to next input if current input is filled
     if (value && index < length - 1) {
-      inputRefs.current[index + 1].focus();
+      focusInput(index + 1);
     }
 
-    // Check if all inputs are filled
     if (newOtp.every(num => num !== '')) {
       onComplete(newOtp.join(''));
     }
@@ -26,8 +32,7 @@ export const OtpInput = ({ length = 6, onComplete, disabled = false }) => {
 
   const handleKeyDown = (e, index) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      // Move to previous input on backspace
-      inputRefs.current[index - 1].focus();
+      focusInput(index - 1);
     }
   };
 
@@ -40,6 +45,10 @@ export const OtpInput = ({ length = 6, onComplete, disabled = false }) => {
       onComplete(pasteArray.join(''));
     }
   };
+
+  useEffect(() => {
+    focusInput(0);
+  }, []);
 
   return (
     <div className="flex justify-center space-x-2 sm:space-x-3">
@@ -54,9 +63,14 @@ export const OtpInput = ({ length = 6, onComplete, disabled = false }) => {
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           onPaste={handlePaste}
+          onFocus={() => {
+            const input = inputRefs.current[index];
+            if (input) input.select();
+          }}
           ref={(el) => (inputRefs.current[index] = el)}
           disabled={disabled}
           className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg sm:text-xl font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+          autoComplete="one-time-code"
         />
       ))}
     </div>

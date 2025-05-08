@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { OtpInput } from './OtpInput';
-import { sendOtp, verifyOtp, loginWithPassword } from '../../../../backend/services/authService';
+import axios from 'axios';
 
 // Animation variants
 const containerVariants = {
@@ -32,6 +32,22 @@ const hoverEffect = {
 };
 
 const tapEffect = { scale: 0.98 };
+
+// API calls
+const sendOtp = async (identifier) => {
+  const response = await axios.post('/api/auth/send-otp', { identifier });
+  return response.data;
+};
+
+const verifyOtp = async (identifier, otp) => {
+  const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
+  return response.data;
+};
+
+const loginWithPassword = async (email, password) => {
+  const response = await axios.post('/api/auth/login', { email, password });
+  return response.data;
+};
 
 export const LoginForm = ({ navigate }) => {
   const [formData, setFormData] = useState({
@@ -85,7 +101,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message || 'Failed to initiate login', 
+        error: err.response?.data?.message || err.message || 'Failed to initiate login', 
         isLoading: false 
       }));
     }
@@ -111,7 +127,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message || 'Login failed', 
+        error: err.response?.data?.message || err.message || 'Login failed', 
         isLoading: false 
       }));
     }
@@ -129,7 +145,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message || 'Invalid OTP. Please try again.', 
+        error: err.response?.data?.message || err.message || 'Invalid OTP. Please try again.', 
         isLoading: false 
       }));
     }
@@ -151,7 +167,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message || 'Failed to resend OTP', 
+        error: err.response?.data?.message || err.message || 'Failed to resend OTP', 
         isLoading: false 
       }));
     }

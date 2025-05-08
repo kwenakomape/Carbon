@@ -22,7 +22,7 @@ CREATE TABLE Admin (
     admin_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- Increased length for hashed passwords
+    password VARCHAR(255) NOT NULL, -- 
     role_id INT,
     specialist_type ENUM('Biokineticist', 'Dietitian', 'Physiotherapist', 'IT Software Development'),
     FOREIGN KEY (role_id) REFERENCES Roles(role_id) ON DELETE CASCADE ON UPDATE CASCADE

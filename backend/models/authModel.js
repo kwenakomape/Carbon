@@ -1,7 +1,7 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcrypt';
 import logger from '../utils/logger.js';
-
+import crypto from 'crypto';
 
 const SALT_ROUNDS = 12;
 
