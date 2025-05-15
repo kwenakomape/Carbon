@@ -63,7 +63,8 @@ class AuthService {
 
   static async verifyOTP(identifier, otp) {
     const storedData = otpStorage.get(identifier);
-    
+    //console.log(JSON.stringify(storedData, null, 2));
+    //console.log(`teh storedData is ${storedData}`)
     if (!storedData) {
       throw new Error('OTP expired or not requested');
     }
@@ -76,7 +77,8 @@ class AuthService {
       storedData.userId, 
       storedData.isMember
     );
-
+    // console.log()
+    //console.log(`the user data is ${JSON.stringify(user, null, 2)}`)
     if (!user) {
       throw new Error('User not found');
     }

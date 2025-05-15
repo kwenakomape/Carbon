@@ -20,7 +20,8 @@ class AuthController {
     try {
       const { identifier, otp } = req.body;
       const user = await AuthService.verifyOTP(identifier, otp);
-      
+      console.log(`how does it look }`);
+      console.log(` the data is ${JSON.stringify(user, null, 2)}`);
       const token = generateToken({
         id: user.id,
         email: user.email,
