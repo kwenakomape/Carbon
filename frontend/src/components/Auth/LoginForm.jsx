@@ -138,11 +138,10 @@ export const LoginForm = ({ navigate }) => {
     
     try {
       const result = await verifyOtp(formData.identifier, otp);
-      // console.log(`these are the values ${formData.identifier}  --- ${otp}`);
-      // navigate(result.user.isMember 
-      //   ? `/dashboard/user/${result.user.id}`
-      //   : `/dashboard/admin/${result.user.id}`
-      // );
+      navigate(result.user.isMember 
+        ? `/dashboard/user/${result.user.id}`
+        : `/dashboard/admin/${result.user.id}`
+      );
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 

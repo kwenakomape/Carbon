@@ -2,8 +2,7 @@ import AuthModel from '../models/authModel.js';
 import otpStorage  from '../utils/otpStorage.js';
 import crypto from 'crypto';
 import { 
-  verifyAdminPassword,
-  getDefaultAdminPasswordHash
+  verifyAdminPassword
 } from '../utils/passwordUtils.js';
 import { generateToken, verifyToken } from '../utils/jwtUtils.js';
 import logger from '../utils/logger.js';
@@ -63,8 +62,6 @@ class AuthService {
 
   static async verifyOTP(identifier, otp) {
     const storedData = otpStorage.get(identifier);
-    //console.log(JSON.stringify(storedData, null, 2));
-    //console.log(`teh storedData is ${storedData}`)
     if (!storedData) {
       throw new Error('OTP expired or not requested');
     }
@@ -77,8 +74,6 @@ class AuthService {
       storedData.userId, 
       storedData.isMember
     );
-    // console.log()
-    //console.log(`the user data is ${JSON.stringify(user, null, 2)}`)
     if (!user) {
       throw new Error('User not found');
     }
@@ -108,7 +103,6 @@ class AuthService {
 
   static async loginWithPassword(email, password) {
     const user = await AuthModel.findAdminByEmail(email);
-    
     if (!user) {
       throw new Error('Admin not found');
     }
@@ -180,11 +174,6 @@ class AuthService {
 
   static generateTempToken() {
     return crypto.randomBytes(32).toString('hex');
-  }
-
-  // For initial admin setup
-  static getDefaultAdminPassword() {
-    return getDefaultAdminPasswordHash();
   }
 }
 

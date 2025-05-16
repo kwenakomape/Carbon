@@ -19,9 +19,7 @@ class AuthController {
   static async verifyOTP(req, res, next) {
     try {
       const { identifier, otp } = req.body;
-      const user = await AuthService.verifyOTP(identifier, otp);
-      console.log(`how does it look }`);
-      console.log(` the data is ${JSON.stringify(user, null, 2)}`);
+      const {user} = await AuthService.verifyOTP(identifier, otp);
       const token = generateToken({
         id: user.id,
         email: user.email,

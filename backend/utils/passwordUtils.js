@@ -1,10 +1,9 @@
 import bcrypt from 'bcrypt';
-import logger from './logger.js'; // Fixed import with extension
+import logger from './logger.js';
 
 const SALT_ROUNDS = 12;
-const DEFAULT_ADMIN_PASSWORD = 'SSISA!';
 
-async function hashAdminPassword(password) {
+export async function hashAdminPassword(password) {
   try {
     return await bcrypt.hash(password, SALT_ROUNDS);
   } catch (error) {
@@ -13,7 +12,7 @@ async function hashAdminPassword(password) {
   }
 }
 
-async function verifyAdminPassword(password, hash) {
+export async function verifyAdminPassword(password, hash) {
   try {
     return await bcrypt.compare(password, hash);
   } catch (error) {
@@ -21,14 +20,3 @@ async function verifyAdminPassword(password, hash) {
     throw new Error('Failed to verify admin password');
   }
 }
-
-function getDefaultAdminPasswordHash() {
-  return bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, SALT_ROUNDS);
-}
-
-export {
-  hashAdminPassword,
-  verifyAdminPassword,
-  getDefaultAdminPasswordHash,
-  DEFAULT_ADMIN_PASSWORD
-};

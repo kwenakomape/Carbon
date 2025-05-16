@@ -57,7 +57,6 @@ export const LandingForm = () => {
         );
 
         if (response.data.valid) {
-          console.log("this is the is", response.data.AdminID);
           navigate(`/dashboard/admin/${response.data.AdminID}`);
         } else {
           setErrorMessage(response.data.errorMessage);
