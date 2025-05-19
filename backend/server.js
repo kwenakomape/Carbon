@@ -6,6 +6,7 @@ import cors from "cors";
 import { fileURLToPath } from "url";
 import path from "path";
 import authRouter from './routes/authRoutes.js';
+import adminRouter from './routes/adminRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,6 +17,7 @@ app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 app.use(express.json());
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
 
 // Health check endpoint
 // This is commonly known as a health check endpoint. 

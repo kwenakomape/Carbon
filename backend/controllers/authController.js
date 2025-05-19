@@ -1,5 +1,5 @@
+// File: controllers/authController.js
 import AuthService from '../services/authService.js';
-import { generateToken } from '../utils/jwtUtils.js';
 import logger from '../utils/logger.js';
 
 class AuthController {
@@ -19,14 +19,8 @@ class AuthController {
   static async verifyOTP(req, res, next) {
     try {
       const { identifier, otp } = req.body;
-      const {user} = await AuthService.verifyOTP(identifier, otp);
-      const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role_id,
-        isMember: user.isMember
-      });
-
+      const { user, token } = await AuthService.verifyOTP(identifier, otp);
+      
       logger.info(`User ${user.id} verified successfully`);
       res.json({
         success: true,

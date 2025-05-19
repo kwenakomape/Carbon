@@ -115,7 +115,7 @@ INSERT INTO Roles (role_name) VALUES
 
 -- Insert members (NO passwords)
 INSERT INTO Members (member_id, email, name, cell, role_id) VALUES
-(920811, 'kwenakomape2@gmail.com', 'Kwena', '27696742412', 3),
+(920811, 'kwenkomape22@gmail.com', 'Kwena', '27696742412', 3),
 (920938, 'augustnhila@ssisa.com', 'August', '277345723179', 3),
 (920845, 'jane.doe@example.com', 'Jane', '278167511463', 3);
 
@@ -125,7 +125,7 @@ INSERT INTO Admin (name, email, password, role_id, specialist_type) VALUES
 ('Marie', 'marie@gmail.com', '$2b$12$E9Y1uFcZx3hL2pN4r5XvO.9Xz8vQ1wR2sT3uV4y5A6B7C8D9E0F', 1, 'Dietitian'),
 ('Rashaad', 'rashaad@gmail.com', '$2b$12$E9Y1uFcZx3hL2pN4r5XvO.9Xz8vQ1wR2sT3uV4y5A6B7C8D9E0F', 1, 'Physiotherapist'),
 ('Natasha', 'natasha@gmail.com', '$2b$12$E9Y1uFcZx3hL2pN4r5XvO.9Xz8vQ1wR2sT3uV4y5A6B7C8D9E0F', 1, 'Dietitian'),
-('IT Manager', 'itmanager@example.com', '$2b$12$E9Y1uFcZx3hL2pN4r5XvO.9Xz8vQ1wR2sT3uV4y5A6B7C8D9E0F', 2, 'IT Software Development');
+('August', 'itmanager@example.com', '$2b$12$E9Y1uFcZx3hL2pN4r5XvO.9Xz8vQ1wR2sT3uV4y5A6B7C8D9E0F', 2, 'IT Software Development');
 
 -- Insert data into Services table
 INSERT INTO Services (service_name, service_description, price, credit_cost) VALUES
