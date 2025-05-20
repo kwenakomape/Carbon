@@ -1,38 +1,25 @@
-
-import jwt from 'jsonwebtoken';
 import MemberModel from '../models/memberModel.js';
 import AdminModel from '../models/adminModel.js';
 import AuthModel from '../models/authModel.js';
 import otpStorage from '../utils/otpStorage.js';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 
 class AuthService {
-  /**
-   * Send OTP to member or admin
-   * @param {string} identifier - Member ID or admin email
-   * @returns {Promise<object>} - Result object
-   */
   static async sendOTP(identifier) {
     const isNumericId = /^\d+$/.test(identifier);
     let user;
 
     try {
       if (isNumericId) {
-        // Member login flow
         user = await MemberModel.findById(identifier);
-        if (!user) {
-          throw new Error('Member not found');
-        }
+        if (!user) throw new Error('Member not found');
       } else {
-        // Admin login flow
         user = await AdminModel.findByEmail(identifier);
-        if (!user) {
-          throw new Error('Admin not found');
-        }
+        if (!user) throw new Error('Admin not found');
       }
 
-      // Check for existing valid OTP
       const existingOtp = otpStorage.get(identifier);
       if (existingOtp && existingOtp.expiresAt > Date.now()) {
         logger.debug(`Existing OTP found for ${identifier}`);
@@ -43,21 +30,18 @@ class AuthService {
         };
       }
 
-      // Generate new OTP
       const otp = AuthModel.generateOTP();
       const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
       otpStorage.set(identifier, {
         otp,
         expiresAt,
-        userId: user.id,
+        userId: isNumericId ? user.id : identifier, // Store ID or email
         roleId: user.role_id,
         isMember: isNumericId
       });
 
       logger.info(`OTP generated for ${identifier}: ${otp}`);
-      // In production: Implement actual SMS/email sending here
-
       return {
         success: true,
         message: 'OTP sent successfully',
@@ -69,40 +53,30 @@ class AuthService {
     }
   }
 
-  /**
-   * Verify OTP for authentication
-   * @param {string} identifier - Member ID or admin email
-   * @param {string} otp - 6-digit OTP
-   * @returns {Promise<object>} - User data and token
-   */
   static async verifyOTP(identifier, otp) {
     try {
       const storedData = otpStorage.get(identifier);
-      if (!storedData) {
-        throw new Error('OTP expired or not requested');
-      }
-
+      if (!storedData) throw new Error('OTP expired or not requested');
       if (storedData.otp !== otp || storedData.expiresAt < Date.now()) {
         throw new Error('Invalid or expired OTP');
       }
 
-      // Get user from appropriate model
-      const user = storedData.isMember
-        ? await MemberModel.findById(storedData.userId)
-        : await AdminModel.findByEmail(storedData.userId);
-
-      if (!user) {
-        throw new Error('User not found');
+      let user;
+      if (storedData.isMember) {
+        user = await MemberModel.findById(storedData.userId);
+      } else {
+        user = await AdminModel.findByEmail(identifier); // Use original identifier (email)
       }
 
-      // Generate JWT token
-      const token = generateToken({
+      if (!user) throw new Error('User not found');
+
+      const token = jwt.sign({
         id: user.id,
         email: user.email,
         roleName: user.role_name,
         roleId: user.role_id,
         isMember: storedData.isMember
-      });
+      }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
       otpStorage.delete(identifier);
       
@@ -164,8 +138,8 @@ class AuthService {
         roleId: user.role_id,
         isPasswordLogin: true
       });
-
-      logger.info(`OTP generated for admin ${email}`);
+      //  console.log(otpStorage);
+      logger.info(`OTP generated for admin ${email}: ${otp}`);
       // In production: Send OTP via email
 
       return {

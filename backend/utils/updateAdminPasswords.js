@@ -1,27 +1,20 @@
-import bcrypt from 'bcrypt';
-import pool from '..//config/db.js';
 
-const saltRounds = 12;
-const plainPassword = 'SSISA!';
-
-async function updateAllAdminPasswords() {
+const userToken = 'your-very-secure'
+const handleUpdatePasswords = async () => {
   try {
-    // Generate the new hash
-    const newHash = await bcrypt.hash(plainPassword, saltRounds);
-    console.log('New hash generated:', newHash);
-
-    // Update all admin passwords
-    const [result] = await pool.query(
-      'UPDATE Admin SET password = ?',
-      [newHash]
+    const response = await axios.post(
+      '/api/admin/update-passwords',
+      { newPassword: 'SSISA2023!' },
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
     );
-
-    console.log(`Updated ${result.affectedRows} admin passwords`);
+    console.log(response.data.message);
   } catch (error) {
-    console.error('Error updating passwords:', error);
-  } finally {
-    await pool.end(); // Close the connection pool
+    console.error('Failed to update passwords:', error.response?.data?.message);
   }
-}
+};
 
-updateAllAdminPasswords();
+handleUpdatePasswords()
