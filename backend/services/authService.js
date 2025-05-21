@@ -14,10 +14,10 @@ class AuthService {
     try {
       if (isNumericId) {
         user = await MemberModel.findById(identifier);
-        if (!user) throw new Error('Member not found');
+        if (!user) throw new Error("Please enter a valid member ID or email");
       } else {
         user = await AdminModel.findByEmail(identifier);
-        if (!user) throw new Error('Admin not found');
+        if (!user) throw new Error("Please enter a valid member ID or email");
       }
 
       const existingOtp = otpStorage.get(identifier);
@@ -25,8 +25,8 @@ class AuthService {
         logger.debug(`Existing OTP found for ${identifier}`);
         return {
           success: true,
-          message: 'OTP already sent',
-          phoneNumber: isNumericId ? user.phoneNumber : null
+          message: "OTP already sent",
+          phoneNumber: isNumericId ? user.phoneNumber : null,
         };
       }
 
@@ -38,14 +38,14 @@ class AuthService {
         expiresAt,
         userId: isNumericId ? user.id : identifier, // Store ID or email
         roleId: user.role_id,
-        isMember: isNumericId
+        isMember: isNumericId,
       });
 
       logger.info(`OTP generated for ${identifier}: ${otp}`);
       return {
         success: true,
-        message: 'OTP sent successfully',
-        phoneNumber: isNumericId ? user.phoneNumber : null
+        message: "OTP sent successfully",
+        phoneNumber: isNumericId ? user.phoneNumber : null,
       };
     } catch (error) {
       logger.error(`OTP send error for ${identifier}: ${error.message}`);
@@ -56,9 +56,9 @@ class AuthService {
   static async verifyOTP(identifier, otp) {
     try {
       const storedData = otpStorage.get(identifier);
-      if (!storedData) throw new Error('OTP expired or not requested');
+      if (!storedData) throw new Error("OTP expired or not requested");
       if (storedData.otp !== otp || storedData.expiresAt < Date.now()) {
-        throw new Error('Invalid or expired OTP');
+        throw new Error("Invalid or expired OTP");
       }
 
       let user;
@@ -68,18 +68,22 @@ class AuthService {
         user = await AdminModel.findByEmail(identifier); // Use original identifier (email)
       }
 
-      if (!user) throw new Error('User not found');
+      if (!user) throw new Error("User not found");
 
-      const token = jwt.sign({
-        id: user.id,
-        email: user.email,
-        roleName: user.role_name,
-        roleId: user.role_id,
-        isMember: storedData.isMember
-      }, process.env.JWT_SECRET, { expiresIn: '1d' });
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          roleName: user.role_name,
+          roleId: user.role_id,
+          isMember: storedData.isMember,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
 
       otpStorage.delete(identifier);
-      
+
       return {
         user: {
           id: user.id,
@@ -87,12 +91,14 @@ class AuthService {
           name: user.name,
           roleId: user.role_id,
           specialistType: user.specialist_type,
-          isMember: storedData.isMember
+          isMember: storedData.isMember,
         },
-        token
+        token,
       };
     } catch (error) {
-      logger.error(`OTP verification failed for ${identifier}: ${error.message}`);
+      logger.error(
+        `OTP verification failed for ${identifier}: ${error.message}`
+      );
       throw error;
     }
   }
@@ -107,13 +113,19 @@ class AuthService {
     try {
       const user = await AdminModel.findByEmail(email);
       if (!user) {
-        throw new Error('Admin not found');
+        throw new Error(
+          "Invalid credentials. Please check your email and password."
+        );
       }
-
       // Verify password
-      const isPasswordValid = await AuthModel.comparePassword(password, user.password);
-      if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
+      const isPasswordValid = await AuthModel.comparePassword(
+        password,
+        user.password
+      );
+       if (!isPasswordValid) {
+        throw new Error(
+          "Invalid credentials. Please check your email and password."
+        );
       }
 
       // Check for existing OTP
@@ -123,7 +135,7 @@ class AuthService {
         return {
           requiresOtp: true,
           tempToken: this.generateTempToken(),
-          message: 'OTP already sent'
+          message: "OTP already sent",
         };
       }
 
@@ -136,7 +148,7 @@ class AuthService {
         expiresAt,
         userId: user.id,
         roleId: user.role_id,
-        isPasswordLogin: true
+        isPasswordLogin: true,
       });
       //  console.log(otpStorage);
       logger.info(`OTP generated for admin ${email}: ${otp}`);
@@ -145,7 +157,7 @@ class AuthService {
       return {
         requiresOtp: true,
         tempToken: this.generateTempToken(),
-        message: 'OTP sent for verification'
+        message: "OTP sent for verification",
       };
     } catch (error) {
       logger.error(`Password login failed for ${email}: ${error.message}`);
@@ -160,13 +172,13 @@ class AuthService {
    */
   static async checkSession(token) {
     if (!token) return null;
-    
+
     try {
       const decoded = verifyToken(token);
       const user = decoded.isMember
         ? await MemberModel.findById(decoded.id)
         : await AdminModel.findByEmail(decoded.id);
-      
+
       if (!user) {
         logger.warn(`User not found for token ${token}`);
         return null;
@@ -178,7 +190,7 @@ class AuthService {
         name: user.name,
         roleId: user.role_id,
         specialistType: user.specialist_type,
-        isMember: decoded.isMember
+        isMember: decoded.isMember,
       };
     } catch (error) {
       logger.error(`Session verification failed: ${error.message}`);
@@ -191,7 +203,7 @@ class AuthService {
    * @returns {string} - Random token
    */
   static generateTempToken() {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString("hex");
   }
 }
 

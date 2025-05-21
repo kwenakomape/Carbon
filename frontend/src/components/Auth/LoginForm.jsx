@@ -33,20 +33,45 @@ const hoverEffect = {
 
 const tapEffect = { scale: 0.98 };
 
-// API calls
+// API calls with improved error handling
 const sendOtp = async (identifier) => {
-  const response = await axios.post('/api/auth/send-otp', { identifier });
-  return response.data;
+  try {
+    const response = await axios.post('/api/auth/send-otp', { identifier });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      throw new Error('Please enter a valid member ID or email....');
+    } else if (error.response?.status === 429) {
+      throw new Error('Too many attempts. Please wait before trying again.');
+    }
+    throw new Error('Failed to send verification code. Please try again.');
+  }
 };
 
 const verifyOtp = async (identifier, otp) => {
-  const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
-  return response.data;
+  try {
+    const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error('Invalid verification code. Please try again.');
+    } else if (error.response?.status === 410) {
+      throw new Error('Verification code expired. Please request a new one.');
+    }
+    throw new Error('Verification failed. Please try again.');
+  }
 };
 
 const loginWithPassword = async (email, password) => {
-  const response = await axios.post('/api/auth/login', { email, password });
-  return response.data;
+  try {
+    const response = await axios.post('/api/auth/login', { email, password });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 401) {
+      throw new Error('Invalid credentials. Please check your email and password.');
+    }
+    throw new Error('Login failed. Please try again.');
+  }
 };
 
 export const LoginForm = ({ navigate }) => {
@@ -101,7 +126,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.response?.data?.message || err.message || 'Failed to initiate login', 
+        error: err.message, 
         isLoading: false 
       }));
     }
@@ -127,7 +152,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.response?.data?.message || err.message || 'Login failed', 
+        error: err.message, 
         isLoading: false 
       }));
     }
@@ -145,7 +170,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.response?.data?.message || err.message || 'Invalid OTP. Please try again.', 
+        error: err.message, 
         isLoading: false 
       }));
     }
@@ -167,7 +192,7 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.response?.data?.message || err.message || 'Failed to resend OTP', 
+        error: err.message, 
         isLoading: false 
       }));
     }
@@ -253,7 +278,12 @@ export const LoginForm = ({ navigate }) => {
           animate={{ opacity: 1, y: 0 }}
           className="p-3 mb-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
         >
-          {uiState.error}
+          <div className="flex items-start">
+            <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{uiState.error}</span>
+          </div>
         </motion.div>
       )}
 
