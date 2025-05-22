@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { OtpInput } from './OtpInput';
 import axios from 'axios';
+
+// Constants
+const OTP_EXPIRY_SECONDS = 120; // 2 minutes standard
+const RESEND_DELAY_MS = 1000; // 1 second delay between countdown updates
 
 // Animation variants
 const containerVariants = {
@@ -26,59 +30,12 @@ const itemVariants = {
   }
 };
 
-const hoverEffect = {
-  scale: 1.02,
-  transition: { type: 'spring', stiffness: 400, damping: 10 }
-};
-
-const tapEffect = { scale: 0.98 };
-
-// API calls with improved error handling
-const sendOtp = async (identifier) => {
-  try {
-    const response = await axios.post('/api/auth/send-otp', { identifier });
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 404) {
-      throw new Error('Please enter a valid member ID or email....');
-    } else if (error.response?.status === 429) {
-      throw new Error('Too many attempts. Please wait before trying again.');
-    }
-    throw new Error('Failed to send verification code. Please try again.');
-  }
-};
-
-const verifyOtp = async (identifier, otp) => {
-  try {
-    const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 400) {
-      throw new Error('Invalid verification code. Please try again.');
-    } else if (error.response?.status === 410) {
-      throw new Error('Verification code expired. Please request a new one.');
-    }
-    throw new Error('Verification failed. Please try again.');
-  }
-};
-
-const loginWithPassword = async (email, password) => {
-  try {
-    const response = await axios.post('/api/auth/login', { email, password });
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 401) {
-      throw new Error('Invalid credentials. Please check your email and password.');
-    }
-    throw new Error('Login failed. Please try again.');
-  }
-};
-
 export const LoginForm = ({ navigate }) => {
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
   });
+  
   const [uiState, setUiState] = useState({
     showPasswordField: false,
     showOtpField: false,
@@ -86,79 +43,119 @@ export const LoginForm = ({ navigate }) => {
     error: '',
     otpSent: false,
     countdown: 0,
-    loginStep: 'initial' // 'initial', 'password', 'otp'
+    loginStep: 'initial'
   });
 
-  const isEmail = (input) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+  // Memoized API call handlers
+  const sendOtp = useCallback(async (identifier) => {
+    try {
+      const response = await axios.post('/api/auth/send-otp', { identifier });
+      return {
+        ...response.data,
+        expiresAt: Date.now() + OTP_EXPIRY_SECONDS * 1000
+      };
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to send verification code');
+    }
+  }, []);
 
-  const handleInputChange = (e) => {
+  const verifyOtp = useCallback(async (identifier, otp) => {
+    try {
+      const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Invalid or expired OTP');
+    }
+  }, []);
+
+  const loginWithPassword = useCallback(async (email, password) => {
+    try {
+      const response = await axios.post('/api/auth/login', { email, password });
+      return {
+        ...response.data,
+        expiresAt: Date.now() + OTP_EXPIRY_SECONDS * 1000
+      };
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Invalid credentials');
+    }
+  }, []);
+
+  // Validation helpers
+  const isEmail = useCallback((input) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input), []);
+  const isNumericId = useCallback((input) => /^\d+$/.test(input), []);
+
+  // Form handlers
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    if (uiState.error) setUiState(prev => ({ ...prev, error: '' }));
+  }, [uiState.error]);
 
-  const handleIdentifierSubmit = async (e) => {
+  const handleIdentifierSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setUiState(prev => ({ ...prev, error: '', isLoading: true }));
-  
+    
+    if (!isNumericId(formData.identifier) && !isEmail(formData.identifier)) {
+      setUiState(prev => ({ ...prev, error: 'Please enter a valid member ID or email' }));
+      return;
+    }
+
+    setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
+
     try {
-      const isNumericId = /^\d+$/.test(formData.identifier);
-      
-      if (isNumericId) {
-        await sendOtp(formData.identifier);
+      if (isNumericId(formData.identifier)) {
+        const result = await sendOtp(formData.identifier);
         setUiState(prev => ({
           ...prev,
           otpSent: true,
           showOtpField: true,
           loginStep: 'otp',
-          countdown: 60,
+          countdown: OTP_EXPIRY_SECONDS,
           isLoading: false
         }));
-      } else if (isEmail(formData.identifier)) {
+      } else {
         setUiState(prev => ({
           ...prev,
           showPasswordField: true,
           loginStep: 'password',
           isLoading: false
         }));
-      } else {
-        throw new Error('Please enter a valid member ID or email');
       }
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message, 
+        error: err.message,
         isLoading: false 
       }));
     }
-  };
+  }, [formData.identifier, isEmail, isNumericId, sendOtp]);
 
-  const handlePasswordSubmit = async (e) => {
+  const handlePasswordSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setUiState(prev => ({ ...prev, error: '', isLoading: true }));
+    setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
 
     try {
       const result = await loginWithPassword(formData.identifier, formData.password);
+      
       if (result.requiresOtp) {
-        await sendOtp(formData.identifier);
         setUiState(prev => ({
           ...prev,
           otpSent: true,
           showOtpField: true,
           loginStep: 'otp',
-          countdown: 60,
+          countdown: OTP_EXPIRY_SECONDS,
           isLoading: false
         }));
       }
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message, 
+        error: err.message,
         isLoading: false 
       }));
     }
-  };
+  }, [formData.identifier, formData.password, loginWithPassword]);
 
-  const handleOtpVerification = async (otp) => {
+  const handleOtpVerification = useCallback(async (otp) => {
     setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
     
     try {
@@ -170,13 +167,13 @@ export const LoginForm = ({ navigate }) => {
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message, 
+        error: err.message,
         isLoading: false 
       }));
     }
-  };
+  }, [formData.identifier, navigate, verifyOtp]);
 
-  const handleResendOtp = async () => {
+  const handleResendOtp = useCallback(async () => {
     if (uiState.countdown > 0 || uiState.isLoading) return;
     
     setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
@@ -185,20 +182,20 @@ export const LoginForm = ({ navigate }) => {
       await sendOtp(formData.identifier);
       setUiState(prev => ({ 
         ...prev, 
-        countdown: 60, 
+        countdown: OTP_EXPIRY_SECONDS, 
         otpSent: true, 
         isLoading: false 
       }));
     } catch (err) {
       setUiState(prev => ({ 
         ...prev, 
-        error: err.message, 
+        error: err.message,
         isLoading: false 
       }));
     }
-  };
+  }, [formData.identifier, sendOtp, uiState.countdown, uiState.isLoading]);
 
-  const handleBackToEmail = () => {
+  const handleBackToInitial = useCallback(() => {
     setUiState({
       showPasswordField: false,
       showOtpField: false,
@@ -208,18 +205,25 @@ export const LoginForm = ({ navigate }) => {
       countdown: 0,
       isLoading: false
     });
-  };
+  }, []);
 
-  // Countdown timer for OTP resend
+  // Optimized countdown timer
   useEffect(() => {
     let timer;
     if (uiState.countdown > 0) {
       timer = setTimeout(() => {
         setUiState(prev => ({ ...prev, countdown: prev.countdown - 1 }));
-      }, 1000);
+      }, RESEND_DELAY_MS);
     }
     return () => clearTimeout(timer);
   }, [uiState.countdown]);
+
+  // Format countdown display
+  const formatCountdown = useCallback((seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   return (
     <motion.div 
@@ -228,58 +232,31 @@ export const LoginForm = ({ navigate }) => {
       variants={containerVariants}
       className="w-full max-w-md mx-auto p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
     >
-      <motion.div
-        variants={itemVariants}
-        className="flex flex-col items-center mb-8"
-      >
+      {/* Logo and Title */}
+      <motion.div variants={itemVariants} className="flex flex-col items-center mb-8">
         <motion.div
           className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center"
-          whileHover={{
-            rotate: 10,
-            transition: { type: "spring", stiffness: 300 },
-          }}
+          whileHover={{ rotate: 10 }}
         >
           <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 2L3 7L12 12L21 7L12 2Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3 17L12 22L21 17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3 12L12 17L21 12"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" strokeWidth="2" />
+            <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" />
+            <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2" />
           </svg>
         </motion.div>
-        <motion.h1
-          className="mt-4 text-2xl font-bold text-gray-800 dark:text-white"
-          whileHover={{ scale: 1.02 }}
-        >
+        <motion.h1 className="mt-4 text-2xl font-bold text-gray-800 dark:text-white">
           {uiState.loginStep === "otp" ? "Verify Identity" : "Welcome Back"}
         </motion.h1>
       </motion.div>
 
+      {/* Error Display */}
       {uiState.error && (
         <motion.div
           variants={itemVariants}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
           className="p-3 mb-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
         >
           <div className="flex items-start">
-            <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>{uiState.error}</span>
@@ -287,6 +264,7 @@ export const LoginForm = ({ navigate }) => {
         </motion.div>
       )}
 
+      {/* OTP Verification View */}
       {uiState.loginStep === "otp" ? (
         <motion.div variants={itemVariants} className="space-y-6">
           <div className="text-center">
@@ -294,8 +272,7 @@ export const LoginForm = ({ navigate }) => {
               Enter Verification Code
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Sent to your registered{" "}
-              {isEmail(formData.identifier) ? "email" : "phone number"}
+              Sent to your registered {isEmail(formData.identifier) ? "email" : "phone number"}
             </p>
           </div>
 
@@ -306,59 +283,46 @@ export const LoginForm = ({ navigate }) => {
           />
 
           <div className="text-center text-sm">
-            <motion.button
+            <button
               type="button"
               onClick={handleResendOtp}
               disabled={uiState.countdown > 0 || uiState.isLoading}
               className={`text-emerald-600 dark:text-emerald-400 ${
-                uiState.countdown > 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:underline"
+                uiState.countdown > 0 ? "opacity-50 cursor-not-allowed" : "hover:underline"
               }`}
-              whileHover={uiState.countdown > 0 ? {} : { scale: 1.05 }}
-              whileTap={tapEffect}
             >
-              {uiState.countdown > 0 ? `Resend code in ${uiState.countdown}s` : "Resend code"}
-            </motion.button>
+              {uiState.countdown > 0 
+                ? `Resend code in ${formatCountdown(uiState.countdown)}` 
+                : "Resend code"}
+            </button>
 
-            <motion.button
+            <button
               type="button"
-              onClick={handleBackToEmail}
+              onClick={handleBackToInitial}
               className="block mt-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:underline"
-              whileHover={{ scale: 1.02 }}
-              whileTap={tapEffect}
             >
               Back to login
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       ) : (
+        /* Main Login Form */
         <motion.form
-          onSubmit={
-            uiState.loginStep === "password"
-              ? handlePasswordSubmit
-              : handleIdentifierSubmit
-          }
+          onSubmit={uiState.loginStep === "password" ? handlePasswordSubmit : handleIdentifierSubmit}
           variants={itemVariants}
           className="space-y-4"
         >
           <motion.div variants={itemVariants}>
-            <label
-              htmlFor="identifier"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
+            <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {uiState.loginStep === "password" ? "Email" : "Member ID or Email"}
             </label>
-            <motion.input
-              whileFocus={{ scale: 1.01 }}
-              whileHover={hoverEffect}
-              whileTap={tapEffect}
+            <input
               id="identifier"
               name="identifier"
               type={uiState.loginStep === "password" ? "email" : "text"}
               value={formData.identifier}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               placeholder={uiState.loginStep === 'password' ? 'your@email.com' : '12345 or your@email.com'}
               required
               disabled={uiState.isLoading}
@@ -368,31 +332,23 @@ export const LoginForm = ({ navigate }) => {
           {uiState.loginStep === "password" && (
             <motion.div variants={itemVariants}>
               <div className="flex justify-between items-center mb-1">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Password
                 </label>
-                <motion.button
+                <button
                   type="button"
                   className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={tapEffect}
                 >
                   Forgot password?
-                </motion.button>
+                </button>
               </div>
-              <motion.input
-                whileFocus={{ scale: 1.01 }}
-                whileHover={hoverEffect}
-                whileTap={tapEffect}
+              <input
                 id="password"
                 name="password"
                 type="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="••••••••"
                 required
                 disabled={uiState.isLoading}
@@ -400,10 +356,7 @@ export const LoginForm = ({ navigate }) => {
             </motion.div>
           )}
 
-          <motion.button
-            variants={itemVariants}
-            whileHover={hoverEffect}
-            whileTap={tapEffect}
+          <button
             type="submit"
             disabled={uiState.isLoading}
             className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg shadow transition-all duration-300 flex items-center justify-center"
@@ -416,19 +369,8 @@ export const LoginForm = ({ navigate }) => {
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Processing...
               </>
@@ -437,22 +379,15 @@ export const LoginForm = ({ navigate }) => {
             ) : (
               "Sign In"
             )}
-          </motion.button>
+          </button>
 
           {uiState.loginStep === "initial" && (
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 text-center"
-            >
+            <div className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 text-center">
               <span>Not a member yet?</span>
-              <motion.button
-                whileHover={{ scale: 1.05, color: "#10B981" }}
-                whileTap={tapEffect}
-                className="ml-1 font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
-              >
+              <button className="ml-1 font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
                 Learn about membership
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           )}
         </motion.form>
       )}

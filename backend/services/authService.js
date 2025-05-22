@@ -27,6 +27,8 @@ class AuthService {
           success: true,
           message: "OTP already sent",
           phoneNumber: isNumericId ? user.phoneNumber : null,
+          // [+] Add expiresAt to help frontend show countdown
+          expiresAt: existingOtp.expiresAt 
         };
       }
 
@@ -36,16 +38,18 @@ class AuthService {
       otpStorage.set(identifier, {
         otp,
         expiresAt,
-        userId: isNumericId ? user.id : identifier, // Store ID or email
+        userId: isNumericId ? user.id : identifier,
         roleId: user.role_id,
         isMember: isNumericId,
       });
 
-      logger.info(`OTP generated for ${identifier}: ${otp}`);
+      logger.info(`OTP generated for ${identifier} : ${otp}`); // 
       return {
         success: true,
         message: "OTP sent successfully",
         phoneNumber: isNumericId ? user.phoneNumber : null,
+        // [+] Add expiresAt
+        expiresAt 
       };
     } catch (error) {
       logger.error(`OTP send error for ${identifier}: ${error.message}`);
@@ -57,15 +61,18 @@ class AuthService {
     try {
       const storedData = otpStorage.get(identifier);
       if (!storedData) throw new Error("OTP expired or not requested");
-      if (storedData.otp !== otp || storedData.expiresAt < Date.now()) {
-        throw new Error("Invalid or expired OTP");
+      if (storedData.otp !== otp) {
+        throw new Error("Invalid OTP");
+      }
+      if (storedData.expiresAt < Date.now()) {
+        throw new Error("OTP expired");
       }
 
       let user;
       if (storedData.isMember) {
         user = await MemberModel.findById(storedData.userId);
       } else {
-        user = await AdminModel.findByEmail(identifier); // Use original identifier (email)
+        user = await AdminModel.findByEmail(identifier);
       }
 
       if (!user) throw new Error("User not found");
@@ -96,52 +103,43 @@ class AuthService {
         token,
       };
     } catch (error) {
-      logger.error(
-        `OTP verification failed for ${identifier}: ${error.message}`
-      );
+      logger.error(`OTP verification failed for ${identifier}: ${error.message}`);
       throw error;
     }
   }
 
-  /**
-   * Authenticate admin with password
-   * @param {string} email - Admin email
-   * @param {string} password - Plain text password
-   * @returns {Promise<object>} - Authentication result
-   */
   static async loginWithPassword(email, password) {
     try {
+      if (!email || !password) {
+        throw new Error("Email and password are required");
+      }
+
       const user = await AdminModel.findByEmail(email);
       if (!user) {
-        throw new Error(
-          "Invalid credentials. Please check your email and password."
-        );
+        throw new Error("Invalid credentials. Please check your email and password.");
       }
-      // Verify password
+
       const isPasswordValid = await AuthModel.comparePassword(
         password,
         user.password
       );
-       if (!isPasswordValid) {
-        throw new Error(
-          "Invalid credentials. Please check your email and password."
-        );
+      
+      if (!isPasswordValid) {
+        throw new Error("Invalid credentials. Please check your email and password.");
       }
 
-      // Check for existing OTP
       const existingOtp = otpStorage.get(email);
       if (existingOtp && existingOtp.expiresAt > Date.now()) {
         logger.debug(`Existing OTP found for admin ${email}`);
         return {
           requiresOtp: true,
-          tempToken: this.generateTempToken(),
           message: "OTP already sent",
+          expiresAt: existingOtp.expiresAt // [+] Add expiresAt
         };
       }
 
-      // Generate new OTP for admin
       const otp = AuthModel.generateOTP();
-      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+      const expiresAt = Date.now() + 10 * 60 * 1000;
 
       otpStorage.set(email, {
         otp,
@@ -150,14 +148,12 @@ class AuthService {
         roleId: user.role_id,
         isPasswordLogin: true,
       });
-      //  console.log(otpStorage);
-      logger.info(`OTP generated for admin ${email}: ${otp}`);
-      // In production: Send OTP via email
 
+      logger.info(`OTP generated for admin ${email} ${otp}`);
       return {
         requiresOtp: true,
-        tempToken: this.generateTempToken(),
         message: "OTP sent for verification",
+        expiresAt // [+] Add expiresAt
       };
     } catch (error) {
       logger.error(`Password login failed for ${email}: ${error.message}`);
@@ -165,16 +161,11 @@ class AuthService {
     }
   }
 
-  /**
-   * Validate existing session token
-   * @param {string} token - JWT token
-   * @returns {Promise<object|null>} - User data if valid
-   */
   static async checkSession(token) {
     if (!token) return null;
 
     try {
-      const decoded = verifyToken(token);
+      const decoded = this.verifyToken(token);
       const user = decoded.isMember
         ? await MemberModel.findById(decoded.id)
         : await AdminModel.findByEmail(decoded.id);
@@ -198,24 +189,20 @@ class AuthService {
     }
   }
 
-  /**
-   * Generate temporary token for OTP flow
-   * @returns {string} - Random token
-   */
   static generateTempToken() {
     return crypto.randomBytes(32).toString("hex");
   }
-}
 
-// Local utility functions (could move to separate file if reused)
-function generateToken(payload) {
-  return jwt.sign(payload, process.env.JWT_SECRET, { 
-    expiresIn: process.env.JWT_EXPIRES_IN || '1d' 
-  });
-}
+  // [+] Moved to class methods for better organization
+  static generateToken(payload) {
+    return jwt.sign(payload, process.env.JWT_SECRET, { 
+      expiresIn: process.env.JWT_EXPIRES_IN || '1d' 
+    });
+  }
 
-function verifyToken(token) {
-  return jwt.verify(token, process.env.JWT_SECRET);
+  static verifyToken(token) {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  }
 }
 
 export default AuthService;
