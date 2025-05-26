@@ -4,7 +4,7 @@ import { OtpInput } from './OtpInput';
 import axios from 'axios';
 
 // Constants
-const OTP_EXPIRY_SECONDS = 120; // 2 minutes standard
+const OTP_EXPIRY_SECONDS = 60; // 1 minute
 const RESEND_DELAY_MS = 1000; // 1 second delay between countdown updates
 
 // Animation variants
@@ -43,7 +43,9 @@ export const LoginForm = ({ navigate }) => {
     error: '',
     otpSent: false,
     countdown: 0,
-    loginStep: 'initial'
+    loginStep: 'initial',
+    otpExpired: false,
+    resendCount: 0 // Track resend attempts
   });
 
   // Memoized API call handlers
@@ -64,7 +66,10 @@ export const LoginForm = ({ navigate }) => {
       const response = await axios.post('/api/auth/verify-otp', { identifier, otp });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Invalid or expired OTP');
+      if (error.response?.data?.message?.includes('expired')) {
+        throw new Error('The verification code has expired. Please request a new one.');
+      }
+      throw new Error(error.response?.data?.message || 'Invalid verification code');
     }
   }, []);
 
@@ -110,7 +115,8 @@ export const LoginForm = ({ navigate }) => {
           showOtpField: true,
           loginStep: 'otp',
           countdown: OTP_EXPIRY_SECONDS,
-          isLoading: false
+          isLoading: false,
+          resendCount: 0
         }));
       } else {
         setUiState(prev => ({
@@ -143,7 +149,8 @@ export const LoginForm = ({ navigate }) => {
           showOtpField: true,
           loginStep: 'otp',
           countdown: OTP_EXPIRY_SECONDS,
-          isLoading: false
+          isLoading: false,
+          resendCount: 0
         }));
       }
     } catch (err) {
@@ -168,7 +175,8 @@ export const LoginForm = ({ navigate }) => {
       setUiState(prev => ({ 
         ...prev, 
         error: err.message,
-        isLoading: false 
+        isLoading: false,
+        otpExpired: err.message.includes('expired')
       }));
     }
   }, [formData.identifier, navigate, verifyOtp]);
@@ -176,7 +184,12 @@ export const LoginForm = ({ navigate }) => {
   const handleResendOtp = useCallback(async () => {
     if (uiState.countdown > 0 || uiState.isLoading) return;
     
-    setUiState(prev => ({ ...prev, isLoading: true, error: '' }));
+    setUiState(prev => ({ 
+      ...prev, 
+      isLoading: true, 
+      error: '',
+      otpExpired: false
+    }));
     
     try {
       await sendOtp(formData.identifier);
@@ -184,7 +197,9 @@ export const LoginForm = ({ navigate }) => {
         ...prev, 
         countdown: OTP_EXPIRY_SECONDS, 
         otpSent: true, 
-        isLoading: false 
+        isLoading: false,
+        error: 'New verification code sent successfully',
+        resendCount: prev.resendCount + 1
       }));
     } catch (err) {
       setUiState(prev => ({ 
@@ -203,11 +218,14 @@ export const LoginForm = ({ navigate }) => {
       error: '',
       otpSent: false,
       countdown: 0,
-      isLoading: false
+      isLoading: false,
+      otpExpired: false,
+      resendCount: 0
     });
+    setFormData({ identifier: '', password: '' });
   }, []);
 
-  // Optimized countdown timer
+  // Countdown timer
   useEffect(() => {
     let timer;
     if (uiState.countdown > 0) {
@@ -253,7 +271,11 @@ export const LoginForm = ({ navigate }) => {
       {uiState.error && (
         <motion.div
           variants={itemVariants}
-          className="p-3 mb-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-lg text-sm"
+          className={`p-3 mb-4 rounded-lg text-sm ${
+            uiState.error.includes('sent successfully') 
+              ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300'
+              : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300'
+          }`}
         >
           <div className="flex items-start">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,6 +299,7 @@ export const LoginForm = ({ navigate }) => {
           </div>
 
           <OtpInput
+            key={`otp-input-${uiState.resendCount}`} // Reset on resend
             length={6}
             onComplete={handleOtpVerification}
             disabled={uiState.isLoading}

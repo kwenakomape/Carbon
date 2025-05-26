@@ -1,40 +1,25 @@
-// File: controllers/memberController.js
 import MemberService from '../services/memberService.js';
 import logger from '../utils/logger.js';
 
 class MemberController {
-  static async getMemberProfile(req, res, next) {
+  static async getMemberWithAppointments(req, res) {
     try {
       const { memberId } = req.params;
-      const member = await MemberService.getMemberById(memberId);
+      const memberData = await MemberService.getMemberWithAppointments(memberId);
       
-      if (!member) {
-        return res.status(404).json({
-          success: false,
-          message: 'Member not found'
-        });
-      }
-
-      logger.info(`Retrieved profile for member ${memberId}`);
+      logger.info(`Fetched member data for ${memberId}`);
       res.json({
         success: true,
-        data: {
-          id: member.id,
-          name: member.name,
-          email: member.email,
-          phoneNumber: member.phoneNumber,
-          credits: member.credits
-          // Exclude sensitive data
-        }
+        data: memberData
       });
     } catch (error) {
-      logger.error(`Member profile error: ${error.message}`);
-      next(error);
+      logger.error(`Error fetching member data: ${error.message}`);
+      res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
-
-  // Future methods can go here
-  // updateMemberProfile, etc.
 }
 
 export default MemberController;

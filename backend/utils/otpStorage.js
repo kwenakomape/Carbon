@@ -1,11 +1,25 @@
-// In production, replace with Redis implementation
 const otpStorage = new Map();
 
-export function getOTP(identifier) {
-  return otpStorage.get(identifier);
+// Add periodic cleanup for expired OTPs
+setInterval(() => {
+  const now = Date.now();
+  for (const [identifier, data] of otpStorage.entries()) {
+    if (data.expiresAt < now) {
+      otpStorage.delete(identifier);
+    }
+  }
+}, 60 * 1000); // Run cleanup every minute
+
+export function get(identifier) {
+  const data = otpStorage.get(identifier);
+  if (data && data.expiresAt < Date.now()) {
+    otpStorage.delete(identifier);
+    return null;
+  }
+  return data;
 }
 
-export function setOTP(identifier, data) {
+export function set(identifier, data) {
   otpStorage.set(identifier, data);
 }
 

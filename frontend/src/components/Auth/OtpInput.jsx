@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export const OtpInput = ({ length = 6, onComplete, disabled = false }) => {
+export const OtpInput = ({ length = 6, onComplete, disabled = false, clearOnResend = false }) => {
   const [otp, setOtp] = useState(Array(length).fill(''));
   const inputRefs = useRef([]);
+
+  // Clear inputs when clearOnResend prop changes
+  useEffect(() => {
+    if (clearOnResend) {
+      setOtp(Array(length).fill(''));
+      focusInput(0);
+    }
+  }, [clearOnResend, length]);
+
 
   const focusInput = (index) => {
     const input = inputRefs.current[index];

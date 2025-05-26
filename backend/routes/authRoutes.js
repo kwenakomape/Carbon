@@ -5,17 +5,17 @@ import { rateLimiter } from '../middleware/rateLimiter.js';
 const router = express.Router();
 
 router.post('/send-otp', 
-  rateLimiter(10, 60), // 5 requests per minute
+  // rateLimiter(5, 60), // 5 requests per minute
   AuthController.sendOTP
 );
 
 router.post('/verify-otp', 
-  rateLimiter(3, 60), // 3 requests per minute
+  // rateLimiter(3, 60), // 3 requests per minute
   AuthController.verifyOTP
 );
 
 router.post('/login', 
-  rateLimiter(3, 60), // 3 requests per minute
+  // rateLimiter(3, 60), // 3 requests per minute
   AuthController.loginWithPassword
 );
 
