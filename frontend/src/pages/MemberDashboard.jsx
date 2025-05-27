@@ -18,7 +18,7 @@ export const MemberDashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/member/${id}`);
-      console.log("sdkljklf")
+
       console.log(response.data.data);
       if (response.data.success) {
         setMemberData(response.data.data);

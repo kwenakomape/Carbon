@@ -575,7 +575,7 @@ app.post("/api/bookings", async (req, res) => {
             ];
 
       await pool.query(appointmentQuery, appointmentValues);
-      res.status(200).send("Appointment and sessions booked successfully");
+      res.status(200).send("Appointment booked successfully");
     }
   } catch (err) {
     console.error("Error booking appointment:", err);

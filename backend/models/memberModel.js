@@ -16,6 +16,7 @@ class MemberModel {
     }
   }
   static async getMemberWithAppointments(memberId) {
+    console.log(`here is ${memberId}`);
     const query = `
       SELECT 
         m.member_id,
