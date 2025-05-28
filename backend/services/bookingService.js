@@ -6,9 +6,9 @@ class BookingService {
   static async createOrUpdateBooking(bookingData) {
     try {
       // Validate required fields
-      if (!bookingData.memberId || !bookingData.specialistId) {
-        throw new Error('Member ID and Specialist ID are required');
-      }
+      // if (!bookingData.memberId || !bookingData.specialistId) {
+      //   throw new Error('Member ID and Specialist ID are required');
+      // }
 
       // Format dates and times
       const formattedData = this.formatBookingData(bookingData);

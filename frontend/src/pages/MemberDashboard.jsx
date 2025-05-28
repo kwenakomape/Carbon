@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { MemberModals } from '../components/MemberModals';
 import { Spin, Avatar, Badge, Tag } from 'antd';
-import { NotificationDropdown } from '../components/NotificationDropdown';
 import dayjs from 'dayjs';
 import axios from 'axios';
 import { UserOutlined, BellOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
@@ -12,14 +11,12 @@ export const MemberDashboard = () => {
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notificationHighlight, setNotificationHighlight] = useState(null);
-
+  
   const fetchMemberData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/member/${id}`);
-
-      console.log(response.data.data);
+      //console.log(response.data.data);
       if (response.data.success) {
         setMemberData(response.data.data);
       } else {
@@ -36,14 +33,6 @@ export const MemberDashboard = () => {
   useEffect(() => {
     fetchMemberData();
   }, [fetchMemberData]);
-
-  const handleNotificationClick = useCallback((appointmentId) => {
-    setNotificationHighlight(appointmentId);
-    setTimeout(() => {
-      const element = document.getElementById(`appointment-${appointmentId}`);
-      element?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-  }, []);
 
   const handleRefresh = useCallback(() => {
     fetchMemberData();
@@ -131,11 +120,7 @@ export const MemberDashboard = () => {
             <div className="text-gray-600">
               Hi {memberData.name}, You have {pendingCount} pending appointments
             </div>
-            <NotificationDropdown
-              userId={id}
-              userType="member"
-              onNotificationClick={handleNotificationClick}
-            />
+            
           </div>
         </header>
 
@@ -171,11 +156,8 @@ export const MemberDashboard = () => {
                       <tr
                         key={appointment.appointment_id}
                         id={`appointment-${appointment.appointment_id}`}
-                        className={`transition duration-200 ${
-                          notificationHighlight === appointment.appointment_id
-                            ? 'bg-blue-50 border-l-4 border-blue-500'
-                            : 'hover:bg-gray-100'
-                        }`}
+                        className="hover:bg-gray-100"
+                        
                       >
                         <td className="py-3 px-4 border-b">
                           {appointment.request_date ? dayjs(appointment.request_date).format('D MMMM, YYYY') : '-'}

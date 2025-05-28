@@ -9,7 +9,7 @@ import { Button as AntButton, Modal,Dropdown ,message,Alert } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import dayjs from "dayjs";
 import { DownOutlined } from '@ant-design/icons';
-// import { createNotification, updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
+import { createNotification, updateAppointmentStatus } from '../../../backend/utils/apiUtils.js';
 import { ConfirmbookingMessage } from "../messageTemplates/ConfirmbookingMessage.jsx";
 import { AlertMessage } from "./AlertMessage.jsx";
 import { NoteAlert } from "./Alert/NoteAlert.jsx";
@@ -75,18 +75,18 @@ export const MemberModals = (props) => {
  
   const filteredItems = items.filter((item) => {
     if (
-      props.status === "Pending" ||
-      props.status === "Pending Reschedule"
+      props.appointmentStatus === "Pending" ||
+      props.appointmentStatus === "Pending Reschedule"
     ) {
       return ["2", "3"].includes(item.key);
     } else if (
-      props.status === "Cancelled" ||
-      props.status === "Missed"
+      props.appointmentStatus === "Cancelled" ||
+      props.appointmentStatus === "Missed"
     ) {
       return ["3"].includes(item.key);
-    } else if (props.status === "Seen") {
+    } else if (props.appointmentStatus === "Seen") {
       return ["3"].includes(item.key);
-    } else if (props.status === "Confirmed") {
+    } else if (props.appointmentStatus === "Confirmed") {
       return ["1", "3"].includes(item.key);
     }
   });
@@ -235,7 +235,16 @@ export const MemberModals = (props) => {
     setOpen(true);
   };
   const handleStatus = async (status) => {
-    // await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
+    await updateAppointmentStatus(props.memberId, props.AppointmentId, status);
+    await createNotification(
+      props.AppointmentId,
+      "Appointment Cancelled",
+      "specialist",
+      props.specialistId,
+      props.memberName,
+      props.memberId,
+      props.memberId
+    );
     handleClose();
     props.autoRefresh();
   };
@@ -286,6 +295,40 @@ export const MemberModals = (props) => {
 
     try {
       await axios.post("/api/bookings", bookingData);
+      if (reschedule) {
+        if (isDietitian) {
+          await createNotification(
+            props.AppointmentId,
+            "Appointment Rescheduled",
+            "specialist",
+            props.specialistId,
+            props.memberName,
+            props.memberId,
+            props.memberId
+          );
+        } else {
+          await createNotification(
+            props.AppointmentId,
+            "Appointment Reschedule Requested",
+            "specialist",
+            props.specialistId,
+            props.memberName,
+            props.memberId,
+            props.memberId
+          );
+        }
+      }
+      if (modify) {
+        await createNotification(
+          props.AppointmentId,
+          "Appointment Details Updated",
+          "specialist",
+          props.specialistId,
+          props.memberName,
+          props.memberId,
+          props.memberId
+        );
+      }
       setTimeout(() => {
         setOpen(false);
         setConfirmLoading(false);
@@ -309,7 +352,9 @@ export const MemberModals = (props) => {
         setShowConfirmationModal(true);
       }, 2000);
       setShowUpdateModal(false);
-      
+      if (!isDietitian) {
+        await axios.post("/api/send-email", bookingData);
+      }
     } catch (error) {
       console.error("Error booking appointment:", error);
       setConfirmLoading(false);
@@ -349,8 +394,8 @@ export const MemberModals = (props) => {
     <>
       {props.modalType === "More Actions" && (
         <>
-          {props.status !== "Cancelled" &&
-            props.status !== "Missed" && (
+          {props.appointmentStatus !== "Cancelled" &&
+            props.appointmentStatus !== "Missed" && (
               <div className="w-6 mr-2 transform hover:text-purple-500 hover:scale-110">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -534,11 +579,11 @@ export const MemberModals = (props) => {
                 clientName={props.memberName}
                 phoneNumber={props.phoneNumber}
                 memberEmail={props.memberEmail}
-                appointmentId={props.appointment_id}
+                appointmentId={props.AppointmentId}
                 confirmed_date={props.confirmed_date}
                 confirmed_time={props.confirmed_time}
                 credits_used={props.credits_used}
-                appointmentStatus={props.status}
+                appointmentStatus={props.appointmentStatus}
                 preferred_date1={props.preferred_date1}
                 preferred_time_range1={props.preferred_time_range1}
                 preferred_date2={props.preferred_date2}
