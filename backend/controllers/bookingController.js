@@ -5,16 +5,6 @@ class BookingController {
   static async createOrUpdateBooking(req, res) {
     try {
       const bookingData = req.body;
-      // console.log("passed")
-      // const userId = req.user.id; // From authentication middleware
-
-      // Validate user has permission to book/modify
-    //   if (bookingData.memberId && bookingData.memberId !== userId && !req.user.isAdmin) {
-    //     return res.status(403).json({
-    //       success: false,
-    //       message: 'Unauthorized to book/modify this appointment'
-    //     });
-    //   }
 
       const result = await BookingService.createOrUpdateBooking(bookingData);
       
