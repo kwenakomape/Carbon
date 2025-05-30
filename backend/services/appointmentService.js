@@ -5,11 +5,15 @@ class AppointmentService {
   static async updateStatus(appointmentId, status, userId, isMember) {
     try {
       // Validate status
-      const validStatuses = ['Pending', 'Confirmed', 'Cancelled', 'Seen', 'Rescheduled', 'Missed'];
-      if (!validStatuses.includes(status)) {
-        throw { message: 'Invalid status', statusCode: 400 };
-      }
-
+      // const validStatuses = ['Pending', 'Confirmed', 'Cancelled', 'Seen', 'Rescheduled', 'Missed'];
+      // if (!validStatuses.includes(status)) {
+      //   throw { message: 'Invalid status', statusCode: 400 };
+      // }
+      console.log("passed here");
+      console.log(appointmentId);
+      console.log(status);
+      console.log(userId);
+      console.log(isMember);
       // Check permissions and update
       const updatedAppointment = await AppointmentModel.updateStatus(
         appointmentId,

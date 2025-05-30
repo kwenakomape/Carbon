@@ -4,16 +4,16 @@ import logger from '../utils/logger.js';
 class AppointmentController {
   static async updateStatus(req, res) {
     try {
-      const { appointmentId } = req.params;
-      const { status } = req.body;
-      const { id: userId, isMember } = req.user;
+      // const { appointmentId } = req.params;
+      // const { status } = req.body;
+      // const { id: userId, isMember } = req.user;
 
-      const result = await AppointmentService.updateStatus(
-        appointmentId,
-        status,
-        userId,
-        isMember
-      );
+      // const result = await AppointmentService.updateStatus(
+      //   appointmentId,
+      //   status,
+      //   userId,
+      //   isMember
+      // );
 
       res.json({
         success: true,
